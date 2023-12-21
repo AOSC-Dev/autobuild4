@@ -1,0 +1,6 @@
+// @AB_HEADER_COMMENT@
+#pragma once
+
+constexpr const char *ab_version = "@AB_VERSION@";
+constexpr const char *ab_url = "@AB_URL@";
+constexpr const char *native_arch_name = "@AB_NATIVE_ARCH_NAME@";

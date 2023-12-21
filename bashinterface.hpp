@@ -1,0 +1,27 @@
+#pragma once
+
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+#include "common.hpp"
+
+// forward declaration for word_list
+typedef struct word_list WORD_LIST;
+typedef int (*builtin_func_t)(WORD_LIST *);
+
+Diagnostic autobuild_get_backtrace();
+int autobuild_bool(const char *value);
+int autobuild_load_file(const char *filename, bool validate_only);
+int autobuild_get_variable_with_suffix(std::string name,
+                                       std::vector<std::string> aliases);
+void autobuild_register_builtins(
+    std::unordered_map<const char *, builtin_func_t> functions);
+int autobuild_switch_strict_mode(const bool enable);
+
+class ABStrictModeGuard {
+  inline ABStrictModeGuard() { autobuild_switch_strict_mode(true); }
+  inline ~ABStrictModeGuard() { autobuild_switch_strict_mode(false); }
+};

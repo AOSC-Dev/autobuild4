@@ -1,0 +1,23 @@
+{
+  "mainline": [
+    "amd64",
+    "arm64",
+    "loongarch64",
+    "loongson3",
+    "mips64r6el",
+    "ppc64el",
+    "riscv64"
+  ],
+  "arm": ["armv4", "armv6hf", "armv7hf", "arm64"],
+  "ocaml_native": ["amd64", "arm64", "ppc64el"],
+  "retro": [
+    "armv4",
+    "armv6hf",
+    "armv7hf",
+    "i486",
+    "loongson2f",
+    "m68k",
+    "powerpc",
+    "ppc64"
+  ]
+}
