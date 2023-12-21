@@ -156,18 +156,21 @@ SHELL_VAR *autobuild_copy_variable(SHELL_VAR *src, const char *dst_name) {
   return dst;
 }
 
-int autobuild_get_variable_with_suffix(std::string name,
-                                       std::vector<std::string> aliases) {
+int autobuild_get_variable_with_suffix(const std::string name,
+                                       const std::vector<std::string> aliases) {
   bool found = false;
-  for (std::string &alias : aliases) {
-    const std::string var_name = name + "__" + alias;
+  for (auto it = aliases.begin(); it != aliases.end(); it++) {
+    const std::string var_name = name + "__" + *it;
     auto *target = find_variable(var_name.c_str());
     if (target) {
       if (found) {
-        // TODO: throw error
         return 1;
       }
       autobuild_copy_variable(target, name.c_str());
+      // the first element in the aliases is the arch name
+      // which should be considered an exact match
+      if (it == aliases.begin())
+        break;
       found = true;
       continue;
     }

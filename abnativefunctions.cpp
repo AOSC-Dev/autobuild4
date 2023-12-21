@@ -55,6 +55,65 @@ static inline std::string get_all_args(WORD_LIST *list) {
   return args;
 }
 
+static inline std::string get_self_path() {
+  auto *path_var = find_variable("AB");
+  if (!path_var) {
+    return {};
+  }
+  const char *path = path_var->value;
+  const std::string ab_path{path};
+  return ab_path;
+}
+
+static inline std::string arch_findfile_inner(const std::string &path,
+                                              bool stage2_aware) {
+  const auto defines_path = std::string{"autobuild/"};
+  // find arch-specific directory first
+  const auto *arch_name = find_variable("ABHOST");
+  const auto *stage2_v = find_variable("ABSTAGE2");
+  const bool is_stage2 =
+      stage2_aware && (stage2_v ? autobuild_bool(stage2_v->value) : false);
+  if (arch_name && arch_name->value) {
+    auto test_path = defines_path + arch_name->value + "/" + path;
+    if (is_stage2) {
+      test_path += ".stage2";
+    }
+    if (access(test_path.c_str(), F_OK) == 0) {
+      return test_path;
+    }
+  }
+
+  // then try the ABHOST_GROUP
+  const auto *ag_v = find_variable("ABHOST_GROUP");
+  if (!ag_v || !(ag_v->attributes & att_array))
+    return "";
+  const auto *ag_a = array_cell(ag_v);
+  for (ARRAY_ELEMENT *ae = element_forw(ag_a->head); ae != ag_a->head;
+       ae = element_forw(ae)) {
+    auto test_path = defines_path + ae->value + "/" + path;
+    if (is_stage2) {
+      test_path += ".stage2";
+    }
+    // TODO: check if the group name is ambiguous
+    if (access(test_path.c_str(), F_OK) == 0) {
+      return test_path;
+    }
+  }
+
+  // lastly, try to find the file in the standard location
+  {
+    auto test_path = defines_path + path;
+    if (is_stage2) {
+      test_path += ".stage2";
+    }
+    if (access(test_path.c_str(), F_OK) == 0) {
+      return test_path;
+    }
+  }
+  // not found
+  return {};
+}
+
 static int ab_bool(WORD_LIST *list) {
   char *argv1 = get_argv1(list);
   if (!argv1)
@@ -230,8 +289,6 @@ static int abdie(WORD_LIST *list) {
   return exit_code;
 }
 
-static int arch_loadfile_strict(WORD_LIST *list) { return 0; }
-
 static void register_logger_from_env() {
   auto *var = find_variable_tempenv("ABREPORTER");
   if (!var || !var->value) {
@@ -250,12 +307,10 @@ static void register_logger_from_env() {
 }
 
 static int set_arch_variables() {
-  auto *path_var = find_variable("AB");
-  if (!path_var) {
+  const std::string ab_path = get_self_path();
+  if (ab_path.empty()) {
     return 1;
   }
-  const char *path = path_var->value;
-  const std::string ab_path{path};
   // read targets
   const auto arch_targets_path = ab_path + "/sets/arch_targets.json";
   std::ifstream targets_file(arch_targets_path);
@@ -282,7 +337,8 @@ static int set_arch_variables() {
   // ABBUILD=ARCH
   build_v->value = strdup(this_arch);
 
-  const std::string arch_triple = arch_targets[this_arch].template get<std::string>();
+  const std::string arch_triple =
+      arch_targets[this_arch].template get<std::string>();
   // set HOST
   auto *host_var = bind_variable("HOST", const_cast<char *>("HOST"), 0);
   // HOST=${ARCH_TARGET["$ABHOST"]}
@@ -315,14 +371,103 @@ static int set_arch_variables() {
   return 0;
 }
 
-static int arch_loadvar(WORD_LIST *list) {
-  // TODO
+static inline int arch_loadvar_inner(const std::string &var_name) {
+  std::vector<std::string> aliases{};
+  aliases.reserve(4);
+  const auto arch_v = find_variable("ARCH");
+  // ARCH can't be an array
+  if (!arch_v || arch_v->attributes & att_array)
+    return 1;
+  const auto ag_v = find_variable("ABHOST_GROUP");
+  // ABHOST_GROUP needs to be an array
+  if (!ag_v || !(ag_v->attributes & att_array))
+    return 1;
+  aliases.emplace_back(arch_v->value);
+  const auto ag_a = array_cell(ag_v);
+  for (ARRAY_ELEMENT *ae = element_forw(ag_a->head); ae != ag_a->head;
+       ae = element_forw(ae)) {
+    aliases.emplace_back(ae->value);
+  }
+
+  const int result = autobuild_get_variable_with_suffix(var_name, aliases);
+  if (result != 0) {
+    // auto *log = reinterpret_cast<BaseLogger *>(logger);
+    // TODO: log: Refusing to assign [...]
+    return 1;
+  }
   return 0;
 }
 
-static int arch_loadfile(WORD_LIST *list) {
-  // TODO
+static int arch_loadvar(WORD_LIST *list) {
+  const auto name = get_argv1(list);
+  if (!name)
+    return 0;
+  arch_loadvar_inner(name);
+
   return 0;
+}
+
+static int arch_loaddefines(WORD_LIST *list) {
+  // parse args
+  int opt = 0;
+  bool stage2_aware = false;
+  reset_internal_getopt();
+  while ((opt = internal_getopt(list, const_cast<char *>("2"))) != -1) {
+    switch (opt) {
+    case '2':
+      stage2_aware = true;
+      break;
+    default:
+      return 1;
+    }
+  }
+  const auto *argv1 = get_argv1(loptend);
+  if (!argv1)
+    return 1;
+
+  // load exported variables list
+  const std::string ab_path = get_self_path();
+  if (ab_path.empty()) {
+    return 1;
+  }
+  const std::string exported_vars_path = ab_path + "/sets/exports.json";
+  std::ifstream exported_vars_file(exported_vars_path);
+  json exported_vars_json = json::parse(exported_vars_file);
+  std::vector<std::string> exported_vars;
+  exported_vars.reserve(64);
+  for (json::iterator it = exported_vars_json.begin();
+       it != exported_vars_json.end(); ++it) {
+    const auto inner_array =
+        it.value().template get<std::vector<std::string>>();
+    exported_vars.insert(exported_vars.end(), inner_array.begin(),
+                         inner_array.end());
+  }
+
+  // load the defines file
+  const auto defines_path = arch_findfile_inner(argv1, stage2_aware);
+  if (defines_path.empty())
+    return 127;
+  const int result = autobuild_load_file(defines_path.c_str(), false);
+  if (result != 0)
+    return result;
+  // load the actual variables from the current context
+  for (const auto &var : exported_vars) {
+    arch_loadvar_inner(var);
+  }
+  return 0;
+}
+
+static int arch_loadfile_strict(WORD_LIST *list) {
+  const auto *argv1 = get_argv1(list);
+  if (!argv1)
+    return 1;
+  return autobuild_load_file(argv1, false);
+}
+
+static int arch_loadfile(WORD_LIST *list) {
+  auto *log = reinterpret_cast<BaseLogger *>(logger);
+  log->warning("arch_loadfile is deprecated. Use arch_loadfile_strict instead.");
+  return arch_loadfile_strict(list);
 }
 
 extern "C" {
@@ -336,12 +481,17 @@ void register_all_native_functions() {
       {"load_strict", ab_load_strict},
       {"diag_print_backtrace", ab_print_backtrace},
       {"ab_filter_args", ab_filter_args},
-      {"arch_loadfile_strict", arch_loadfile_strict},
+      // previously in base.sh
       {"abinfo", abinfo},
       {"abwarn", abwarn},
       {"aberr", aberr},
       {"abdbg", abdbg},
       {"abdie", abdie},
+      // previously in arch.sh
+      {"arch_loadvar", arch_loadvar},
+      {"arch_loaddefines", arch_loaddefines},
+      {"arch_loadfile", arch_loadfile},
+      {"arch_loadfile_strict", arch_loadfile_strict},
   };
   // puts("Registering all native functions");
   // Initialize logger

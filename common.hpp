@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-enum class LogLevel {
+enum class LogLevel : uint8_t {
   Debug,
   Info,
   Warning,
