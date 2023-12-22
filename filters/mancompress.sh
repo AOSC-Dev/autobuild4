@@ -12,7 +12,8 @@ filter_mancompress() {
 			fi
 		
 			if [[ -L $i ]]; then
-				local __mancomp_lnk=$(namei "$i" | tail -1 | awk '{print $NF}')
+				local __mancomp_lnk
+				__mancomp_lnk="$(readlink -f "$i")"
 				rm "$i"
 				ln -sf "$__mancomp_lnk".xz "$i"
 			elif [[ -f $i ]]; then

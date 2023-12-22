@@ -23,6 +23,8 @@ set(COMMON_SRC
   abnativefunctions.h
   logger.hpp
   logger.cpp
+  pm.hpp
+  pm.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/abconfig.h
 )
 

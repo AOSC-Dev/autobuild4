@@ -140,13 +140,14 @@ SHELL_VAR *autobuild_copy_variable(SHELL_VAR *src, const char *dst_name) {
   if (src_types & att_array) {
     ARRAY *src_cells = array_cell(src);
     ARRAY *dst_cells = array_cell(dst);
-    int idx = 0;
     array_flush(dst_cells);
-    for (ARRAY_ELEMENT *ae = element_forw(src_cells->head);
-         ae != src_cells->head; ae = element_forw(ae)) {
-      array_insert(dst_cells, idx, element_value(ae));
-      idx++;
-    }
+    dst_cells = array_copy(src_cells);
+    return dst;
+  } else if (src_types & att_assoc) {
+    HASH_TABLE *src_cells = assoc_cell(src);
+    HASH_TABLE *dst_cells = assoc_cell(dst);
+    assoc_flush(dst_cells);
+    dst_cells = assoc_copy(src_cells);
     return dst;
   }
   const char *args[3]{"-n", dst_name, nullptr};

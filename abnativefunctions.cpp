@@ -2,12 +2,16 @@
 
 #include "abconfig.h"
 #include "bashinterface.hpp"
+#include "pm.hpp"
 
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
+#include <iostream>
 #include <memory>
+#include <random>
+#include <string>
 #include <unistd.h>
 #include <unordered_set>
 
@@ -65,6 +69,24 @@ static inline std::string get_self_path() {
   return ab_path;
 }
 
+static inline std::string arch_findfile_maybe_stage2(std::string &path,
+                                                     bool is_stage2) {
+  auto test_path_stage2 = path + ".stage2";
+  if (is_stage2) {
+    if (access(test_path_stage2.c_str(), F_OK) == 0) {
+      return path;
+    }
+    // TODO: show warning if stage2 file not found
+    auto *log = reinterpret_cast<BaseLogger *>(logger);
+    log->warning(
+        "Unable to find stage2 defines, falling back to normal defines ...");
+  }
+  if (access(path.c_str(), F_OK) == 0) {
+    return path;
+  }
+  return {};
+}
+
 static inline std::string arch_findfile_inner(const std::string &path,
                                               bool stage2_aware) {
   const auto defines_path = std::string{"autobuild/"};
@@ -75,11 +97,9 @@ static inline std::string arch_findfile_inner(const std::string &path,
       stage2_aware && (stage2_v ? autobuild_bool(stage2_v->value) : false);
   if (arch_name && arch_name->value) {
     auto test_path = defines_path + arch_name->value + "/" + path;
-    if (is_stage2) {
-      test_path += ".stage2";
-    }
-    if (access(test_path.c_str(), F_OK) == 0) {
-      return test_path;
+    const auto result = arch_findfile_maybe_stage2(test_path, is_stage2);
+    if (!result.empty()) {
+      return result;
     }
   }
 
@@ -91,23 +111,19 @@ static inline std::string arch_findfile_inner(const std::string &path,
   for (ARRAY_ELEMENT *ae = element_forw(ag_a->head); ae != ag_a->head;
        ae = element_forw(ae)) {
     auto test_path = defines_path + ae->value + "/" + path;
-    if (is_stage2) {
-      test_path += ".stage2";
-    }
+    const auto result = arch_findfile_maybe_stage2(test_path, is_stage2);
     // TODO: check if the group name is ambiguous
-    if (access(test_path.c_str(), F_OK) == 0) {
-      return test_path;
+    if (!result.empty()) {
+      return result;
     }
   }
 
   // lastly, try to find the file in the standard location
   {
     auto test_path = defines_path + path;
-    if (is_stage2) {
-      test_path += ".stage2";
-    }
-    if (access(test_path.c_str(), F_OK) == 0) {
-      return test_path;
+    const auto result = arch_findfile_maybe_stage2(test_path, is_stage2);
+    if (!result.empty()) {
+      return result;
     }
   }
   // not found
@@ -466,8 +482,88 @@ static int arch_loadfile_strict(WORD_LIST *list) {
 
 static int arch_loadfile(WORD_LIST *list) {
   auto *log = reinterpret_cast<BaseLogger *>(logger);
-  log->warning("arch_loadfile is deprecated. Use arch_loadfile_strict instead.");
+  log->warning(
+      "arch_loadfile is deprecated. Use arch_loadfile_strict instead.");
   return arch_loadfile_strict(list);
+}
+
+static int ab_read_listing_file(WORD_LIST *list) {
+  const auto *filename = get_argv1(list);
+  if (!filename)
+    return 1;
+  auto *result_varname = get_argv1(list->next);
+  if (!result_varname)
+    return 1;
+
+  auto file = std::ifstream(filename);
+  if (!file.is_open())
+    return 1;
+  std::string line;
+  std::vector<std::string> lines{};
+  while (std::getline(file, line)) {
+    // TODO: trim whitespaces
+    if (line.front() == '#')
+      continue;
+    lines.emplace_back(line);
+  }
+  file.close();
+  const auto *result_var = make_new_array_variable(result_varname);
+  auto *result_var_a = array_cell(result_var);
+  for (const auto &line : lines) {
+    array_push(result_var_a, const_cast<char *>(line.c_str()));
+  }
+  return 0;
+}
+
+static int ab_tostringarray(WORD_LIST *list) {
+  const auto *varname = get_argv1(list);
+  if (!varname)
+    return 1;
+
+  auto *result_var = find_variable(varname);
+  if (!result_var)
+    return 1;
+  // already an array, nothing to do
+  if (result_var->attributes & att_array)
+    return 0;
+  // FIXME: does not work for assoc vars
+  if (result_var->attributes & att_assoc)
+    return 4;
+
+  // convert the string to an array
+  // save the string value first
+  auto oldval =
+      std::unique_ptr<char, decltype(&free)>(strdup(result_var->value), &free);
+  free(result_var->value);
+  // override the value to an array
+  result_var->value = reinterpret_cast<char *>(array_create());
+  // override the attributes to be an array type
+  result_var->attributes |= att_array;
+  // split the string into array elements
+  assign_array_var_from_string(result_var, oldval.get(), 0);
+  return 0;
+}
+
+static int abpm_dump_builddep_req(WORD_LIST *list) {
+  std::mt19937_64 rng(std::random_device{}());
+  std::cout << "Source: "
+            << "ab4-satdep-" << std::to_string(rng()) << "\nBuild-Depends:\n";
+  for (; list != nullptr; list = list->next) {
+    const auto converted = autobuild_to_deb_version(list->word->word);
+    if (converted.empty()) {
+      return 1;
+    }
+    std::cout << " " << converted << ",\n";
+  }
+  return 0;
+}
+
+static int abpm_genver(WORD_LIST *list) {
+  const auto argv1 = get_argv1(list);
+  if (!argv1)
+    return 1;
+  std::cout << autobuild_to_deb_version(argv1) << std::endl;
+  return 0;
 }
 
 extern "C" {
@@ -480,7 +576,6 @@ void register_all_native_functions() {
       {"abisdefined", ab_isdefined},
       {"load_strict", ab_load_strict},
       {"diag_print_backtrace", ab_print_backtrace},
-      {"ab_filter_args", ab_filter_args},
       // previously in base.sh
       {"abinfo", abinfo},
       {"abwarn", abwarn},
@@ -492,12 +587,17 @@ void register_all_native_functions() {
       {"arch_loaddefines", arch_loaddefines},
       {"arch_loadfile", arch_loadfile},
       {"arch_loadfile_strict", arch_loadfile_strict},
-  };
-  // puts("Registering all native functions");
+      // new stuff
+      {"ab_filter_args", ab_filter_args},
+      {"ab_read_listing_file", ab_read_listing_file},
+      {"ab_tostringarray", ab_tostringarray},
+      {"abpm_debver", abpm_genver},
+      {"abpm_dump_builddep_req", abpm_dump_builddep_req}};
+
   // Initialize logger
   if (!logger)
     register_logger_from_env();
-  // autobuild_switch_strict_mode(true);
+
   autobuild_register_builtins(functions);
 }
 

@@ -12,6 +12,22 @@ enum class LogLevel : uint8_t {
   Critical,
 };
 
+enum class VersionOp: uint8_t {
+  INVALID,
+  // <<
+  Lt,
+  // <=
+  Le,
+  // >>
+  Gt,
+  // >=
+  Ge,
+  // =
+  Eq,
+  // unused
+  Ne,
+};
+
 struct DiagnosticFrame {
   std::string file;
   std::string function;

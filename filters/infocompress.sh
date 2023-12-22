@@ -8,7 +8,8 @@ filter_infocompress() {
 	if [ -d "$PKGDIR"/usr/share/info ]; then
 		for i in "$PKGDIR"/usr/share/info/*.info; do
 			if [[ -L $i ]]; then
-				local __infocomp_lnk=$(namei "$i" | tail -1 | awk '{print $NF}')
+				local __infocomp_lnk
+				__infocomp_lnk="$(readlink -f "$i")"
 				rm "$i"
 				ln -sf "$__infocomp_lnk".xz "$i"
 			elif [[ -f $i ]]; then
