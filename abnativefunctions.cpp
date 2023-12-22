@@ -484,10 +484,26 @@ static int arch_loaddefines(WORD_LIST *list) {
 }
 
 static int arch_loadfile_strict(WORD_LIST *list) {
-  const auto *argv1 = get_argv1(list);
+  // parse args
+  int opt = 0;
+  bool stage2_aware = false;
+  reset_internal_getopt();
+  while ((opt = internal_getopt(list, const_cast<char *>("2"))) != -1) {
+    switch (opt) {
+    case '2':
+      stage2_aware = true;
+      break;
+    default:
+      return 1;
+    }
+  }
+  const auto *argv1 = get_argv1(loptend);
   if (!argv1)
     return 1;
-  return autobuild_load_file(argv1, false);
+  const auto filepath = arch_findfile_inner(argv1, stage2_aware);
+  if (filepath.empty())
+    return 127;
+  return autobuild_load_file(filepath.c_str(), false);
 }
 
 static int arch_loadfile(WORD_LIST *list) {
@@ -587,6 +603,43 @@ static int ab_concatarray(WORD_LIST *list) {
   return 0;
 }
 
+static int ab_typecheck(WORD_LIST *list) {
+  int opt{};
+  int expected_type = 0;
+  reset_internal_getopt();
+  while ((opt = internal_getopt(list, const_cast<char *>("ahsif")))) {
+    switch (opt) {
+    case 'a':
+      expected_type |= att_array;
+      break;
+    case 'h':
+      expected_type |= att_assoc;
+      break;
+    case 's':
+      expected_type |= 0;
+      break;
+    case 'i':
+      expected_type |= att_integer;
+      break;
+    case 'f':
+      expected_type |= att_function;
+      break;
+    default:
+      return 1;
+    }
+  }
+
+  const auto *varname = get_argv1(loptend);
+  if (!varname)
+    return 1;
+  const auto *var = find_variable(varname);
+  if (!var)
+    return 1;
+  if (var->attributes & expected_type)
+    return 0;
+  return 1;
+}
+
 static int abpm_dump_builddep_req(WORD_LIST *list) {
   std::mt19937_64 rng(std::random_device{}());
   std::cout << "Source: "
@@ -636,8 +689,10 @@ void register_all_native_functions() {
       {"ab_filter_args", ab_filter_args},
       {"ab_read_listing_file", ab_read_listing_file},
       {"ab_tostringarray", ab_tostringarray},
+      {"ab_typecheck", ab_typecheck},
       {"abpm_debver", abpm_genver},
-      {"abpm_dump_builddep_req", abpm_dump_builddep_req}};
+      {"abpm_dump_builddep_req", abpm_dump_builddep_req},
+  };
 
   // Initialize logger
   if (!logger)

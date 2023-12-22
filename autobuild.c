@@ -24,16 +24,8 @@ int autobuild_builtin(WORD_LIST *list) {
     switch (opt) {
       CASE_HELPOPT;
     case 'E':
-      // TODO: other verbs
-      printf("%s\n", list_optarg);
-      evalstring(strdup("X=(1 2 3)\n"), "<>", 0);
-      // autobuild_copy_variable(find_variable("X"), "XXX");
-      evalstring(strdup("echo \"${XXX[@]}\"\n"), "<0>", 0);
-      evalstring(strdup("ablog\n"), "<1>", 0);
-      // parser_test("touch /root/123\n", "<builtin>");
+      // TODO: tools
       return 0;
-      // internal_getopt(list, "i:o:");
-      break;
     default:
       builtin_usage();
       return (EX_USAGE);
