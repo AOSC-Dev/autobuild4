@@ -125,6 +125,8 @@ int autobuild_bool(const char *value) {
 }
 
 SHELL_VAR *autobuild_copy_variable(SHELL_VAR *src, const char *dst_name) {
+  constexpr int att_type_mask =
+      att_array | att_function | att_integer | att_assoc;
   if (!src) {
     return {};
   }
@@ -136,6 +138,9 @@ SHELL_VAR *autobuild_copy_variable(SHELL_VAR *src, const char *dst_name) {
     } else {
       dst = bind_variable(dst_name, src->name, 0);
     }
+  }
+  if ((src_types & att_type_mask) == (dst->attributes & att_type_mask)) {
+    return {};
   }
   if (src_types & att_array) {
     ARRAY *src_cells = array_cell(src);
@@ -155,6 +160,18 @@ SHELL_VAR *autobuild_copy_variable(SHELL_VAR *src, const char *dst_name) {
       strvec_to_word_list((char **)args, true, 0), &dispose_words};
   declare_builtin(options.get());
   return dst;
+}
+
+int autobuild_copy_variable_value(const char *src_name, const char *dst_name) {
+  SHELL_VAR *src = find_variable(src_name);
+  if (!src) {
+    return 1;
+  }
+  SHELL_VAR *dst = autobuild_copy_variable(src, dst_name);
+  if (!dst) {
+    return 1;
+  }
+  return 0;
 }
 
 int autobuild_get_variable_with_suffix(const std::string name,

@@ -130,6 +130,16 @@ static inline std::string arch_findfile_inner(const std::string &path,
   return {};
 }
 
+static inline void bash_array_push(ARRAY *array, char *value) {
+  auto *new_ae = array_create_element(0, value);
+  // new element is the last element of the array (tail of the linked-list)
+  new_ae->prev = array->lastref;
+  new_ae->next = array->lastref->next;
+  array->lastref->next = new_ae;
+  array->lastref = new_ae;
+  array->num_elements++;
+}
+
 static int ab_bool(WORD_LIST *list) {
   char *argv1 = get_argv1(list);
   if (!argv1)
@@ -379,7 +389,7 @@ static int set_arch_variables() {
       const auto arch_value = it.value().template get<std::string>();
       if (arch_value == this_arch) {
         // append the group name to the array
-        array_push(arch_groups_a, const_cast<char *>(group_name.c_str()));
+        bash_array_push(arch_groups_a, const_cast<char *>(group_name.c_str()));
       }
     }
   }
@@ -510,7 +520,7 @@ static int ab_read_listing_file(WORD_LIST *list) {
   const auto *result_var = make_new_array_variable(result_varname);
   auto *result_var_a = array_cell(result_var);
   for (const auto &line : lines) {
-    array_push(result_var_a, const_cast<char *>(line.c_str()));
+    bash_array_push(result_var_a, const_cast<char *>(line.c_str()));
   }
   return 0;
 }
@@ -541,6 +551,39 @@ static int ab_tostringarray(WORD_LIST *list) {
   result_var->attributes |= att_array;
   // split the string into array elements
   assign_array_var_from_string(result_var, oldval.get(), 0);
+  return 0;
+}
+
+static int abcopyvar(WORD_LIST *list) {
+  const auto *src = get_argv1(list);
+  if (!src)
+    return 1;
+  const auto *dst = get_argv1(list->next);
+  if (!dst)
+    return 1;
+  // TODO: handle errors
+  return autobuild_copy_variable_value(src, dst);
+}
+
+static int ab_concatarray(WORD_LIST *list) {
+  const auto *dst = get_argv1(list);
+  if (!dst)
+    return 1;
+  const auto *dst_v = find_variable(dst);
+  if (!dst_v || !(dst_v->attributes & att_array))
+    return 1;
+  const auto *src = get_argv1(list->next);
+  if (!src)
+    return 1;
+  const auto *src_v = find_variable(src);
+  if (!src_v || !(src_v->attributes & att_array))
+    return 1;
+  auto *dst_a = array_cell(dst_v);
+  const auto *src_a = array_cell(src_v);
+  for (ARRAY_ELEMENT *ae = element_forw(src_a->head); ae != src_a->head;
+       ae = element_forw(ae)) {
+    bash_array_push(dst_a, ae->value);
+  }
   return 0;
 }
 
@@ -587,6 +630,8 @@ void register_all_native_functions() {
       {"arch_loaddefines", arch_loaddefines},
       {"arch_loadfile", arch_loadfile},
       {"arch_loadfile_strict", arch_loadfile_strict},
+      {"abcopyvar", abcopyvar},
+      {"ab_concatarray", ab_concatarray},
       // new stuff
       {"ab_filter_args", ab_filter_args},
       {"ab_read_listing_file", ab_read_listing_file},
