@@ -581,6 +581,30 @@ static int abcopyvar(WORD_LIST *list) {
   return autobuild_copy_variable_value(src, dst);
 }
 
+static int arch_findfile(WORD_LIST *list) {
+  // parse args
+  int opt = 0;
+  bool stage2_aware = false;
+  reset_internal_getopt();
+  while ((opt = internal_getopt(list, const_cast<char *>("2"))) != -1) {
+    switch (opt) {
+    case '2':
+      stage2_aware = true;
+      break;
+    default:
+      return 1;
+    }
+  }
+  const auto *argv1 = get_argv1(loptend);
+  if (!argv1)
+    return 1;
+  const auto filepath = arch_findfile_inner(argv1, stage2_aware);
+  if (filepath.empty())
+    return 127;
+  std::cout << filepath << std::endl;
+  return 0;
+}
+
 static int ab_concatarray(WORD_LIST *list) {
   const auto *dst = get_argv1(list);
   if (!dst)
@@ -683,6 +707,7 @@ void register_all_native_functions() {
       {"arch_loaddefines", arch_loaddefines},
       {"arch_loadfile", arch_loadfile},
       {"arch_loadfile_strict", arch_loadfile_strict},
+      {"arch_findfile", arch_findfile},
       {"abcopyvar", abcopyvar},
       {"ab_concatarray", ab_concatarray},
       // new stuff

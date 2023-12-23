@@ -24,7 +24,6 @@ build_npm_audit(){
 
 build_npm_configure() {
 	BUILD_START
-	true;
 }
 
 build_npm_build(){

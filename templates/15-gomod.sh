@@ -2,6 +2,14 @@
 ##15-gomod.sh: Builds Go projects using Go Modules and Go 1.11+
 ##@copyright GPL-2.0+
 
+ab_go_build() {
+	local strip_flags
+	if ! bool ABSPLITDBG || ! bool ABSTRIP; then
+	    strip_flags="-s -w"
+	fi
+	go build -v -ldflags "${strip_flags} ${GO_LDFLAGS[*]} -extldflags '-Wl,-z,relro -Wl,-z,now -specs=/usr/lib/autobuild3/specs/hardened-ld'" "$@"
+}
+
 build_gomod_probe() {
 	[ -f "$SRCDIR"/go.mod ] \
 		&& [ -f "$SRCDIR"/go.sum ] # go.sum is required for security reasons
@@ -32,7 +40,7 @@ build_gomod_build() {
 	abinfo "Compiling Go module ..."
 	ab_tostringarray GO_BUILD_AFTER
 	GOPATH="$SRCDIR/abgopath" \
-		go build "${GO_BUILD_AFTER[@]}" .. \
+		ab_go_build "${GO_BUILD_AFTER[@]}" .. \
 		|| abdie "Failed to build Go module: $?."
 }
 
