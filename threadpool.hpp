@@ -7,13 +7,31 @@
 #include <thread>
 #include <vector>
 
-template <typename T> class ThreadPool {
-  using processor_func_t = std::function<void(T &)>;
+#if __cplusplus >= 201703L && !defined(IFCONSTEXPR)
+#define IFCONSTEXPR constexpr
+#else
+#define IFCONSTEXPR
+#endif
+
+template <typename T, typename R> class ThreadPool {
+  using processor_func_t = std::function<R(T &)>;
+
+  inline static int process_for_result(std::function<void(T &)> &func,
+                                       T &data) {
+    func(data);
+    return 0;
+  }
+
+  inline static int process_for_result(std::function<int(T &)> &func,
+                                       T &data) {
+    return func(data);
+  }
 
 public:
   ThreadPool(processor_func_t processor,
              int thread_num = std::thread::hardware_concurrency())
-      : m_waker(), m_queue({}), m_stop(false), m_processor(processor) {
+      : m_waker(), m_queue({}), m_stop(false), m_has_error(false),
+        m_processor(processor) {
     for (int i = 0; i < thread_num; ++i) {
       m_workers.emplace_back(std::thread{[&] {
         while (true) {
@@ -24,7 +42,8 @@ public:
           }
           auto task = std::move(m_queue.back());
           m_queue.pop_back();
-          m_processor(task);
+          if (process_for_result(m_processor, task) != 0)
+            m_has_error = true;
           lock.unlock();
         }
       }});
@@ -46,6 +65,7 @@ public:
     m_stop = true;
     m_waker.notify_all();
   }
+  bool has_error() const { return m_has_error; }
 
 private:
   std::vector<std::thread> m_workers;
@@ -53,5 +73,6 @@ private:
   std::mutex m_mutex;
   std::deque<T> m_queue;
   bool m_stop;
+  bool m_has_error;
   processor_func_t m_processor;
 };

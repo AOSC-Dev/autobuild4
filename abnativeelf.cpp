@@ -61,12 +61,6 @@ static inline ElfXX_Off get_offset(const ElfXX_Off offset,
   __builtin_unreachable();
 }
 
-#if __cplusplus >= 201703L
-#define IFCONSTEXPR constexpr
-#else
-#define IFCONSTEXPR
-#endif
-
 #define ELFXX_ADD_GETTER_INNER(name, getter)                                   \
   using ElfXX_##name##_t = decltype(BaseWrapper::elf64->getter);               \
   inline ElfXX_##name##_t name() const {                                       \
@@ -509,8 +503,9 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     return 0;
   }
   if (!strip_only) {
+    auto path = final_path.string();
     const char *args[] = {"objcopy", "--only-keep-debug", src_path,
-                          final_path.string().c_str(), nullptr};
+                          path.c_str(), nullptr};
     return forked_execvp("objcopy", const_cast<char *const *>(args));
   }
   args[0] = "strip";
@@ -536,11 +531,11 @@ int elf_copy_to_symdir(const char *src_path, const char *dst_path,
   return chown(final_path.c_str(), 0, 0);
 }
 
-class ELFWorkerPool : public ThreadPool<const char *> {
+class ELFWorkerPool : public ThreadPool<const char *, int> {
 public:
   ELFWorkerPool(const char *symdir)
-      : ThreadPool<const char *>([&symdir](const char *src_path) {
-          elf_copy_debug_symbols(src_path, symdir, false, true);
+      : ThreadPool<const char *, int>([&symdir](const char *src_path) {
+          return elf_copy_debug_symbols(src_path, symdir, false, true);
         }) {}
 };
 
@@ -556,6 +551,7 @@ int elf_copy_debug_symbols_parallel(const std::vector<std::string> &directories,
     }
   }
 
-  // TODO: handle errors
+  if (pool.has_error())
+    return 1;
   return 0;
 }

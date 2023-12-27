@@ -24,3 +24,5 @@ int elf_copy_to_symdir(const char *src_path, const char *dst_path,
                        const char *build_id);
 int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
                            bool strip_only, bool use_eu_strip);
+int elf_copy_debug_symbols_parallel(const std::vector<std::string> &directories,
+                                    const char *dst_path);

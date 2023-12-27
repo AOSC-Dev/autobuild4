@@ -60,6 +60,17 @@ static inline std::string get_all_args(WORD_LIST *list) {
   return args;
 }
 
+static inline std::vector<std::string> get_all_args_vector(WORD_LIST *list) {
+  if (!list)
+    return {};
+  std::vector<std::string> args{};
+  args.reserve(16);
+  for (; list; list = list->next) {
+    args.push_back(get_argv1(list));
+  }
+  return args;
+}
+
 static inline std::string get_self_path() {
   auto *path_var = find_variable("AB");
   if (!path_var) {
@@ -717,6 +728,16 @@ static int abelf_copy_dbg(WORD_LIST *list) {
   return 0;
 }
 
+static int abelf_copy_dbg_parallel(WORD_LIST *list) {
+  auto args = get_all_args_vector(list);
+  const auto dst = args.back();
+  args.pop_back();
+  int ret = elf_copy_debug_symbols_parallel(args, dst.c_str());
+  if (ret < 0)
+    return 10;
+  return 0;
+}
+
 extern "C" {
 void register_all_native_functions() {
   if (set_registered_flag())
@@ -749,6 +770,7 @@ void register_all_native_functions() {
       {"ab_read_listing_file", ab_read_listing_file},
       {"ab_tostringarray", ab_tostringarray},
       {"ab_typecheck", ab_typecheck},
+      {"abelf_copy_dbg_parallel", abelf_copy_dbg_parallel},
       {"abpm_debver", abpm_genver},
       {"abpm_dump_builddep_req", abpm_dump_builddep_req},
   };
