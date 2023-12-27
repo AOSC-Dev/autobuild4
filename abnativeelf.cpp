@@ -1,5 +1,6 @@
 #include "abnativeelf.hpp"
 #include "stdwrapper.hpp"
+#include "threadpool.hpp"
 
 #include <cstdarg>
 #include <cstring>
@@ -11,6 +12,7 @@
 #include <thread>
 
 #include <elf.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 // {'!', '<', 'a', 'r', 'c', 'h', '>', '\n'}
@@ -391,18 +393,6 @@ static ELFParseResult identify_binary_data(const char *data,
   return result;
 }
 
-static void scan_directories(const std::vector<std::string> &directories,
-                             std::deque<std::string> &files) {
-  for (const auto &directory : directories) {
-    for (const auto &entry : fs::recursive_directory_iterator(directory)) {
-      if (entry.is_regular_file()) {
-        // queue the files
-        files.push_front(entry.path().string());
-      }
-    }
-  }
-}
-
 inline static fs::path get_filename_from_build_id(const std::string &build_id,
                                                   const char *dst_path) {
   const std::string build_id_str{build_id};
@@ -438,6 +428,17 @@ private:
   void *m_addr;
   size_t m_size;
 };
+
+static inline int forked_execvp(const char *path, char *const argv[]) {
+  pid_t pid = fork();
+  if (pid == 0) {
+    execvp(path, argv);
+  }
+  // wait for the child process to exit
+  int status = 0;
+  waitpid(pid, &status, 0);
+  return status;
+}
 
 int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
                            bool strip_only, bool use_eu_strip) {
@@ -504,18 +505,19 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     }
     args.emplace_back(src_path);
     args.emplace_back(nullptr);
-    execvp("eu-strip", const_cast<char *const *>(args.data()));
+    forked_execvp("eu-strip", const_cast<char *const *>(args.data()));
     return 0;
   }
   if (!strip_only) {
-    execlp("objcopy", "objcopy", "--only-keep-debug", src_path,
-           final_path.string().c_str(), nullptr);
+    const char *args[] = {"objcopy", "--only-keep-debug", src_path,
+                          final_path.string().c_str(), nullptr};
+    return forked_execvp("objcopy", const_cast<char *const *>(args));
   }
   args[0] = "strip";
   std::copy(extra_args.begin(), extra_args.end(), std::back_inserter(args));
   args.emplace_back(src_path);
   args.emplace_back(nullptr);
-  return execvp("strip", const_cast<char *const *>(args.data()));
+  return forked_execvp("strip", const_cast<char *const *>(args.data()));
 }
 
 int elf_copy_to_symdir(const char *src_path, const char *dst_path,
@@ -532,4 +534,28 @@ int elf_copy_to_symdir(const char *src_path, const char *dst_path,
     return ret;
   }
   return chown(final_path.c_str(), 0, 0);
+}
+
+class ELFWorkerPool : public ThreadPool<const char *> {
+public:
+  ELFWorkerPool(const char *symdir)
+      : ThreadPool<const char *>([&symdir](const char *src_path) {
+          elf_copy_debug_symbols(src_path, symdir, false, true);
+        }) {}
+};
+
+int elf_copy_debug_symbols_parallel(const std::vector<std::string> &directories,
+                                    const char *dst_path) {
+  ELFWorkerPool pool{dst_path};
+  for (const auto &directory : directories) {
+    for (const auto &entry : fs::recursive_directory_iterator(directory)) {
+      if (entry.is_regular_file()) {
+        // queue the files
+        pool.enqueue(entry.path().string().c_str());
+      }
+    }
+  }
+
+  // TODO: handle errors
+  return 0;
 }
