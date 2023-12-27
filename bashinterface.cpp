@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "stdwrapper.hpp"
 #include "bashinterface.hpp"
 #include "common.hpp"
 
@@ -214,10 +215,30 @@ int autobuild_load_file(const char *filename, bool validate_only) {
 
 int autobuild_switch_strict_mode(const bool enable) {
   set_minus_o_option(enable ? '-' : '+', const_cast<char *>("errexit"));
+  set_minus_o_option(enable ? '-' : '+', const_cast<char *>("errtrace"));
   const char *args[4]{"diag_print_backtrace", "ERR", "EXIT", nullptr};
   if (!enable)
     args[0] = "-";
   auto options = std::unique_ptr<WORD_LIST, decltype(&dispose_words)>{
       strvec_to_word_list((char **)args, true, 0), &dispose_words};
   return trap_builtin(options.get());
+}
+
+int autobuild_load_all_from_directory(const char *directory) {
+  std::vector<std::string> files;
+  for (fs::directory_iterator it(directory); it != fs::directory_iterator();
+       it++) {
+    if (it->is_regular_file()) {
+      files.push_back(it->path().string());
+    }
+  }
+  // list the files in the directory in alphabetical order
+  // instead of the file system order
+  std::sort(files.begin(), files.end());
+  for (const auto &file : files) {
+    if (autobuild_load_file(file.c_str(), false)) {
+      return 1;
+    }
+  }
+  return 0;
 }

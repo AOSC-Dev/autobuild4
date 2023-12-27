@@ -1,6 +1,7 @@
 #include "logger.hpp"
 
 #include "abconfig.h"
+#include "abnativeelf.hpp"
 #include "bashinterface.hpp"
 #include "pm.hpp"
 
@@ -686,6 +687,36 @@ static int abpm_genver(WORD_LIST *list) {
   return 0;
 }
 
+static int abelf_elf_copy_to_symdir(WORD_LIST *list) {
+  const auto *src = get_argv1(list);
+  if (!src)
+    return 1;
+  WORD_LIST *lists = list->next;
+  const auto *buildid = get_argv1(lists);
+  if (!buildid)
+    return 1;
+  lists = lists->next;
+  const auto *symdir = get_argv1(lists);
+  if (!symdir)
+    return 1;
+
+  return elf_copy_to_symdir(src, symdir, buildid);
+}
+
+static int abelf_copy_dbg(WORD_LIST *list) {
+  const auto *src = get_argv1(list);
+  if (!src)
+    return 1;
+  WORD_LIST *lists = list->next;
+  const auto *dst = get_argv1(lists);
+  if (!dst)
+    return 1;
+  int ret = elf_copy_debug_symbols(src, dst, false, true);
+  if (ret < 0)
+    return 10;
+  return 0;
+}
+
 extern "C" {
 void register_all_native_functions() {
   if (set_registered_flag())
@@ -710,6 +741,9 @@ void register_all_native_functions() {
       {"arch_findfile", arch_findfile},
       {"abcopyvar", abcopyvar},
       {"ab_concatarray", ab_concatarray},
+      // previously in elf.sh
+      {"elf_install_symfile", abelf_elf_copy_to_symdir},
+      {"elf_copydbg", abelf_copy_dbg},
       // new stuff
       {"ab_filter_args", ab_filter_args},
       {"ab_read_listing_file", ab_read_listing_file},

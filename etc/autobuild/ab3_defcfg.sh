@@ -60,7 +60,7 @@ AB_SAN_THR=0
 AB_SAN_LEK=0
 
 # Use BFD LD?
-AB_LD_BFD=0
+AB_LD_BFD=1
 
 # Default testing flags
 ABTESTS=""
