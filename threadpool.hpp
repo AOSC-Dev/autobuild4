@@ -36,8 +36,9 @@ public:
       m_workers.emplace_back(std::thread{[&] {
         while (true) {
           std::unique_lock<std::mutex> lock(m_mutex);
-          m_waker.wait(lock, [&] { return !m_queue.empty(); });
+          m_waker.wait(lock, [&] { return !m_queue.empty() || m_stop; });
           if (m_queue.empty() && m_stop) {
+            lock.unlock();
             break;
           }
           auto task = std::move(m_queue.back());

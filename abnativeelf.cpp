@@ -531,12 +531,16 @@ int elf_copy_to_symdir(const char *src_path, const char *dst_path,
   return chown(final_path.c_str(), 0, 0);
 }
 
-class ELFWorkerPool : public ThreadPool<const char *, int> {
+class ELFWorkerPool : public ThreadPool<std::string, int> {
 public:
-  ELFWorkerPool(const char *symdir)
-      : ThreadPool<const char *, int>([&symdir](const char *src_path) {
-          return elf_copy_debug_symbols(src_path, symdir, false, true);
-        }) {}
+  ELFWorkerPool(const std::string symdir)
+      : ThreadPool<std::string, int>([&](const std::string src_path) {
+          return elf_copy_debug_symbols(src_path.c_str(), m_symdir.c_str(), false,
+                                        true);
+        }), m_symdir(symdir) {}
+
+private:
+  const std::string m_symdir;
 };
 
 int elf_copy_debug_symbols_parallel(const std::vector<std::string> &directories,
@@ -546,7 +550,7 @@ int elf_copy_debug_symbols_parallel(const std::vector<std::string> &directories,
     for (const auto &entry : fs::recursive_directory_iterator(directory)) {
       if (entry.is_regular_file()) {
         // queue the files
-        pool.enqueue(entry.path().string().c_str());
+        pool.enqueue(static_cast<std::string>(entry.path().string()));
       }
     }
   }
