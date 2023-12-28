@@ -4,6 +4,7 @@
 #include "abnativeelf.hpp"
 #include "bashinterface.hpp"
 #include "pm.hpp"
+#include "threadpool.hpp"
 
 #include <cassert>
 #include <cstdio>
@@ -21,6 +22,7 @@ using json = nlohmann::json;
 extern "C" {
 #include "abnativefunctions.h"
 #include "bashincludes.h"
+#include "execute_cmd.h"
 extern volatile int last_command_exit_value;
 }
 
@@ -738,6 +740,74 @@ static int abelf_copy_dbg_parallel(WORD_LIST *list) {
   return 0;
 }
 
+static inline COMMAND *generate_function_call(char *name, char *arg) {
+  char *args[] = {name, arg, nullptr};
+  WORD_LIST *list = strvec_to_word_list(static_cast<char **>(args), true, 0);
+  SIMPLE_COM *conn = new SIMPLE_COM{
+      .flags = 0,
+      .line = 0,
+      .words = list,
+      .redirects = nullptr,
+  };
+  COMMAND *command = new COMMAND{
+      .type = cm_simple,
+      .flags = 0,
+      .redirects = nullptr,
+      .value = {.Simple = conn},
+  };
+  return command;
+}
+
+class ShellThreadPool : public ThreadPool<char *, int> {
+public:
+  ShellThreadPool(char *func_name)
+      : ThreadPool<char *, int>([&](auto arg) {
+          COMMAND *call = generate_function_call(func_name_, arg);
+          return execute_command(call);
+        }),
+        func_name_(func_name) {}
+
+private:
+  char *func_name_;
+};
+
+static int abpp_parallelize(WORD_LIST *list) {
+  auto *src = get_argv1(list);
+  if (!src)
+    return 1;
+  SHELL_VAR *var = find_function(src);
+  if (!var || !(var->attributes & att_function)) {
+    return 1;
+  }
+  // protect the variable from being unset
+  var->attributes |= (att_nounset | att_readonly);
+  ShellThreadPool thread_pool(src);
+  for (list = list->next; list; list = list->next) {
+    thread_pool.enqueue(get_argv1(list));
+  }
+
+  if (thread_pool.has_error())
+    return 1;
+
+  return 0;
+}
+
+static std::mutex ab_gil{};
+
+static int abpp_gil(WORD_LIST *list) {
+  const auto *option = get_argv1(list);
+  if (!option)
+    return 1;
+  if (strcmp(option, "release") == 0) {
+    ab_gil.unlock();
+    return 0;
+  } else if (strcmp(option, "acquire") == 0) {
+    ab_gil.lock();
+    return 0;
+  }
+  return 0;
+}
+
 extern "C" {
 void register_all_native_functions() {
   if (set_registered_flag())
@@ -766,13 +836,15 @@ void register_all_native_functions() {
       {"elf_install_symfile", abelf_elf_copy_to_symdir},
       {"elf_copydbg", abelf_copy_dbg},
       // new stuff
-      {"ab_filter_args", ab_filter_args},
-      {"ab_read_listing_file", ab_read_listing_file},
+      {"ab_remove_args", ab_filter_args},
+      {"ab_read_list", ab_read_listing_file},
       {"ab_tostringarray", ab_tostringarray},
       {"ab_typecheck", ab_typecheck},
       {"abelf_copy_dbg_parallel", abelf_copy_dbg_parallel},
       {"abpm_debver", abpm_genver},
       {"abpm_dump_builddep_req", abpm_dump_builddep_req},
+      {"abpp_parallelize", abpp_parallelize},
+      {"abpp_gil", abpp_gil},
   };
 
   // Initialize logger
