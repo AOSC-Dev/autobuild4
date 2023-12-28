@@ -4,6 +4,7 @@
 #include "abnativeelf.hpp"
 #include "bashinterface.hpp"
 #include "pm.hpp"
+#include "stdwrapper.hpp"
 #include "threadpool.hpp"
 
 #include <cassert>
@@ -680,8 +681,7 @@ static int ab_typecheck(WORD_LIST *list) {
 
 static int abpm_dump_builddep_req(WORD_LIST *list) {
   std::mt19937_64 rng(std::random_device{}());
-  std::cout << "Source: "
-            << "ab4-satdep-" << std::to_string(rng()) << "\nBuild-Depends:\n";
+  std::cout << fmt::format("Source: ab4-satdep-{}\nBuild-Depends:\n", rng());
   for (; list != nullptr; list = list->next) {
     const auto converted = autobuild_to_deb_version(list->word->word);
     if (converted.empty()) {
@@ -737,6 +737,29 @@ static int abelf_copy_dbg_parallel(WORD_LIST *list) {
   int ret = elf_copy_debug_symbols_parallel(args, dst.c_str());
   if (ret < 0)
     return 10;
+  return 0;
+}
+
+static int abpm_get_package_tree_path(WORD_LIST *list) {
+  const auto *package_name = get_argv1(list);
+  if (!package_name)
+    return 1;
+  list = list->next;
+  const auto *version = get_argv1(list);
+  if (!version)
+    return 1;
+  list = list->next;
+  const auto *release = get_argv1(list);
+  if (!release)
+    return 1;
+  list = list->next;
+  const auto *arch = get_argv1(list);
+  if (!arch)
+    return 1;
+
+  constexpr char path[] = "/debs";
+  std::string package_filename =
+      fmt::format("{}_{}_{}_{}.deb", package_name, version, release, arch);
   return 0;
 }
 

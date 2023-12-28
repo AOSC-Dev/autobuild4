@@ -8,10 +8,10 @@ namespace fs = std::filesystem;
 namespace fs = boost::filesystem;
 #endif
 
-#ifdef HAS_STD_FORMAT
+#ifdef HAS_STD_FMT
 #include <format>
-using fmt = std::format;
+namespace fmt = std;
 #else
-#include <boost/format.hpp>
-using fmt = boost::format;
+#define FMT_HEADER_ONLY
+#include <fmt/format.h>
 #endif
