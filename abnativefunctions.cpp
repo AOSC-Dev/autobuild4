@@ -1,10 +1,10 @@
 #include "logger.hpp"
 
+#include "stdwrapper.hpp"
 #include "abconfig.h"
 #include "abnativeelf.hpp"
 #include "bashinterface.hpp"
 #include "pm.hpp"
-#include "stdwrapper.hpp"
 #include "threadpool.hpp"
 
 #include <cassert>
@@ -278,6 +278,10 @@ int ab_filter_args(WORD_LIST *list) {
   return 0;
 }
 
+static inline BaseLogger *get_logger() {
+  return reinterpret_cast<BaseLogger *>(logger);
+}
+
 constexpr const char *ab_get_current_architecture() {
   static_assert(native_arch_name && native_arch_name[0],
                 "native_arch_name is undefined or empty");
@@ -286,29 +290,25 @@ constexpr const char *ab_get_current_architecture() {
 
 static int abinfo(WORD_LIST *list) {
   const auto message = get_all_args(list);
-  auto *log = reinterpret_cast<BaseLogger *>(logger);
-  log->info(message);
+  get_logger()->info(message);
   return 0;
 }
 
 static int abwarn(WORD_LIST *list) {
   const auto message = get_all_args(list);
-  auto *log = reinterpret_cast<BaseLogger *>(logger);
-  log->warning(message);
+  get_logger()->warning(message);
   return 0;
 }
 
 static int aberr(WORD_LIST *list) {
   const auto message = get_all_args(list);
-  auto *log = reinterpret_cast<BaseLogger *>(logger);
-  log->error(message);
+  get_logger()->error(message);
   return 0;
 }
 
 static int abdbg(WORD_LIST *list) {
   const auto message = get_all_args(list);
-  auto *log = reinterpret_cast<BaseLogger *>(logger);
-  log->debug(message);
+  get_logger()->debug(message);
   return 0;
 }
 
@@ -740,7 +740,7 @@ static int abelf_copy_dbg_parallel(WORD_LIST *list) {
   return 0;
 }
 
-static int abpm_get_package_tree_path(WORD_LIST *list) {
+static int abpm_aosc_archive(WORD_LIST *list) {
   const auto *package_name = get_argv1(list);
   if (!package_name)
     return 1;
@@ -757,9 +757,48 @@ static int abpm_get_package_tree_path(WORD_LIST *list) {
   if (!arch)
     return 1;
 
-  constexpr char path[] = "/debs";
-  std::string package_filename =
-      fmt::format("{}_{}_{}_{}.deb", package_name, version, release, arch);
+  fs::path path{"/debs"};
+  const std::string package_name_str{package_name};
+  const std::string package_filename =
+      fmt::format("{0}_{1}_{2}_{3}.deb", package_name, version, release, arch);
+  std::string prefix{package_name[0]};
+  if (package_name_str.size() > 3 && package_name_str.substr(0, 3) == "lib") {
+    prefix = package_name_str.substr(0, 4);
+  }
+  path /= prefix;
+  fs::create_directories(path);
+  path /= package_filename;
+  fs::copy(package_filename, path);
+  std::cout << fmt::format("'{0}' -> '{1}'", package_filename, path.string())
+            << std::endl;
+  return 0;
+}
+
+static int abpm_aosc_archive_new(WORD_LIST *list) {
+  const auto *packages = get_argv1(list);
+  if (!packages)
+    return 1;
+  const auto *packages_v = find_variable(packages);
+  if (!packages_v || !(packages_v->attributes & att_array))
+    return 1;
+  const auto *packages_a = array_cell(packages_v);
+  for (ARRAY_ELEMENT *ae = element_forw(packages_a->head);
+       ae != packages_a->head; ae = element_forw(ae)) {
+    // each element is a package name
+    char *package_name = ae->value;
+    const std::string package_name_str{package_name};
+    std::string prefix{package_name[0]};
+    if (package_name_str.size() > 3 && package_name_str.substr(0, 3) == "lib") {
+      prefix = package_name_str.substr(0, 4);
+    }
+    fs::path path{"/debs"};
+    path /= prefix;
+    fs::create_directories(path);
+    path /= package_name;
+    fs::copy(package_name, path);
+    std::cout << fmt::format("'{0}' -> '{1}'", package_name, path.string())
+              << std::endl;
+  }
   return 0;
 }
 
@@ -828,7 +867,7 @@ static int abpp_gil(WORD_LIST *list) {
     ab_gil.lock();
     return 0;
   }
-  return 0;
+  return 1;
 }
 
 extern "C" {
@@ -859,11 +898,13 @@ void register_all_native_functions() {
       {"elf_install_symfile", abelf_elf_copy_to_symdir},
       {"elf_copydbg", abelf_copy_dbg},
       // new stuff
+      {"aosc-archive", abpm_aosc_archive},
       {"ab_remove_args", ab_filter_args},
       {"ab_read_list", ab_read_listing_file},
       {"ab_tostringarray", ab_tostringarray},
       {"ab_typecheck", ab_typecheck},
       {"abelf_copy_dbg_parallel", abelf_copy_dbg_parallel},
+      {"abpm_aosc_archive", abpm_aosc_archive_new},
       {"abpm_debver", abpm_genver},
       {"abpm_dump_builddep_req", abpm_dump_builddep_req},
       {"abpp_parallelize", abpp_parallelize},
