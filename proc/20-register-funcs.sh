@@ -3,6 +3,21 @@
 ##@copyright GPL-2.0+
 
 AB_TEMPLATES=()
+AB_FILTERS=()
+
+# shellcheck disable=SC2317
+ab_register_filter() {
+	local name="$1"
+	if [ -z "$1" ]; then
+		abdie "Internal error: No template specified"
+	fi
+	local _filter_name="filter_${name}"
+	if ! ab_typecheck -f "${_filter_name}"; then
+		aberr "Internal error: Filter ${name} does not have required function '${_filter_name}'."
+	fi
+	abdbg "Registered filter: ${name}"
+	AB_FILTERS+=("${_filter_name}")
+}
 
 # shellcheck disable=SC2317
 ab_register_template() {
@@ -32,9 +47,10 @@ ab_register_template() {
     AB_TEMPLATES+=("${name}")
 }
 
-for i in "$AB/templates"/*.sh
+for i in "$AB/templates"/*.sh "$AB/filters"/*.sh
 do
+	# shellcheck disable=SC1090
 	. "$i"
 done
 
-unset -f ab_register_template
+unset -f ab_register_template ab_register_filter

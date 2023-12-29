@@ -226,6 +226,7 @@ int setup_default_env_variables() {
     setenv("SHELL", bash_path, true);
   }
 
+  setenv("AB4VERSION", ab_version, true);
   // TODO: set the correct HOME variable
 
   setenv("TZ", "UTC", true);

@@ -505,6 +505,9 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     return -2;
   }
 
+  if (!result.has_debug_info) {
+    return -3;
+  }
   const fs::path final_path =
       get_filename_from_build_id(result.build_id, dst_path);
   const fs::path final_prefix = final_path.parent_path();
