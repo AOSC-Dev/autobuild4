@@ -295,6 +295,25 @@ static bool maybe_kernel_object(const std::vector<ElfXX_Shdr> &section_headers,
   return false;
 }
 
+static inline bool
+is_debug_info_present(const std::vector<ElfXX_Shdr> &section_headers,
+                      const char *shstrtab) {
+  constexpr const char *sh_debug_info = ".debug_info";
+  for (const ElfXX_Shdr &section_header : section_headers) {
+    const uint32_t type = section_header.sh_type();
+    if (type != SHT_PROGBITS) {
+      continue;
+    }
+    const uint32_t name_idx = section_header.sh_name();
+    const char *section_name =
+        reinterpret_cast<const char *>(shstrtab + name_idx);
+    if (memcmp(section_name, sh_debug_info, strlen(sh_debug_info)) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
 static ELFParseResult identify_binary_data(const char *data,
                                            const size_t size) {
   ELFParseResult result{};
@@ -384,6 +403,7 @@ static ELFParseResult identify_binary_data(const char *data,
     result.needed_libs = std::move(needed);
   }
   result.build_id = std::move(build_id);
+  result.has_debug_info = is_debug_info_present(section_headers, shstr_start);
   return result;
 }
 
@@ -535,9 +555,10 @@ class ELFWorkerPool : public ThreadPool<std::string, int> {
 public:
   ELFWorkerPool(const std::string symdir)
       : ThreadPool<std::string, int>([&](const std::string src_path) {
-          return elf_copy_debug_symbols(src_path.c_str(), m_symdir.c_str(), false,
-                                        true);
-        }), m_symdir(symdir) {}
+          return elf_copy_debug_symbols(src_path.c_str(), m_symdir.c_str(),
+                                        false, true);
+        }),
+        m_symdir(symdir) {}
 
 private:
   const std::string m_symdir;

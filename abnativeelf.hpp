@@ -18,6 +18,7 @@ struct ELFParseResult {
   std::vector<const char *> needed_libs;
   std::string build_id;
   BinaryType bin_type;
+  bool has_debug_info;
 };
 
 int elf_copy_to_symdir(const char *src_path, const char *dst_path,
