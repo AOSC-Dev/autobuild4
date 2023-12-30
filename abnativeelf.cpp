@@ -521,8 +521,7 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
   fs::create_directories(final_prefix);
 
   if (flags & AB_ELF_FIND_SO_DEPS) {
-    std::copy(result.needed_libs.begin(), result.needed_libs.end(),
-              std::back_inserter(symbols));
+    symbols.insert(result.needed_libs.begin(), result.needed_libs.end());
   }
   if (flags & AB_ELF_USE_EU_STRIP) {
     args[0] = "eu-strip";

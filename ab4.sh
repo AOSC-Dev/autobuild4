@@ -19,5 +19,5 @@ export BLDDIR="$SRCDIR/abbuild"
 export PKGDIR="$SRCDIR/abdist"
 export SYMDIR="$SRCDIR/abdist-dbg"
 
-enable -f "${ABBLPREFIX}"/libautobuild.so autobuild
+enable -f "${AB}"/libautobuild.so autobuild
 autobuild

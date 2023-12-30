@@ -4,9 +4,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "stdwrapper.hpp"
 #include "bashinterface.hpp"
 #include "common.hpp"
+#include "stdwrapper.hpp"
 
 extern "C" {
 #include "bashincludes.h"
@@ -198,19 +198,18 @@ int autobuild_get_variable_with_suffix(const std::string name,
 }
 
 int autobuild_load_file(const char *filename, bool validate_only) {
-  std::ifstream file(filename);
-  if (!file.is_open()) {
-    return 1;
-  }
-  std::string input((std::istreambuf_iterator<char>(file)),
-                    (std::istreambuf_iterator<char>()));
-  file.close();
-
   if (validate_only) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+      return 1;
+    }
+    std::string input((std::istreambuf_iterator<char>(file)),
+                      (std::istreambuf_iterator<char>()));
+    file.close();
     return evalstring(strdup(input.c_str()), filename,
                       SEVAL_NOHIST | SEVAL_PARSEONLY);
   }
-  return evalstring(strdup(input.c_str()), filename, SEVAL_NOHIST);
+  return source_file(filename, true);
 }
 
 int autobuild_switch_strict_mode(const bool enable) {
