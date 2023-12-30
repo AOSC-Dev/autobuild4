@@ -2,7 +2,7 @@
 # 10-autotools.sh: Builds GNU autotools stuff
 ##@copyright GPL-2.0+
 
-build_autotools_probe(){
+build_autotools_probe() {
 	[ -x "${configure=$SRCDIR/configure}" ] || \
 		[ -x "$SRCDIR"/autogen.sh ] || \
 		[ -x "$SRCDIR"/bootstrap ] || \

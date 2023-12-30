@@ -1,7 +1,6 @@
 #!/bin/bash
 ##25-npm.sh: Builds NPM registry archives
 ##@copyright GPL-2.0+
-abtryexe node npm || ((!ABSTRICT)) || ablibret
 
 build_npm_probe(){
 	[ -f "$SRCDIR"/package.json ]

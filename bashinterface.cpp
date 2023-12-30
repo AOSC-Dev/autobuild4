@@ -215,7 +215,7 @@ int autobuild_load_file(const char *filename, bool validate_only) {
 int autobuild_switch_strict_mode(const bool enable) {
   set_minus_o_option(enable ? '-' : '+', const_cast<char *>("errexit"));
   set_minus_o_option(enable ? '-' : '+', const_cast<char *>("errtrace"));
-  const char *args[4]{"diag_print_backtrace", "ERR", "EXIT", nullptr};
+  const char *args[4]{"abdie", "ERR", "EXIT", nullptr};
   if (!enable)
     args[0] = "-";
   auto options = std::unique_ptr<WORD_LIST, decltype(&dispose_words)>{

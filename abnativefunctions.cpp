@@ -31,6 +31,10 @@ extern volatile int last_command_exit_value;
 #error Bash compiled with ALT_ARRAY_IMPLEMENTATION is not supported
 #endif
 
+static inline BaseLogger *get_logger() {
+  return reinterpret_cast<BaseLogger *>(logger);
+}
+
 static bool set_registered_flag() {
   if (find_variable("__ABNR"))
     return true;
@@ -219,7 +223,7 @@ static int ab_load_strict(WORD_LIST *list) {
 
 static int ab_print_backtrace(WORD_LIST *list) {
   if (last_command_exit_value != 0) {
-    autobuild_get_backtrace();
+    get_logger()->logDiagnostic(autobuild_get_backtrace());
     return last_command_exit_value;
   }
   return 0;
@@ -285,10 +289,6 @@ int ab_filter_args(WORD_LIST *list) {
     array_dispose_element(ae);
   }
   return 0;
-}
-
-static inline BaseLogger *get_logger() {
-  return reinterpret_cast<BaseLogger *>(logger);
 }
 
 constexpr const char *ab_get_current_architecture() {
@@ -946,6 +946,7 @@ void register_builtin_variables() {
 }
 
 int start_proc_00() {
+  autobuild_switch_strict_mode(true);
   const std::string self_path = get_self_path() + "/proc";
   return autobuild_load_all_from_directory(self_path.c_str());
 }
