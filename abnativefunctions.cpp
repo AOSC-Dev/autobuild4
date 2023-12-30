@@ -1,10 +1,10 @@
 #include "logger.hpp"
 
-#include "stdwrapper.hpp"
 #include "abconfig.h"
 #include "abnativeelf.hpp"
 #include "bashinterface.hpp"
 #include "pm.hpp"
+#include "stdwrapper.hpp"
 #include "threadpool.hpp"
 
 #include <cassert>
@@ -82,6 +82,12 @@ static inline std::string get_self_path() {
   const char *path = path_var->value;
   const std::string ab_path{path};
   return ab_path;
+}
+
+static inline std::string string_to_uppercase(const std::string &str) {
+  std::string result{str};
+  std::transform(result.begin(), result.end(), result.begin(), ::toupper);
+  return result;
 }
 
 static inline std::string arch_findfile_maybe_stage2(std::string &path,
@@ -428,13 +434,24 @@ static inline int arch_loadvar_inner(const std::string &var_name) {
   const auto ag_a = array_cell(ag_v);
   for (ARRAY_ELEMENT *ae = element_forw(ag_a->head); ae != ag_a->head;
        ae = element_forw(ae)) {
-    aliases.emplace_back(ae->value);
+    aliases.emplace_back(string_to_uppercase(ae->value));
   }
 
   const int result = autobuild_get_variable_with_suffix(var_name, aliases);
   if (result != 0) {
-    // auto *log = reinterpret_cast<BaseLogger *>(logger);
-    // TODO: log: Refusing to assign [...]
+    const auto logger = get_logger();
+    logger->error(fmt::format(
+        "Refusing to assign {0} to group-specific variable {0}__{1}\n"
+        "... because it is already assigned to {0}__{2}",
+        var_name, aliases[2], aliases[1]));
+    logger->info(
+        fmt::format("Current ABHOST {0} belongs to the following groups:",
+                    ab_get_current_architecture()));
+    logger->info(fmt::format(
+        "Add the more specific {0}__{1} instead to suppress the conflict.",
+        var_name, string_to_uppercase(ab_get_current_architecture())));
+    logger->logException(
+        "Ambiguous architecture group variable detected! Refuse to proceed.");
     return 1;
   }
   return 0;
@@ -725,7 +742,8 @@ static int abelf_copy_dbg(WORD_LIST *list) {
   const auto *dst = get_argv1(lists);
   if (!dst)
     return 1;
-  int ret = elf_copy_debug_symbols(src, dst, false, true);
+  std::unordered_set<std::string> symbols{};
+  int ret = elf_copy_debug_symbols(src, dst, AB_ELF_USE_EU_STRIP, symbols);
   if (ret < 0)
     return 10;
   return 0;

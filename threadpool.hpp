@@ -22,8 +22,7 @@ template <typename T, typename R> class ThreadPool {
     return 0;
   }
 
-  inline static int process_for_result(std::function<int(T &)> &func,
-                                       T &data) {
+  inline static int process_for_result(std::function<int(T &)> &func, T &data) {
     return func(data);
   }
 
@@ -50,12 +49,7 @@ public:
       }});
     }
   }
-  ~ThreadPool() {
-    stop();
-    for (auto &worker : m_workers) {
-      worker.join();
-    }
-  }
+  ~ThreadPool() { wait_for_completion(); }
   void enqueue(T &&task) {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_queue.emplace_back(std::move(task));
@@ -65,6 +59,13 @@ public:
     std::lock_guard<std::mutex> lock(m_mutex);
     m_stop = true;
     m_waker.notify_all();
+  }
+  void wait_for_completion() {
+    stop();
+    for (auto &worker : m_workers) {
+      if (worker.joinable())
+        worker.join();
+    }
   }
   bool has_error() const { return m_has_error; }
 

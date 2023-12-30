@@ -1,7 +1,7 @@
 #!/bin/bash
 ##qa_post_build: Execute post-build QA modules.
 ##@copyright GPL-2.0+
-if bool $ABQA; then
+if bool "$ABQA"; then
 	abinfo "Running post-build QA tests ..."
 	for i in "$AB"/qa/post/*; do
 		. "$i"

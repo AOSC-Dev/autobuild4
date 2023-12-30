@@ -14,6 +14,7 @@
 #include <elf.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <unordered_set>
 
 // {'!', '<', 'a', 'r', 'c', 'h', '>', '\n'}
 constexpr std::array<uint8_t, 8> ar_magic = {0x21, 0x3C, 0x61, 0x72,
@@ -455,7 +456,8 @@ static inline int forked_execvp(const char *path, char *const argv[]) {
 }
 
 int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
-                           bool strip_only, bool use_eu_strip) {
+                           int flags,
+                           std::unordered_set<std::string> &symbols) {
   int fd = open(src_path, O_RDONLY, 0);
   if (fd < 0) {
     perror("open");
@@ -476,6 +478,11 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
   const char *data = static_cast<const char *>(file.addr());
   const ELFParseResult result = identify_binary_data(data, size);
 
+  if (!result.has_debug_info) {
+    // no debug info, strip only
+    flags |= AB_ELF_STRIP_ONLY;
+  }
+
   switch (result.bin_type) {
   case BinaryType::Invalid:
     // skip this file
@@ -485,7 +492,7 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     return 1;
   case BinaryType::Static:
     // skip static library
-    strip_only = true;
+    flags |= AB_ELF_STRIP_ONLY;
     break;
   case BinaryType::Executable:
     // strip all symbols
@@ -513,9 +520,13 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
   const fs::path final_prefix = final_path.parent_path();
   fs::create_directories(final_prefix);
 
-  if (use_eu_strip) {
+  if (flags & AB_ELF_FIND_SO_DEPS) {
+    std::copy(result.needed_libs.begin(), result.needed_libs.end(),
+              std::back_inserter(symbols));
+  }
+  if (flags & AB_ELF_USE_EU_STRIP) {
     args[0] = "eu-strip";
-    if (!strip_only) {
+    if (!(flags & AB_ELF_STRIP_ONLY)) {
       args.emplace_back("--reloc-debug-sections");
       args.emplace_back("-f");
       args.emplace_back(final_path.c_str());
@@ -525,7 +536,7 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     forked_execvp("eu-strip", const_cast<char *const *>(args.data()));
     return 0;
   }
-  if (!strip_only) {
+  if (!(flags & AB_ELF_STRIP_ONLY)) {
     auto path = final_path.string();
     const char *args[] = {"objcopy", "--only-keep-debug", src_path,
                           path.c_str(), nullptr};
@@ -558,13 +569,17 @@ class ELFWorkerPool : public ThreadPool<std::string, int> {
 public:
   ELFWorkerPool(const std::string symdir)
       : ThreadPool<std::string, int>([&](const std::string src_path) {
-          return elf_copy_debug_symbols(src_path.c_str(), m_symdir.c_str(),
-                                        false, true);
+          return elf_copy_debug_symbols(
+              src_path.c_str(), m_symdir.c_str(),
+              AB_ELF_USE_EU_STRIP | AB_ELF_FIND_SO_DEPS, m_sodeps);
         }),
-        m_symdir(symdir) {}
+        m_symdir(symdir), m_sodeps({}) {}
+
+  const std::unordered_set<std::string> get_sodeps() const { return m_sodeps; }
 
 private:
   const std::string m_symdir;
+  std::unordered_set<std::string> m_sodeps;
 };
 
 int elf_copy_debug_symbols_parallel(const std::vector<std::string> &directories,
@@ -578,6 +593,8 @@ int elf_copy_debug_symbols_parallel(const std::vector<std::string> &directories,
       }
     }
   }
+
+  pool.wait_for_completion();
 
   if (pool.has_error())
     return 1;
