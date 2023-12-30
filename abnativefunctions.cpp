@@ -942,4 +942,9 @@ void register_builtin_variables() {
   setup_default_env_variables();
   set_arch_variables();
 }
+
+int start_proc_00() {
+  const std::string self_path = get_self_path() + "/proc";
+  return autobuild_load_all_from_directory(self_path.c_str());
+}
 } // extern "C"

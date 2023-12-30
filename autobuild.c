@@ -33,8 +33,7 @@ int autobuild_builtin(WORD_LIST *list) {
   }
   list = loptend;
   if (!list) {
-    builtin_usage();
-    return (EX_USAGE);
+    return start_proc_00();
   }
   rval = EXECUTION_SUCCESS;
   return (rval);
