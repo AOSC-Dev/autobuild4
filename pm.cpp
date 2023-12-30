@@ -89,8 +89,8 @@ std::string autobuild_to_deb_version(const std::string &ab_version) {
     deb_version += " " + version_part;
     deb_version += ")";
   }
-//   invalid situations:
-  if (!deb_version.empty() && op_part == VersionOp::INVALID) {
+  // invalid situations:
+  if (deb_version.empty() && op_part == VersionOp::INVALID) {
     return {};
   }
 

@@ -28,7 +28,7 @@ ab_register_template() {
 	local _error=
 	for fragment in "build_${1}_probe" "build_${1}_configure" "build_${1}_build" "build_${1}_install"; do
 		if ! ab_typecheck -f "$fragment"; then
-			aberr "Internal error: Template $1 does not have required function '$i'."
+			aberr "Internal error: Template $1 does not have required function '${fragment}'."
 			_error=1
 		fi
 	done

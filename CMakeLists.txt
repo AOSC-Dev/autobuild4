@@ -57,6 +57,8 @@ set(COMMON_SRC
   ${CMAKE_CURRENT_BINARY_DIR}/abconfig.h
 )
 
+set(AB_INSTALL_PREFIX "${CMAKE_INSTALL_FULL_LIBDIR}/autobuild4")
+
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/abconfig.h
   COMMAND cmake
@@ -64,8 +66,10 @@ add_custom_command(
     -DAB_OUTPUT_FILE="${CMAKE_CURRENT_BINARY_DIR}/abconfig.h"
     -DAB_VERSION="${PROJECT_VERSION}"
     -DAB_URL="${PROJECT_HOMEPAGE_URL}"
-    -P "${CMAKE_CURRENT_SOURCE_DIR}/GenerateConfig.cmake"
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/GenerateConfig.cmake
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/GenerateConfig.cmake"
+  DEPENDS
+    ${CMAKE_CURRENT_SOURCE_DIR}/config.h.in
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/GenerateConfig.cmake
 )
 
 add_library(autobuild SHARED ${COMMON_SRC} autobuild.c)
@@ -91,8 +95,7 @@ message(STATUS "Using std::format")
   target_compile_definitions(autobuild PRIVATE HAS_STD_FMT)
 endif()
 
-set(AB_INSTALL_PREFIX "${CMAKE_INSTALL_LIBDIR}/autobuild4")
 install(PROGRAMS ab4.sh DESTINATION "${CMAKE_INSTALL_BINDIR}" RENAME autobuild)
 install(TARGETS autobuild LIBRARY DESTINATION "${AB_INSTALL_PREFIX}")
 install(DIRECTORY arch filters pm proc qa sets templates DESTINATION "${AB_INSTALL_PREFIX}")
-install(DIRECTORY etc/autobuild DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}")
+install(DIRECTORY etc/autobuild DESTINATION "${CMAKE_INSTALL_FULL_SYSCONFDIR}")

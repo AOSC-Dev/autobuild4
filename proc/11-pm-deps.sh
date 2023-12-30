@@ -17,5 +17,5 @@ if bool "$ABBUILDDEPONLY"; then
 	fi
     pm_install_deps $BUILDDEP
 else
-	pm_install_deps $BUILDDEP $PKGDEP $BUILDDEP $PKGPRDEP $TESTDEP
+	pm_install_deps $BUILDDEP $PKGDEP $PKGPRDEP $TESTDEP
 fi

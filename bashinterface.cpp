@@ -10,11 +10,11 @@
 
 extern "C" {
 #include "bashincludes.h"
+#include "execute_cmd.h"
 // unexported functions
 extern void with_input_from_string PARAMS((char *, const char *));
 extern int line_number;
 extern int remember_on_history;
-extern volatile int last_command_exit_value;
 }
 
 Diagnostic autobuild_get_backtrace() {
@@ -27,13 +27,13 @@ Diagnostic autobuild_get_backtrace() {
   GET_ARRAY_FROM_VAR("BASH_SOURCE", bash_source_v, bash_source_a);
   GET_ARRAY_FROM_VAR("BASH_LINENO", bash_lineno_v, bash_lineno_a);
 
+  array_push(bash_lineno_a, itos(executing_line_number()));
+
   funcname_cursor = funcname_a->head;
   bash_lineno_cursor = bash_lineno_a->head;
   bash_source_cursor = bash_source_a->head;
-  size_t max_depth = bash_lineno_a->num_elements + 1;
+  size_t max_depth = bash_source_a->num_elements + 1;
   diag.frames.reserve(max_depth);
-
-  // printf("last error: %d\n", line_number);
 
   // reverse order, most recent call last
   while (bash_lineno_cursor != NULL && bash_lineno_cursor->next != NULL &&
@@ -42,11 +42,14 @@ Diagnostic autobuild_get_backtrace() {
     auto source_str = bash_source_cursor->value;
     auto func_str = funcname_cursor->value;
     auto lineno = lineno_str ? atoi(lineno_str) : 0;
-    diag.frames.push_back({
-        .file = source_str ? source_str : "",
-        .function = func_str ? func_str : "",
-        .line = (lineno > 0) ? static_cast<uintptr_t>(lineno) : 0,
-    });
+    // skip empty frames
+    if (lineno_str || source_str || func_str) {
+      diag.frames.push_back({
+          .file = source_str ? source_str : "",
+          .function = func_str ? func_str : "",
+          .line = (lineno > 0) ? static_cast<uintptr_t>(lineno) : 0,
+      });
+    }
 
     funcname_cursor = funcname_cursor->next;
     bash_lineno_cursor = bash_lineno_cursor->next;
@@ -206,8 +209,10 @@ int autobuild_load_file(const char *filename, bool validate_only) {
     std::string input((std::istreambuf_iterator<char>(file)),
                       (std::istreambuf_iterator<char>()));
     file.close();
-    return evalstring(strdup(input.c_str()), filename,
-                      SEVAL_NOHIST | SEVAL_PARSEONLY);
+    int ret = evalstring(strdup(input.c_str()), filename,
+                         SEVAL_NOHIST | SEVAL_PARSEONLY);
+    line_number = 0;
+    return ret;
   }
   return source_file(filename, true);
 }

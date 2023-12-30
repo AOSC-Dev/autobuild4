@@ -691,7 +691,11 @@ static int ab_typecheck(WORD_LIST *list) {
   const auto *varname = get_argv1(loptend);
   if (!varname)
     return 1;
-  const auto *var = find_variable(varname);
+  auto *var = find_variable(varname);
+  if (!var) {
+    // find the name in the function context
+    var = find_function(varname);
+  }
   if (!var)
     return 1;
   if (var->attributes & expected_type)

@@ -161,7 +161,7 @@ ABINSTALL="dpkg"
 # Golang default build flags | Adapted from Arch Linux's Go package guildline.
 __GOFLAGS=(
 	'-mod=readonly'  # Ensure module files are not updated during building process.
-	'-trimpath'      # Required for eproducible build.
+	'-trimpath'      # Required for reproducible build.
 	'-modcacherw'    # Ensures that go modules creates a write-able path.
 	'buildmode=pie'  # Hardening binary.
 )
@@ -169,7 +169,6 @@ GOFLAGS="${__GOFLAGS[*]}"
 unset -f __GOFLAGS
 
 . /etc/autobuild/ab3cfg.sh
-[[ -d /etc/autobuild/ab3cfg.d ]] && recsr /etc/autobuild/ab3cfg.d/*!(.dpkg*|dist)
 
 if bool "$ABSTAGE2"; then
 	abwarn "Autobuild3 running in stage2 mode ..."
