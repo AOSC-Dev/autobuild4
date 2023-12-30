@@ -155,8 +155,10 @@ static inline void bash_array_push(ARRAY *array, char *value) {
   auto *new_ae = array_create_element(0, value);
   // new element is the last element of the array (tail of the linked-list)
   new_ae->prev = array->lastref;
-  new_ae->next = array->lastref->next;
-  array->lastref->next = new_ae;
+  if (array->lastref) {
+    new_ae->next = array->lastref->next;
+    array->lastref->next = new_ae;
+  }
   array->lastref = new_ae;
   array->num_elements++;
 }
