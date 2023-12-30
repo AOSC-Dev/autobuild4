@@ -7,9 +7,9 @@ BUILD_READY(){ true; }
 BUILD_FINAL(){ true; }
 
 # Autobuild settings
-arch_loadfile_strict "$AB"/etc/autobuild/ab3_defcfg.sh
-arch_loadfile_strict "$AB/arch/_common.sh"
-arch_loadfile_strict "$AB/arch/${ABHOST//\//_}.sh"
+load_strict /etc/autobuild/ab3_defcfg.sh
+load_strict "$AB/arch/_common.sh"
+load_strict "$AB/arch/${ABHOST//\//_}.sh"
 
 arch_loaddefines -2 defines || abdie "Failed to source defines file: $?."
 
@@ -29,4 +29,4 @@ fi
 
 abisdefined PKGREL || PKGREL=0
 
-arch_loadfile_strict "$AB/arch/_common_switches.sh"
+load_strict "$AB/arch/_common_switches.sh"

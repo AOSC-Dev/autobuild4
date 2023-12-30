@@ -168,8 +168,8 @@ __GOFLAGS=(
 GOFLAGS="${__GOFLAGS[*]}"
 unset -f __GOFLAGS
 
-. "$AB"/etc/autobuild/ab3cfg.sh
-[[ -d "$AB"/etc/autobuild/ab3cfg.d ]] && recsr "$AB"/etc/autobuild/ab3cfg.d/*!(.dpkg*|dist)
+. /etc/autobuild/ab3cfg.sh
+[[ -d /etc/autobuild/ab3cfg.d ]] && recsr /etc/autobuild/ab3cfg.d/*!(.dpkg*|dist)
 
 if bool "$ABSTAGE2"; then
 	abwarn "Autobuild3 running in stage2 mode ..."
