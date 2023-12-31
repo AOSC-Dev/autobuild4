@@ -10,7 +10,7 @@ for i in "${ABMPM[@]}"; do
     pm_build_package
     if [[ -d "${SYMDIR}" ]] && [ "$(ls -A "$SYMDIR")" ]; then
         pm_build_debug_package
-    else
+    elif bool "$ABSPLITDBG"; then
         abdie "ABSPLITDBG is set, but we can't find any symbol files."
     fi
     pm_install_all "${AB_PACKAGES[@]}"

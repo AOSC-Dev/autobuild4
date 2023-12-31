@@ -13,6 +13,6 @@ if [[ "$ABBUILD" == "$ABHOST" ]]; then
 			export CC=gcc CXX=g++ OBJC=gcc OBJCXX=g++
 		fi
 	fi
-else
+elif [[ "$ABHOST" != 'noarch' ]]; then
     abdie "Cross-compilation is no longer supported."
 fi

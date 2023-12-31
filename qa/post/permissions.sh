@@ -1,10 +1,15 @@
 #!/bin/bash
 ##permissions: Check for incorrect permissions.
 ##@copyright GPL-2.0+
-FILES="$(find "$PKGDIR/usr/bin" -type f -not -executable -print 2>/dev/null)"
+FILES="$(find "$PKGDIR/usr/bin" -type f -not -executable -print 2>/dev/null || true)"
 if [ -n "$FILES" ]; then
 	aberr "QA (E324): non-executable file(s) found in /usr/bin:\n\n${FILES}\n" | \
 		tee -a "$SRCDIR"/abqaerr.log
+fi
+
+# the following checks assumes the existence of /usr/lib
+if [ ! -d "$PKGDIR/usr/lib" ]; then
+	return 0
 fi
 
 FILES="$(find "$PKGDIR/usr/lib" -type f -name '*.so.*' -not -executable \
