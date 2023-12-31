@@ -796,7 +796,7 @@ static int abpm_aosc_archive(WORD_LIST *list) {
   path /= prefix;
   fs::create_directories(path);
   path /= package_filename;
-  fs::copy(package_filename, path);
+  fs::copy(package_filename, path, fs::copy_options::overwrite_existing);
   std::cout << fmt::format("'{0}' -> '{1}'", package_filename, path.string())
             << std::endl;
   return 0;
@@ -823,7 +823,7 @@ static int abpm_aosc_archive_new(WORD_LIST *list) {
     path /= prefix;
     fs::create_directories(path);
     path /= package_name;
-    fs::copy(package_name, path);
+    fs::copy(package_name, path, fs::copy_options::overwrite_existing);
     std::cout << fmt::format("'{0}' -> '{1}'", package_name, path.string())
               << std::endl;
   }
