@@ -2,11 +2,11 @@
 
 #include "abconfig.h"
 #include "abnativeelf.hpp"
+#include "abnativefunctions.h"
 #include "bashinterface.hpp"
 #include "pm.hpp"
 #include "stdwrapper.hpp"
 #include "threadpool.hpp"
-#include "abnativefunctions.h"
 
 #include <cassert>
 #include <cstdio>
@@ -381,20 +381,22 @@ static int set_arch_variables() {
   // set ARCH variables
   constexpr const auto this_arch = ab_get_current_architecture();
   // ARCH=$(abdetectarch)
-  bind_global_variable("ARCH", strdup(this_arch), 0);
+  bind_global_variable("ARCH", const_cast<char *>(this_arch), ASS_NOEVAL);
   // ABHOST=ARCH
-  bind_global_variable("ABHOST", strdup(this_arch), 0);
+  bind_global_variable("ABHOST", const_cast<char *>(this_arch), ASS_NOEVAL);
   // ABBUILD=ARCH
-  bind_global_variable("ABBUILD", strdup(this_arch), 0);
+  bind_global_variable("ABBUILD", const_cast<char *>(this_arch), ASS_NOEVAL);
 
   const std::string arch_triple =
       arch_targets[this_arch].template get<std::string>();
   // set HOST
   // HOST=${ARCH_TARGET["$ABHOST"]}
-  bind_global_variable("HOST", strdup(arch_triple.c_str()), 0);
+  bind_global_variable("HOST", const_cast<char *>(arch_triple.c_str()),
+                       ASS_NOEVAL);
   // set BUILD
   // BUILD=${ARCH_TARGET["$ABBUILD"]}
-  bind_global_variable("BUILD", strdup(arch_triple.c_str()), 0);
+  bind_global_variable("BUILD", const_cast<char *>(arch_triple.c_str()),
+                       ASS_NOEVAL);
 
   // set ABHOST_GROUP
   auto *arch_groups_v =
@@ -717,7 +719,7 @@ static int abpm_dump_builddep_req(WORD_LIST *list) {
 static int abpm_genver(WORD_LIST *list) {
   const auto argv1 = get_argv1(list);
   if (!argv1)
-    return 1;
+    return EX_BADUSAGE;
   std::cout << autobuild_to_deb_version(argv1) << std::endl;
   return 0;
 }
@@ -725,15 +727,15 @@ static int abpm_genver(WORD_LIST *list) {
 static int abelf_elf_copy_to_symdir(WORD_LIST *list) {
   const auto *src = get_argv1(list);
   if (!src)
-    return 1;
+    return EX_BADUSAGE;
   WORD_LIST *lists = list->next;
   const auto *buildid = get_argv1(lists);
   if (!buildid)
-    return 1;
+    return EX_BADUSAGE;
   lists = lists->next;
   const auto *symdir = get_argv1(lists);
   if (!symdir)
-    return 1;
+    return EX_BADUSAGE;
 
   return elf_copy_to_symdir(src, symdir, buildid);
 }
@@ -741,11 +743,11 @@ static int abelf_elf_copy_to_symdir(WORD_LIST *list) {
 static int abelf_copy_dbg(WORD_LIST *list) {
   const auto *src = get_argv1(list);
   if (!src)
-    return 1;
+    return EX_BADUSAGE;
   WORD_LIST *lists = list->next;
   const auto *dst = get_argv1(lists);
   if (!dst)
-    return 1;
+    return EX_BADUSAGE;
   std::unordered_set<std::string> symbols{};
   int ret = elf_copy_debug_symbols(src, dst, AB_ELF_USE_EU_STRIP, symbols);
   if (ret < 0)
@@ -755,6 +757,8 @@ static int abelf_copy_dbg(WORD_LIST *list) {
 
 static int abelf_copy_dbg_parallel(WORD_LIST *list) {
   auto args = get_all_args_vector(list);
+  if (args.empty())
+    return EX_BADUSAGE;
   const auto dst = args.back();
   args.pop_back();
   int ret = elf_copy_debug_symbols_parallel(args, dst.c_str());
@@ -993,13 +997,15 @@ static int abfp_lambda(WORD_LIST *list) {
   std::mt19937_64 rng(std::random_device{}());
   const std::string env_name = fmt::format("__abfp_env__{:2x}", rng());
   char *env_name_str = strdup(env_name.c_str());
-  auto *env_ptr_var = bind_global_variable(env_name_str, nullptr, 0);
+  auto *env_ptr_var = bind_global_variable(env_name.c_str(), nullptr, 0);
   env_ptr_var->value = reinterpret_cast<char *>(env);
   env_ptr_var->attributes |= (att_special | att_readonly | att_nounset);
 
   // patch in a new function call at the function prologue
   COMMAND *retore_call =
       generate_function_call(strdup("abfp_lambda_restore"), env_name_str);
+  if (env_name_str)
+    free(env_name_str);
   CONNECTION *conn = new CONNECTION{
       .first = retore_call,
       .second = orig_func_f,
