@@ -63,4 +63,4 @@ build_dune_install() {
 	fi
 }
 
-ab_register_template dune -- dune
+ab_register_template -l dune -- dune

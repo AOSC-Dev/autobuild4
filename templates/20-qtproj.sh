@@ -48,4 +48,4 @@ build_qtproj_install() {
 		|| abdie "Failed to install binaries: $?."
 }
 
-ab_register_template qtproj -- qmake
+ab_register_template -l qtproj -- qmake

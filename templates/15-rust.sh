@@ -100,4 +100,4 @@ build_rust_install() {
 	BUILD_FINAL
 }
 
-ab_register_template rust -- rustc cargo readelf
+ab_register_template -l rust -- rustc cargo readelf

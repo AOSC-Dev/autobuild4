@@ -40,4 +40,4 @@ build_npm_install() {
 		|| abdie "Could not install from NPM archives: $?."
 }
 
-ab_register_template npm -- node npm
+ab_register_template -l npm -- node npm
