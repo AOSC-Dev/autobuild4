@@ -5,6 +5,8 @@
 PATCHFLAGS=("-Np1" "-t")
 RPATCHFLAGS=("-Rp1" "-t")
 
+argprint(){ printf '%q ' "$@"; }
+
 ab_apply_patches() {
 	for i in "$@"; do
 		if [[ -e $i ]];then
