@@ -55,7 +55,7 @@ ab_match_archgroup() {
 		abdie "Misuse of ab_match_archgroup()! Refuse to proceed."
 	fi
 	# A little more robustness here
-	if [[ ! $ABHOST_GROUP ]]; then
+	if ! ab_typecheck -a ABHOST_GROUP; then
 		abwarn "Current ABHOST $ABHOST does not belong to any arch group."
 		abwarn "Taking false branch."
 		return 1

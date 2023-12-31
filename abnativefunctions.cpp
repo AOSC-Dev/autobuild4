@@ -160,6 +160,9 @@ static inline void bash_array_push(ARRAY *array, char *value) {
   if (array->lastref) {
     new_ae->next = array->lastref->next;
     array->lastref->next = new_ae;
+  } else {
+    array->head->next = new_ae;
+    new_ae->next = array->head;
   }
   array->lastref = new_ae;
   array->num_elements++;
@@ -380,26 +383,21 @@ static int set_arch_variables() {
 
   // set ARCH variables
   constexpr const auto this_arch = ab_get_current_architecture();
-  auto *arch_v = bind_variable("ARCH", const_cast<char *>("ARCH"), 0);
   // ARCH=$(abdetectarch)
-  arch_v->value = strdup(this_arch);
-  auto *host_v = bind_variable("ABHOST", const_cast<char *>("ABHOST"), 0);
+  bind_global_variable("ARCH", strdup(this_arch), 0);
   // ABHOST=ARCH
-  host_v->value = strdup(this_arch);
-  auto *build_v = bind_variable("ABBUILD", const_cast<char *>("ABBUILD"), 0);
+  bind_global_variable("ABHOST", strdup(this_arch), 0);
   // ABBUILD=ARCH
-  build_v->value = strdup(this_arch);
+  bind_global_variable("ABBUILD", strdup(this_arch), 0);
 
   const std::string arch_triple =
       arch_targets[this_arch].template get<std::string>();
   // set HOST
-  auto *host_var = bind_variable("HOST", const_cast<char *>("HOST"), 0);
   // HOST=${ARCH_TARGET["$ABHOST"]}
-  host_var->value = strdup(arch_triple.c_str());
+  bind_global_variable("HOST", strdup(arch_triple.c_str()), 0);
   // set BUILD
-  auto *build_var = bind_variable("BUILD", const_cast<char *>("BUILD"), 0);
   // BUILD=${ARCH_TARGET["$ABBUILD"]}
-  build_var->value = strdup(arch_triple.c_str());
+  bind_global_variable("BUILD", strdup(arch_triple.c_str()), 0);
 
   // set ABHOST_GROUP
   auto *arch_groups_v =
@@ -1074,9 +1072,13 @@ void register_all_native_functions() {
 }
 
 void register_builtin_variables() {
-  // TODO: error handling
-  setup_default_env_variables();
-  set_arch_variables();
+  int ret = 0;
+  if ((ret = setup_default_env_variables()))
+    get_logger()->error(
+        fmt::format("Failed to setup default env variables: {0}", ret));
+  if ((ret = set_arch_variables()))
+    get_logger()->error(fmt::format(
+        "Failed to setup default architecture variables: {0}", ret));
 }
 
 int start_proc_00() {
