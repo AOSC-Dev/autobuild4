@@ -13,6 +13,14 @@ load_strict "$AB/arch/${ABHOST//\//_}.sh"
 
 arch_loaddefines -2 defines || abdie "Failed to source defines file: $?."
 
+if abisdefined FAIL_ARCH && abisdefined ALLOW_ARCH; then
+	abdie "Can not define FAIL_ARCH and ALLOW_ARCH at the same time."
+fi
+
+# shellcheck disable=SC2053
+[[ ${ABHOST%%\/*} = $ALLOW_ARCH ]] ||
+	abdie "This package can only be built on $ALLOW_ARCH, not including $ABHOST."
+# shellcheck disable=SC2053
 [[ ${ABHOST%%\/*} != $FAIL_ARCH ]] ||
 	abdie "This package cannot be built for $FAIL_ARCH, e.g. $ABHOST."
 
@@ -30,3 +38,4 @@ fi
 abisdefined PKGREL || PKGREL=0
 
 load_strict "$AB/arch/_common_switches.sh"
+load_strict "$AB"/lib/builtin.sh

@@ -3,7 +3,6 @@
 ##@copyright GPL-2.0+
 
 # PEP517 is only supported in Python 3
-abtryexe python3 || pip3 || ((!ABSTRICT)) || ablibret
 
 build_pep517_probe(){
 	[ -f "$SRCDIR"/pyproject.toml ]
@@ -38,4 +37,4 @@ build_pep517_install() {
 	BUILD_FINAL
 }
 
-ab_register_template pep517 -- python3
+ab_register_template pep517 -- python3 pip3

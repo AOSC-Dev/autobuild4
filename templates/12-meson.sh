@@ -1,7 +1,6 @@
 #!/bin/bash
 # 12-meson.sh: Builds Meson sources
 ##@copyright GPL-2.0+
-abtryexe meson
 
 build_meson_probe(){
 	[ -e "$SRCDIR"/meson.build ]

@@ -54,4 +54,4 @@ build_gomod_install() {
 		|| abdie "Failed to return to source directory: $?."
 }
 
-ab_register_template go -- go
+ab_register_template gomod -- go

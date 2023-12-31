@@ -19,8 +19,22 @@ ab_register_filter() {
 	AB_FILTERS+=("${_filter_name}")
 }
 
+abtpl_check_exe() {
+	for exe in "$@"; do
+		if ! command -v "$exe" > /dev/null; then
+			abdie "Template ${name} requires $exe but was not found on the system."
+		fi
+	done
+}
+
 # shellcheck disable=SC2317
 ab_register_template() {
+	local delayed_check=0
+	if [ "$1" = "-l" ]; then
+	    # delayed check
+		delayed_check=1
+        shift
+	fi
 	local name="$1"
 	if [ -z "$1" ]; then
         abdie "Internal error: No template specified"
@@ -37,11 +51,11 @@ ab_register_template() {
 	fi
 	if [ "$2" = '--' ]; then
 		shift 2;
-		for exe in "$@"; do
-			if ! command -v "$exe" > /dev/null; then
-				abdie "Template ${name} requires $exe but was not found on the system."
-			fi
-		done
+		if ((delayed_check)); then
+			# TODO
+		    true
+		fi
+		name="${name}" abtpl_check_exe "$@"
 	fi
 	abdbg "Registered build template: ${name}"
     AB_TEMPLATES+=("${name}")
