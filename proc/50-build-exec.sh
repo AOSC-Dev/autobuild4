@@ -6,7 +6,11 @@ arch_loadfile_strict -2 prepare
 
 cd "$SRCDIR"
 
-if ! ab_typecheck -f "build_${ABTYPE}_audit"; then
+if ab_typecheck -f "build_${ABTYPE}_check"; then
+    "build_${ABTYPE}_check"
+fi
+
+if ab_typecheck -f "build_${ABTYPE}_audit"; then
     "build_${ABTYPE}_audit" || abdie "Audit failed: $?."
 fi
 

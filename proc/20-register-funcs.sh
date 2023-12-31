@@ -49,11 +49,14 @@ ab_register_template() {
 	if [ "$_error" = 1 ]; then
 		abdie "Internal error: Template ${name} contains error. Can't continue."
 	fi
+	tmp_function() {
+		abtpl_check_exe "${bins[@]}"
+	}
 	if [ "$2" = '--' ]; then
 		shift 2;
 		if ((delayed_check)); then
-			# TODO
-		    true
+		    local bins=("$@")
+			abfp_lambda tmp_function "build_${1}_check" -- name bins
 		fi
 		name="${name}" abtpl_check_exe "$@"
 	fi
