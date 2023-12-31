@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <mutex>
 #include <nlohmann/json.hpp>
 #include <vector>
 
@@ -8,17 +9,26 @@
 
 class BaseLogger {
 public:
-  BaseLogger() : m_level(LogLevel::Info) {};
+  BaseLogger() : m_io_mutex(), m_level(LogLevel::Info){};
   virtual ~BaseLogger() = default;
   virtual void log(LogLevel lvl, std::string message) = 0;
   virtual void logDiagnostic(Diagnostic diagnostic) = 0;
   virtual void logException(std::string message) = 0;
   virtual const char *loggerName() = 0;
   inline void setLogLevel(const LogLevel lvl) { m_level = lvl; }
-  inline void info(const std::string& message) { log(LogLevel::Info, message); }
-  inline void debug(const std::string& message) { log(LogLevel::Debug, message); }
-  inline void warning(const std::string& message) { log(LogLevel::Warning, message); }
-  inline void error(const std::string& message) { log(LogLevel::Error, message); }
+  inline void info(const std::string &message) { log(LogLevel::Info, message); }
+  inline void debug(const std::string &message) {
+    log(LogLevel::Debug, message);
+  }
+  inline void warning(const std::string &message) {
+    log(LogLevel::Warning, message);
+  }
+  inline void error(const std::string &message) {
+    log(LogLevel::Error, message);
+  }
+
+protected:
+  std::mutex m_io_mutex;
 
 private:
   LogLevel m_level;

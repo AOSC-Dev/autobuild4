@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+typedef std::lock_guard<std::mutex> io_lock_guard;
+
 inline const char *level_to_string(const LogLevel level) {
   switch (level) {
   case LogLevel::Debug:
@@ -20,6 +22,7 @@ inline const char *level_to_string(const LogLevel level) {
 }
 
 void PlainLogger::log(const LogLevel lvl, const std::string message) {
+  io_lock_guard guard(this->m_io_mutex);
   switch (lvl) {
   case LogLevel::Info:
     std::cout << "[INFO]:  ";
@@ -43,6 +46,7 @@ void PlainLogger::log(const LogLevel lvl, const std::string message) {
 }
 
 void PlainLogger::logDiagnostic(Diagnostic diagnostic) {
+  io_lock_guard guard(this->m_io_mutex);
   this->error("Build error detected ^o^");
   for (const auto &diag : diagnostic.frames) {
     const auto filename = diag.file.empty() ? "<unknown>" : diag.file;
@@ -56,6 +60,7 @@ void PlainLogger::logDiagnostic(Diagnostic diagnostic) {
 }
 
 void PlainLogger::logException(std::string message) {
+  io_lock_guard guard(this->m_io_mutex);
   std::cout << "autobuild encountered an error and couldn't continue."
             << std::endl;
   if (!message.empty()) {
@@ -75,6 +80,7 @@ using namespace nlohmann::literals;
 void JsonLogger::log(LogLevel lvl, std::string message) {
   const json line = {
       {"event", "log"}, {"level", level_to_string(lvl)}, {"message", message}};
+  io_lock_guard guard(this->m_io_mutex);
   std::cout << line.dump() << std::endl;
 }
 
@@ -88,15 +94,18 @@ void JsonLogger::logDiagnostic(Diagnostic diagnostic) {
                               {"line", frame.line},
                               {"function", frame.function}});
   }
+  io_lock_guard guard(this->m_io_mutex);
   std::cout << line.dump() << std::endl;
 }
 
 void JsonLogger::logException(std::string message) {
   json line = {{"event", "exception"}, {"level", "CRIT"}, {"message", message}};
+  io_lock_guard guard(this->m_io_mutex);
   std::cout << line.dump() << std::endl;
 }
 
 void ColorfulLogger::log(LogLevel lvl, std::string message) {
+  io_lock_guard guard(this->m_io_mutex);
   switch (lvl) {
   case LogLevel::Info:
     std::cout << "[\x1b[96mINFO\x1b[0m]:  ";
@@ -124,6 +133,7 @@ void ColorfulLogger::logDiagnostic(Diagnostic diagnostic) {
 }
 
 void ColorfulLogger::logException(std::string message) {
+  io_lock_guard guard(this->m_io_mutex);
   std::cout << "\x1b[1;31m"
             << "autobuild encountered an error and couldn't continue."
             << "\x1b[0m" << std::endl;
