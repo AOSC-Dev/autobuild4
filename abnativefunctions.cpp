@@ -6,6 +6,7 @@
 #include "pm.hpp"
 #include "stdwrapper.hpp"
 #include "threadpool.hpp"
+#include "abnativefunctions.h"
 
 #include <cassert>
 #include <cstdio>
@@ -21,17 +22,12 @@
 using json = nlohmann::json;
 
 extern "C" {
-#include "abnativefunctions.h"
 #include "bashincludes.h"
 }
 
 #ifdef ALT_ARRAY_IMPLEMENTATION
 #error Bash compiled with ALT_ARRAY_IMPLEMENTATION is not supported
 #endif
-
-static inline BaseLogger *get_logger() {
-  return reinterpret_cast<BaseLogger *>(logger);
-}
 
 static bool set_registered_flag() {
   if (find_variable("__ABNR"))

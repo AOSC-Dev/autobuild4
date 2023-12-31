@@ -1,6 +1,7 @@
 #include "abnativeelf.hpp"
 #include "stdwrapper.hpp"
 #include "threadpool.hpp"
+#include "abnativefunctions.h"
 
 #include <cstdarg>
 #include <cstring>
