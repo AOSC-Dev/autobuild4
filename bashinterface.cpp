@@ -137,7 +137,8 @@ int autobuild_bool(const char *value) {
   return 2;
 }
 
-SHELL_VAR *autobuild_copy_variable(SHELL_VAR *src, const char *dst_name) {
+SHELL_VAR *autobuild_copy_variable(SHELL_VAR *src, const char *dst_name,
+                                   bool reference) {
   constexpr int att_type_mask =
       att_array | att_function | att_integer | att_assoc;
   if (!src) {
@@ -152,26 +153,30 @@ SHELL_VAR *autobuild_copy_variable(SHELL_VAR *src, const char *dst_name) {
       dst = bind_variable(dst_name, src->name, 0);
     }
   }
-  if ((src_types & att_type_mask) == (dst->attributes & att_type_mask)) {
+  if ((src_types & att_type_mask) != (dst->attributes & att_type_mask)) {
     return {};
   }
   if (src_types & att_array) {
     ARRAY *src_cells = array_cell(src);
     ARRAY *dst_cells = array_cell(dst);
-    array_flush(dst_cells);
-    dst_cells = array_copy(src_cells);
+    array_dispose(dst_cells);
+    dst->value = (char *)array_copy(src_cells);
     return dst;
   } else if (src_types & att_assoc) {
     HASH_TABLE *src_cells = assoc_cell(src);
     HASH_TABLE *dst_cells = assoc_cell(dst);
-    assoc_flush(dst_cells);
-    dst_cells = assoc_copy(src_cells);
+    assoc_dispose(dst_cells);
+    dst->value = (char *)assoc_copy(src_cells);
     return dst;
   }
-  const char *args[3]{"-n", dst_name, nullptr};
-  auto options = std::unique_ptr<WORD_LIST, decltype(&dispose_words)>{
-      strvec_to_word_list((char **)args, true, 0), &dispose_words};
-  declare_builtin(options.get());
+  if (reference) {
+    const char *args[3]{"-n", dst_name, nullptr};
+    auto options = std::unique_ptr<WORD_LIST, decltype(&dispose_words)>{
+        strvec_to_word_list((char **)args, true, 0), &dispose_words};
+    declare_builtin(options.get());
+  } else {
+    dst->value = strdup(src->value);
+  }
   return dst;
 }
 

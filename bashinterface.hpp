@@ -11,6 +11,7 @@
 // forward declaration for word_list
 typedef struct word_list WORD_LIST;
 typedef int (*builtin_func_t)(WORD_LIST *);
+typedef struct variable SHELL_VAR;
 
 Diagnostic autobuild_get_backtrace();
 int autobuild_bool(const char *value);
@@ -21,6 +22,7 @@ void autobuild_register_builtins(
     std::unordered_map<const char *, builtin_func_t> functions);
 int autobuild_switch_strict_mode(const bool enable);
 int autobuild_copy_variable_value(const char *src_name, const char *dst_name);
+SHELL_VAR *autobuild_copy_variable(SHELL_VAR *src, const char *dst_name, bool reference = true);
 int autobuild_load_all_from_directory(const char *directory);
 
 class ABStrictModeGuard {

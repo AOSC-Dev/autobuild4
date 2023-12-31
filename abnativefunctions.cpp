@@ -898,6 +898,131 @@ static int abpp_gil(WORD_LIST *list) {
   return 1;
 }
 
+struct abfp_lambda_env {
+  uint8_t magic0;
+  uint8_t magic1;
+  uint8_t magic2;
+  uint8_t zero;
+  std::vector<SHELL_VAR *> *vars;
+};
+
+static int abfp_lambda_restore(WORD_LIST *list) {
+  const auto *env_name = get_argv1(list);
+  if (!env_name)
+    return EX_BADUSAGE;
+  auto *env_ptr_var = find_global_variable(env_name);
+  if (!env_ptr_var || !(env_ptr_var->attributes & att_special)) {
+    return EX_BADUSAGE;
+  }
+  auto *env_ptr = reinterpret_cast<abfp_lambda_env *>(env_ptr_var->value);
+  if (env_ptr->magic0 != 'E' || env_ptr->magic1 != 'N' ||
+      env_ptr->magic2 != 'V' || env_ptr->zero != 0x00) {
+    return EX_BADASSIGN;
+  }
+  // find current context (from variables.c:all_local_variables)
+  VAR_CONTEXT *vc;
+  for (vc = shell_variables; vc != nullptr; vc = vc->down) {
+    if (vc_isfuncenv(vc) && vc->scope == variable_context) {
+      break;
+    }
+  }
+  if (vc == nullptr) {
+    return EX_BADASSIGN;
+  }
+  // move variables from env_ptr to current context
+  for (auto *var : *env_ptr->vars) {
+    var->context = variable_context;
+    var->attributes |= att_local;
+    if (!shell_variables->table)
+      shell_variables->table = hash_create(4);
+    BUCKET_CONTENTS *elem =
+        hash_insert(strdup(var->name), shell_variables->table, HASH_NOSRCH);
+    elem->data = var;
+  }
+  // clean up the storage variable
+  delete env_ptr->vars;
+  free(env_ptr);
+  env_ptr_var->value = nullptr;
+  env_ptr_var->attributes |= att_nofree;
+  env_ptr_var->attributes &= ~att_nounset;
+  unbind_variable(env_name);
+  env_ptr_var = nullptr;
+
+  return 0;
+}
+
+static int abfp_lambda(WORD_LIST *list) {
+  constexpr const char *tmp_var_name = "__abfp_lambda_tmp_var__";
+  const auto *orig_func_name = get_argv1(list);
+  if (!orig_func_name)
+    return EX_BADUSAGE;
+  auto *orig_func = find_function(orig_func_name);
+  if (!orig_func || !(orig_func->attributes & att_function)) {
+    return EX_BADUSAGE;
+  }
+  list = list->next;
+  const auto *new_func_name = get_argv1(list);
+  if (!new_func_name)
+    return EX_BADUSAGE;
+  auto *orig_func_f = function_cell(orig_func);
+  auto *vars = new std::vector<SHELL_VAR *>{};
+  for (list = list->next; list; list = list->next) {
+    const auto captured = get_argv1(list);
+    if (memcmp(captured, "--", 2) == 0) {
+      continue;
+    }
+    auto *captured_var = find_variable(captured);
+    auto *copied = autobuild_copy_variable(captured_var, tmp_var_name, false);
+    if (!copied) {
+      return EX_BADASSIGN;
+    }
+    SHELL_VAR *recreated = new SHELL_VAR{
+        .name = strdup(captured),
+        .value = copied->value,
+        .attributes = copied->attributes,
+        .context = 0,
+    };
+    // disconnect the variable from the scope
+    copied->attributes |= att_nofree;
+    unbind_variable(tmp_var_name);
+    vars->push_back(recreated);
+  }
+
+  abfp_lambda_env *env = new abfp_lambda_env{
+      .magic0 = 'E',
+      .magic1 = 'N',
+      .magic2 = 'V',
+      .zero = 0x00,
+      .vars = vars,
+  };
+  std::mt19937_64 rng(std::random_device{}());
+  const std::string env_name = fmt::format("__abfp_env__{:2x}", rng());
+  char *env_name_str = strdup(env_name.c_str());
+  auto *env_ptr_var = bind_global_variable(env_name_str, nullptr, 0);
+  env_ptr_var->value = reinterpret_cast<char *>(env);
+  env_ptr_var->attributes |= (att_special | att_readonly | att_nounset);
+
+  // patch in a new function call at the function prologue
+  COMMAND *retore_call =
+      generate_function_call(strdup("abfp_lambda_restore"), env_name_str);
+  CONNECTION *conn = new CONNECTION{
+      .first = retore_call,
+      .second = orig_func_f,
+      .connector = ';',
+  };
+  COMMAND *connector = new COMMAND{
+      .type = cm_connection,
+      .flags = 0,
+      .redirects = nullptr,
+      .value = {.Connection = conn},
+  };
+
+  orig_func->value = nullptr;
+  unbind_func(orig_func_name);
+  bind_function(new_func_name, connector);
+  return 0;
+}
+
 extern "C" {
 void register_all_native_functions() {
   if (set_registered_flag())
@@ -937,6 +1062,8 @@ void register_all_native_functions() {
       {"abpm_dump_builddep_req", abpm_dump_builddep_req},
       {"abpp_parallelize", abpp_parallelize},
       {"abpp_gil", abpp_gil},
+      {"abfp_lambda", abfp_lambda},
+      {"abfp_lambda_restore", abfp_lambda_restore},
   };
 
   // Initialize logger
