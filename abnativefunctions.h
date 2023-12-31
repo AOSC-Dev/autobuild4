@@ -5,7 +5,7 @@ extern "C" {
 #endif
 
 struct Logger;
-static struct Logger *logger = 0;
+extern struct Logger *logger;
 
 void register_all_native_functions();
 void register_builtin_variables();

@@ -28,6 +28,7 @@ extern "C" {
 #ifdef ALT_ARRAY_IMPLEMENTATION
 #error Bash compiled with ALT_ARRAY_IMPLEMENTATION is not supported
 #endif
+struct Logger *logger = nullptr;
 
 static bool set_registered_flag() {
   if (find_variable("__ABNR"))

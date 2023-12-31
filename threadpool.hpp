@@ -42,9 +42,9 @@ public:
           }
           auto task = std::move(m_queue.back());
           m_queue.pop_back();
+          lock.unlock();
           if (process_for_result(m_processor, task) != 0)
             m_has_error = true;
-          lock.unlock();
         }
       }});
     }

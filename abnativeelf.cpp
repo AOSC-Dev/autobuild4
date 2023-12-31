@@ -445,6 +445,21 @@ private:
   size_t m_size;
 };
 
+template <typename T> class GuardedSet {
+public:
+  GuardedSet() = default;
+  GuardedSet(std::unordered_set<T> set) : m_set{std::move(set)} {}
+  template <typename Iterator> void insert(Iterator begin, Iterator end) {
+    auto lock_guard = std::lock_guard<std::mutex>{m_mutex};
+    m_set.insert(begin, end);
+  }
+  const std::unordered_set<T> &get_set() const { return m_set; }
+
+private:
+  std::mutex m_mutex;
+  std::unordered_set<T> m_set;
+};
+
 static inline int forked_execvp(const char *path, char *const argv[]) {
   pid_t pid = fork();
   if (pid == 0) {
@@ -457,8 +472,7 @@ static inline int forked_execvp(const char *path, char *const argv[]) {
 }
 
 int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
-                           int flags,
-                           std::unordered_set<std::string> &symbols) {
+                           int flags, GuardedSet<std::string> &symbols) {
   int fd = open(src_path, O_RDONLY, 0);
   if (fd < 0) {
     perror("open");
@@ -575,13 +589,15 @@ public:
               src_path.c_str(), m_symdir.c_str(),
               AB_ELF_USE_EU_STRIP | AB_ELF_FIND_SO_DEPS, m_sodeps);
         }),
-        m_symdir(symdir), m_sodeps({}) {}
+        m_symdir(symdir), m_sodeps() {}
 
-  const std::unordered_set<std::string> get_sodeps() const { return m_sodeps; }
+  const std::unordered_set<std::string> get_sodeps() const {
+    return m_sodeps.get_set();
+  }
 
 private:
   const std::string m_symdir;
-  std::unordered_set<std::string> m_sodeps;
+  GuardedSet<std::string> m_sodeps;
 };
 
 int elf_copy_debug_symbols_parallel(const std::vector<std::string> &directories,
