@@ -10,5 +10,10 @@
 #include "variables.h"
 #include "builtins/common.h"
 #include "builtins/builtext.h"
+#include "execute_cmd.h"
 #include "config.h"
 // clang-format on
+
+// from unexported trap.h
+extern int running_trap;
+extern int trap_saved_exit_value;

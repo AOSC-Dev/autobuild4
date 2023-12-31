@@ -23,8 +23,6 @@ using json = nlohmann::json;
 extern "C" {
 #include "abnativefunctions.h"
 #include "bashincludes.h"
-#include "execute_cmd.h"
-extern volatile int last_command_exit_value;
 }
 
 #ifdef ALT_ARRAY_IMPLEMENTATION
@@ -324,8 +322,13 @@ static int abdbg(WORD_LIST *list) {
 static int abdie(WORD_LIST *list) {
   const auto message = get_argv1(list);
   const auto exit_value = list ? get_argv1(list->next) : nullptr;
-  const int exit_code =
-      exit_value ? std::atoi(exit_value) : last_command_exit_value;
+  const int real_exit_code =
+      running_trap ? trap_saved_exit_value : last_command_exit_value;
+  // do nothing if we are in a trap and the exit value is 0
+  // we want to continue the execution if no errors occurred
+  if (running_trap && trap_saved_exit_value == 0)
+    return 0;
+  const int exit_code = exit_value ? std::atoi(exit_value) : real_exit_code;
 
   auto *log = reinterpret_cast<BaseLogger *>(logger);
 
@@ -666,7 +669,7 @@ static int ab_typecheck(WORD_LIST *list) {
   int opt{};
   int expected_type = 0;
   reset_internal_getopt();
-  while ((opt = internal_getopt(list, const_cast<char *>("ahsif")))) {
+  while ((opt = internal_getopt(list, const_cast<char *>("ahsif"))) != -1) {
     switch (opt) {
     case 'a':
       expected_type |= att_array;

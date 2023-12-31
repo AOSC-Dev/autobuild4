@@ -10,7 +10,6 @@
 
 extern "C" {
 #include "bashincludes.h"
-#include "execute_cmd.h"
 // unexported functions
 extern void with_input_from_string PARAMS((char *, const char *));
 extern int line_number;
@@ -57,8 +56,18 @@ Diagnostic autobuild_get_backtrace() {
     max_depth--;
   }
 
-  diag.message =
-      "Command exited with " + std::to_string(last_command_exit_value);
+  // special case: interactive shell
+  if (interactive_shell && diag.frames.size() == 0) {
+    diag.frames.push_back({
+        .file = "<stdin>",
+        .function = "<interactive shell>",
+        .line = static_cast<uintptr_t>(executing_line_number()),
+    });
+  }
+
+  diag.message = fmt::format("Command exited with {0}.",
+                             running_trap ? trap_saved_exit_value
+                                          : last_command_exit_value);
   return diag;
 }
 

@@ -27,7 +27,9 @@ ab_arch_setflags() {
             for f in "${features[@]}"; do
                 for cc in "${_cc}" 'COMMON'; do
                     local flagname="${flagtype}_${cc}${suffix}${f}"
-                    ab_concatarray "${flagtype}" "${flagname}"
+                    if abisarray "${flagname}"; then
+                        ab_concatarray "${flagtype}" "${flagname}"
+                    fi
                 done
             done
         done
