@@ -7,7 +7,7 @@
 TMPDIR="$SRCDIR"
 
 # Misc building flags
-ABARCHIVE=autobuild-aoscarchive	# Archive program
+ABARCHIVE=abpm_aosc_archive	# Archive program
 ABSHADOW=yes			# Shall shadow builds be performed by default?
 NOLTO=no			# Enable LTO by default.
 USECLANG=no			# Are we using clang?

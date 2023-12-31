@@ -30,7 +30,7 @@ fi
 
 cd "$SRCDIR" || abdie "Unable to cd $SRCDIR: $?."
 
-__overrides="$(arch_findfile -2 overrides)"
+__overrides="$(arch_findfile -2 overrides || true)"
 if [ -d "${__overrides}" ]; then
     abinfo "Deploying files in overrides ..."
 	cp -arvT "${__overrides}"/ "$PKGDIR/" || \
@@ -39,5 +39,5 @@ fi
 
 cd "$SRCDIR" || abdie "Unable to cd $SRCDIR: $?."
 
-unalias BUILD_{START,READY,FINAL}
+unset -f BUILD_{START,READY,FINAL}
 unset __overrides

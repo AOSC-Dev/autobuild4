@@ -6,7 +6,7 @@ pushd "$PKGDIR" > /dev/null || exit 127
 
 for ii in "${AB_FILTERS[@]}"; do
 	abinfo "Running post-build filter: $ii ..."
-	"filter_$ii"
+	"$ii"
 done
 
 popd > /dev/null || exit 128

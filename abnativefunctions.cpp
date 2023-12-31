@@ -1051,7 +1051,7 @@ void register_all_native_functions() {
       {"elf_install_symfile", abelf_elf_copy_to_symdir},
       {"elf_copydbg", abelf_copy_dbg},
       // new stuff
-      {"aosc-archive", abpm_aosc_archive},
+      {"autobuild-aoscarchive", abpm_aosc_archive},
       {"ab_remove_args", ab_filter_args},
       {"ab_read_list", ab_read_listing_file},
       {"ab_tostringarray", ab_tostringarray},

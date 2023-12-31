@@ -34,23 +34,23 @@ var
 )
 
 ACCEPTABLE2=(
-usr/bin
-usr/include
-usr/gnemul
-usr/lib
-usr/libexec
-usr/local
-usr/share
-usr/src
+bin
+include
+gnemul
+lib
+libexec
+local
+share
+src
 )
 
 ACCEPTABLE3=(
-usr/local/bin
-usr/local/include
-usr/local/lib
-usr/local/libexec
-usr/local/share
-usr/local/src
+bin
+include
+lib
+libexec
+share
+src
 )
 
 abqa_build_find_expr() {
@@ -68,27 +68,27 @@ EXPR3=()
 abqa_build_find_expr ACCEPTABLE EXPR1
 abqa_build_find_expr ACCEPTABLE2 EXPR2
 abqa_build_find_expr ACCEPTABLE3 EXPR3
-PATHS="$(find "$PKGDIR" -maxdepth 1 "${EXPR1[@]}" -type d 2>/dev/null)"
-PATHS2="$(find "$PKGDIR"/usr -mindepth 1 -maxdepth 1 "${EXPR2[@]}" -type d 2>/dev/null)"
-PATHS3="$(find "$PKGDIR"/usr/local -mindepth 1 -maxdepth 1 "${EXPR3[@]}" -type d 2>/dev/null)"
+PATHS="$(find "$PKGDIR" -mindepth 1 -maxdepth 1 '(' "${EXPR1[@]}" ')' -type d 2>/dev/null)"
+PATHS2="$(find "$PKGDIR"/usr -mindepth 1 -maxdepth 1 '(' "${EXPR2[@]}" ')' -type d 2>/dev/null || true)"
+PATHS3="$(find "$PKGDIR"/usr/local -mindepth 1 -maxdepth 1 '(' "${EXPR3[@]}" ')' -type d 2>/dev/null || true)"
 
 if [ -n "$PATHS" ]; then
 	aberr "QA (E321): found unexpected path(s) in package:\n\n$PATHS\n"
-	exit 1
+	return 1
 fi
 if [ -n "$PATHS2" ]; then
 	aberr "QA (E321): found unexpected path(s) in package:\n\n$PATHS2\n"
-	exit 1
+	return 1
 fi
 if [ -n "$PATHS3" ]; then
 	aberr "QA (E321): found unexpected path(s) in package:\n\n$PATHS3\n"
-	exit 1
+	return 1
 fi
 
 
 for i in "$PKGDIR"/{dev,home,proc,sys,tmp}; do
 	if [ -e "$i" ]; then
 		abwarn "QA (E321): found pseudo filesystem, template, or temporary directory(s) in package (building aosc-aaa?):\n\n${i}\n"
-		exit 1
+		return 1
 	fi
 done
