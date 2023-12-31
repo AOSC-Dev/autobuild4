@@ -28,7 +28,7 @@ OBJCXXFLAGS_COMMON_WEIRD=()
 OBJCXXFLAGS_COMMON_PERMISSIVE=('-fpermissive')
 # RUST Flags.
 RUSTFLAGS_COMMON=()
-RUSTFLAGS_COMMON_OPTI=('-Ccodegen-units=1' '-Copt-level=3')
+RUSTFLAGS_COMMON_OPTI=('-Ccodegen-units=1' '-Copt-level=3' '-Cdebuginfo=line-tables-only')
 RUSTFLAGS_COMMON_WEIRD=()
 # Use clang + lld for processing LTO
 RUSTFLAGS_COMMON_OPTI_LTO=(

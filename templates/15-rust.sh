@@ -6,6 +6,7 @@ DEFAULT_CARGO_CONFIG=(
 --config 'profile.release.lto = true'
 --config 'profile.release.incremental = false'
 --config 'profile.release.codegen-units = 1'
+--config 'profile.release.strip = false'
 )
 
 build_rust_prepare_registry() {
@@ -53,6 +54,12 @@ build_rust_configure() {
 	export PKG_CONFIG_SYSROOT_DIR=/
 
 	BUILD_START
+	if bool AB_FLAGS_O3; then
+		DEFAULT_CARGO_CONFIG+=(--config 'profile.release.opt-level = 3')
+	fi
+	if ! bool ABSPLITDBG; then
+	    DEFAULT_CARGO_CONFIG+=(--config 'profile.release.debug = 0')
+	fi
 	[ -f "$SRCDIR"/Cargo.lock ] \
 		|| abwarn "This project is lacking the lock file. Please report this issue to the upstream."
 	if ! dpkg --compare-versions "$(build_rust_get_installed_rust_version)" ge '1.70.0'; then
