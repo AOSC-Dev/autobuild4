@@ -2,7 +2,9 @@
 ##proc/build_do: So we build it now
 ##@copyright GPL-2.0+
 
-arch_loadfile_strict -2 prepare
+if arch_findfile -2 prepare > /dev/null; then
+    arch_loadfile_strict -2 prepare
+fi
 
 cd "$SRCDIR"
 
@@ -22,7 +24,9 @@ cd "$SRCDIR" || abdie "Unable to cd $SRCDIR: $?."
 
 [ -d "$PKGDIR" ] || abdie "50-build: Suspecting build failure due to missing PKGDIR."
 
-arch_loadfile_strict -2 beyond
+if arch_findfile -2 beyond; then
+    arch_loadfile_strict -2 beyond
+fi
 
 cd "$SRCDIR" || abdie "Unable to cd $SRCDIR: $?."
 

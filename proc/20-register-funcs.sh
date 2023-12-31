@@ -57,8 +57,9 @@ ab_register_template() {
 		if ((delayed_check)); then
 		    local bins=("$@")
 			abfp_lambda tmp_function "build_${1}_check" -- name bins
+		else
+			name="${name}" abtpl_check_exe "$@"
 		fi
-		name="${name}" abtpl_check_exe "$@"
 	fi
 	abdbg "Registered build template: ${name}"
     AB_TEMPLATES+=("${name}")
