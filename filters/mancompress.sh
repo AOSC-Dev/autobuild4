@@ -23,8 +23,10 @@ filter_mancompress() {
 			fi
 		done
 
-		abinfo "Compressing man page ${__mancomp_todo[*]} ..."
-		xz --lzma2=preset=6e,pb=0 -- "${__mancomp_todo[@]}"
+		if ((${#__mancomp_todo})); then
+			abinfo "Compressing man page ${__mancomp_todo[*]} ..."
+			xz --lzma2=preset=6e,pb=0 -- "${__mancomp_todo[@]}"
+		fi
 	fi
 
 	unset __mancomp_todo __mancomp_lnk
