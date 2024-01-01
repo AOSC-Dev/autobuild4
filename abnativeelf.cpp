@@ -605,7 +605,7 @@ int elf_copy_debug_symbols_parallel(const std::vector<std::string> &directories,
   ELFWorkerPool pool{dst_path};
   for (const auto &directory : directories) {
     for (const auto &entry : fs::recursive_directory_iterator(directory)) {
-      if (entry.is_regular_file()) {
+      if (entry.is_regular_file() && (!entry.is_symlink())) {
         // queue the files
         pool.enqueue(static_cast<std::string>(entry.path().string()));
       }
