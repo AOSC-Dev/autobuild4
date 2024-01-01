@@ -47,16 +47,16 @@ if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif()
 
 set(COMMON_SRC
-  bashincludes.h
-  bashinterface.cpp
-  bashinterface.hpp
-  abnativefunctions.cpp
-  abnativefunctions.h
-  abnativeelf.cpp
-  logger.hpp
-  logger.cpp
-  pm.hpp
-  pm.cpp
+  native/bashincludes.h
+  native/bashinterface.cpp
+  native/bashinterface.hpp
+  native/abnativefunctions.cpp
+  native/abnativefunctions.h
+  native/abnativeelf.cpp
+  native/logger.hpp
+  native/logger.cpp
+  native/pm.hpp
+  native/pm.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/abconfig.h
 )
 
@@ -75,10 +75,13 @@ add_custom_command(
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/GenerateConfig.cmake
 )
 
-add_library(autobuild SHARED ${COMMON_SRC} autobuild.c)
+add_library(autobuild SHARED ${COMMON_SRC} native/autobuild.c)
 target_include_directories(autobuild PRIVATE "${BASH_INCLUDE}" "${BASH_INNER_INCLUDE}" "${CMAKE_CURRENT_BINARY_DIR}")
 target_link_libraries(autobuild PRIVATE nlohmann_json::nlohmann_json)
-target_precompile_headers(autobuild PRIVATE $<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/logger.hpp ${CMAKE_CURRENT_SOURCE_DIR}/stdwrapper.hpp>)
+target_precompile_headers(autobuild PRIVATE
+  $<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/native/logger.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/native/stdwrapper.hpp>
+)
 
 if (NOT HAVE_STD_FS)
   message(STATUS "Target STL does not have filesystem support, falling back to Boost")
