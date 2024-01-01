@@ -1090,6 +1090,7 @@ int register_builtin_variables() {
         "Failed to setup default architecture variables: {0}", ret));
     return ret;
   }
+  return 0;
 }
 
 int start_proc_00() {

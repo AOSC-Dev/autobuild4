@@ -10,7 +10,12 @@
 #include "variables.h"
 #include "builtins/common.h"
 #include "builtins/builtext.h"
+#include "version.h"
+#if DEFAULT_COMPAT_LEVEL > 51
 #include "execute_cmd.h"
+#else
+#include "polyfill_execute_cmd.h"
+#endif
 #include "config.h"
 // clang-format on
 
