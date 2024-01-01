@@ -1,6 +1,8 @@
 #include "logger.hpp"
 #include "abconfig.h"
+#include "stdwrapper.hpp"
 
+#include <fstream>
 #include <iostream>
 
 typedef std::lock_guard<std::mutex> io_lock_guard;
@@ -46,13 +48,13 @@ void PlainLogger::log(const LogLevel lvl, const std::string message) {
 }
 
 void PlainLogger::logDiagnostic(Diagnostic diagnostic) {
-  io_lock_guard guard(this->m_io_mutex);
   this->error("Build error detected ^o^");
   for (const auto &diag : diagnostic.frames) {
     const auto filename = diag.file.empty() ? "<unknown>" : diag.file;
     const auto function = (diag.function.empty() || diag.function == "source")
                               ? "<unknown>"
                               : diag.function;
+    io_lock_guard guard(this->m_io_mutex);
     printf("%s(%zu): In function `%s':\n", filename.c_str(), diag.line,
            function.c_str());
   }
@@ -128,8 +130,53 @@ void ColorfulLogger::log(LogLevel lvl, std::string message) {
   std::cout.flush();
 }
 
+static std::string get_snippet(const std::string &filename, const size_t line) {
+  std::ifstream file{filename};
+  if (!file.is_open()) {
+    return "";
+  }
+  std::string formatted_snippet{};
+  std::string line_str{};
+  size_t line_num = 0;
+  while (std::getline(file, line_str)) {
+    line_num++;
+    if (line_num < (line + 2) && line_num > (line - 2)) {
+      formatted_snippet +=
+          fmt::format("{0}{1:>4} | {2}\e[0m\n",
+                      line_num == line ? "\e[1m>" : " ", line_num, line_str);
+      continue;
+    }
+  }
+
+  return formatted_snippet;
+}
+
 void ColorfulLogger::logDiagnostic(Diagnostic diagnostic) {
-  // TODO
+  std::string buffer{};
+  // reverse order, most recent call last
+  for (auto it = diagnostic.frames.rbegin(); it != diagnostic.frames.rend();
+       ++it) {
+    const auto &frame = *it;
+    if (buffer.empty()) {
+      // first call
+      buffer += fmt::format("\e[0mIn file included from \e[1m{0}:{1}\n",
+                            frame.file, frame.line);
+    }
+    if ((it + 1) == diagnostic.frames.rend()) {
+      // last call
+      buffer += fmt::format("{0}:{1}: \e[0mIn function `\e[1m{2}':\n"
+                            "{0}:{1}: \e[91merror: \e[39m{3}\e[0m\n",
+                            frame.file, frame.line, frame.function,
+                            diagnostic.message);
+      buffer += get_snippet(frame.file, frame.line);
+      continue;
+    }
+    buffer += fmt::format("\e[0m                 from \e[1m{0}:{1}\n",
+                          frame.file, frame.line);
+  }
+
+  io_lock_guard guard(this->m_io_mutex);
+  std::cout << buffer << std::endl;
 }
 
 void ColorfulLogger::logException(std::string message) {

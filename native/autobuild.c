@@ -14,7 +14,6 @@
 
 int autobuild_builtin(WORD_LIST *list) {
   int opt, rval;
-  SHELL_VAR **vars;
 
   rval = EXECUTION_SUCCESS;
   prctl(PR_SET_NAME, "autobuild");
