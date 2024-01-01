@@ -1078,14 +1078,18 @@ void register_all_native_functions() {
   autobuild_register_builtins(functions);
 }
 
-void register_builtin_variables() {
+int register_builtin_variables() {
   int ret = 0;
-  if ((ret = setup_default_env_variables()))
+  if ((ret = setup_default_env_variables())) {
     get_logger()->error(
         fmt::format("Failed to setup default env variables: {0}", ret));
-  if ((ret = set_arch_variables()))
+    return ret;
+  }
+  if ((ret = set_arch_variables())) {
     get_logger()->error(fmt::format(
         "Failed to setup default architecture variables: {0}", ret));
+    return ret;
+  }
 }
 
 int start_proc_00() {

@@ -41,8 +41,10 @@ int autobuild_builtin(WORD_LIST *list) {
 /* Called when `template' is enabled and loaded from the shared object.  If this
    function returns 0, the load fails. */
 int autobuild_builtin_load(char *name) {
+  if (register_builtin_variables() != 0) {
+    return 0;
+  }
   register_all_native_functions();
-  register_builtin_variables();
   return (1);
 }
 

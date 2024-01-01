@@ -8,7 +8,7 @@ struct Logger;
 extern struct Logger *logger;
 
 void register_all_native_functions();
-void register_builtin_variables();
+int register_builtin_variables();
 int start_proc_00();
 
 #ifdef __cplusplus
