@@ -30,6 +30,12 @@ extern "C" {
 #endif
 struct Logger *logger = nullptr;
 
+static inline void cleanup_command(COMMAND **cmd) {
+  if (*cmd != nullptr) {
+    dispose_command(*cmd);
+  }
+}
+
 static bool set_registered_flag() {
   if (find_variable("__ABNR"))
     return true;
@@ -832,13 +838,15 @@ static int abpm_aosc_archive_new(WORD_LIST *list) {
 static inline COMMAND *generate_function_call(char *name, char *arg) {
   char *args[] = {name, arg, nullptr};
   WORD_LIST *list = strvec_to_word_list(static_cast<char **>(args), true, 0);
-  SIMPLE_COM *conn = new SIMPLE_COM{
+  SIMPLE_COM *conn = (SIMPLE_COM *)calloc(1, sizeof(SIMPLE_COM));
+  *conn = SIMPLE_COM{
       .flags = 0,
       .line = 0,
       .words = list,
       .redirects = nullptr,
   };
-  COMMAND *command = new COMMAND{
+  COMMAND *command = (COMMAND *)calloc(1, sizeof(COMMAND));
+  *command = COMMAND{
       .type = cm_simple,
       .flags = 0,
       .redirects = nullptr,
@@ -940,7 +948,7 @@ static int abfp_lambda_restore(WORD_LIST *list) {
   }
   // clean up the storage variable
   delete env_ptr->vars;
-  free(env_ptr);
+  delete env_ptr;
   env_ptr_var->value = nullptr;
   env_ptr_var->attributes |= att_nofree;
   env_ptr_var->attributes &= ~att_nounset;
@@ -975,12 +983,10 @@ static int abfp_lambda(WORD_LIST *list) {
     if (!copied) {
       return EX_BADASSIGN;
     }
-    SHELL_VAR *recreated = new SHELL_VAR{
-        .name = strdup(captured),
-        .value = copied->value,
-        .attributes = copied->attributes,
-        .context = 0,
-    };
+    SHELL_VAR *recreated = (SHELL_VAR*)calloc(1, sizeof(SHELL_VAR));
+    recreated->name = strdup(captured);
+    recreated->value = copied->value;
+    recreated->attributes = copied->attributes;
     // disconnect the variable from the scope
     copied->attributes |= att_nofree;
     unbind_variable(tmp_var_name);
@@ -996,28 +1002,26 @@ static int abfp_lambda(WORD_LIST *list) {
   };
   std::mt19937_64 rng(std::random_device{}());
   const std::string env_name = fmt::format("__abfp_env__{:2x}", rng());
-  char *env_name_str = strdup(env_name.c_str());
-  auto *env_ptr_var = bind_global_variable(env_name.c_str(), nullptr, 0);
+  char *env_name_str = const_cast<char *>(env_name.c_str());
+  auto *env_ptr_var = bind_global_variable(env_name_str, nullptr, 0);
   env_ptr_var->value = reinterpret_cast<char *>(env);
   env_ptr_var->attributes |= (att_special | att_readonly | att_nounset);
 
   // patch in a new function call at the function prologue
-  COMMAND *retore_call =
-      generate_function_call(strdup("abfp_lambda_restore"), env_name_str);
-  if (env_name_str)
-    free(env_name_str);
-  CONNECTION *conn = new CONNECTION{
-      .first = retore_call,
-      .second = orig_func_f,
-      .connector = ';',
-  };
-  COMMAND *connector = new COMMAND{
-      .type = cm_connection,
-      .flags = 0,
-      .redirects = nullptr,
-      .value = {.Connection = conn},
-  };
+  COMMAND *retore_call = generate_function_call(
+      const_cast<char *>("abfp_lambda_restore"), env_name_str);
+  CONNECTION *conn = (CONNECTION *)calloc(1, sizeof(CONNECTION));
+  conn->first = retore_call;
+  conn->second = orig_func_f;
+  conn->connector = ';';
+  __attribute__((cleanup(cleanup_command))) COMMAND *connector =
+      (COMMAND *)calloc(1, sizeof(COMMAND));
+  connector->type = cm_connection;
+  connector->flags = 0;
+  connector->redirects = nullptr;
+  connector->value = {.Connection = conn};
 
+  // null the original function to avoid `COMMAND`s getting freed
   orig_func->value = nullptr;
   unbind_func(orig_func_name);
   bind_function(new_func_name, connector);
