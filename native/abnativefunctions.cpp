@@ -771,7 +771,7 @@ static int abelf_copy_dbg_parallel(WORD_LIST *list) {
   auto args = get_all_args_vector(list);
   if (args.empty())
     return EX_BADUSAGE;
-  const auto &dst = args.back();
+  const auto dst = args.back();
   args.pop_back();
   int ret = elf_copy_debug_symbols_parallel(args, dst.c_str());
   if (ret < 0)
