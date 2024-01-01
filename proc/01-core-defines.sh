@@ -2,14 +2,24 @@
 ##defines: First we need the defines
 ##@copyright GPL-2.0+
 
+export ABBLPREFIX="$AB"/lib
+
 BUILD_START(){ true; }
 BUILD_READY(){ true; }
 BUILD_FINAL(){ true; }
+
+# build-specific variables
+export SRCDIR="$PWD"
+export BLDDIR="$SRCDIR/abbuild"
+export PKGDIR="$SRCDIR/abdist"
+export SYMDIR="$SRCDIR/abdist-dbg"
 
 # Autobuild settings
 load_strict /etc/autobuild/ab3_defcfg.sh
 load_strict "$AB/arch/_common.sh"
 load_strict "$AB/arch/${ABHOST//\//_}.sh"
+
+export AB ABBUILD ABHOST ABTARGET
 
 arch_loaddefines -2 defines || abdie "Failed to source defines file: $?."
 
