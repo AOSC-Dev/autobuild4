@@ -1,7 +1,9 @@
 Autobuild4
 ==========
 
-Autobuild4 is an semi-automated packaging toolkit for AOSC OS. Based on source and package definitions, Autobuild4 can:
+Autobuild4 is an semi-automated packaging toolkit for AOSC OS.
+
+Based on source and package definitions, Autobuild4 can:
 
 - Prepare and patch source code for building.
 - Build source code based on pre-defined or custom build templates and scripts.
