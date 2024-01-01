@@ -82,7 +82,7 @@ void autobuild_register_builtins(
   new_builtins.reserve(functions.size() + 1);
   for (const auto &[name, function] : functions) {
     // generate the new builtin descriptor
-    char *stub_doc[] = {const_cast<char *>(name), const_cast<char *>(""), NULL};
+    char *stub_doc[] = {const_cast<char *>(name), nullptr, nullptr};
     struct builtin descriptor {
       .name = const_cast<char *>(name), .function = function,
       .flags = BUILTIN_ENABLED, .long_doc = stub_doc, .short_doc = name,
