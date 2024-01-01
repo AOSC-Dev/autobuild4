@@ -30,7 +30,7 @@ public:
   ThreadPool(processor_func_t processor,
              int thread_num = std::thread::hardware_concurrency())
       : m_waker(), m_queue({}), m_stop(false), m_has_error(false),
-        m_processor(processor) {
+        m_processor(std::move(processor)) {
     for (int i = 0; i < thread_num; ++i) {
       m_workers.emplace_back(std::thread{[&] {
         while (true) {

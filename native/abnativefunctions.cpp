@@ -60,7 +60,10 @@ static inline std::string get_all_args(WORD_LIST *list) {
   std::string args{};
   args.reserve(16);
   while (list) {
-    args += get_argv1(list);
+    const auto *word = get_argv1(list);
+    if (!word)
+      continue;
+    args += word;
     if (list->next)
       args += " ";
     list = list->next;
@@ -74,7 +77,10 @@ static inline std::vector<std::string> get_all_args_vector(WORD_LIST *list) {
   std::vector<std::string> args{};
   args.reserve(16);
   for (; list; list = list->next) {
-    args.push_back(get_argv1(list));
+    const auto *word = get_argv1(list);
+    if (!word)
+      continue;
+    args.push_back(word);
   }
   return args;
 }
@@ -412,7 +418,7 @@ static int set_arch_variables() {
   std::ifstream groups_file(arch_groups_path);
   json arch_groups = json::parse(groups_file);
   for (json::iterator it = arch_groups.begin(); it != arch_groups.end(); ++it) {
-    const auto group_name = it.key();
+    const auto &group_name = it.key();
     auto group = it.value();
     // search inner array for the target architecture name
     for (json::iterator it = group.begin(); it != group.end(); ++it) {
@@ -765,7 +771,7 @@ static int abelf_copy_dbg_parallel(WORD_LIST *list) {
   auto args = get_all_args_vector(list);
   if (args.empty())
     return EX_BADUSAGE;
-  const auto dst = args.back();
+  const auto &dst = args.back();
   args.pop_back();
   int ret = elf_copy_debug_symbols_parallel(args, dst.c_str());
   if (ret < 0)
@@ -975,15 +981,18 @@ static int abfp_lambda(WORD_LIST *list) {
   auto *vars = new std::vector<SHELL_VAR *>{};
   for (list = list->next; list; list = list->next) {
     const auto captured = get_argv1(list);
+    if (!captured)
+      continue;
     if (memcmp(captured, "--", 2) == 0) {
       continue;
     }
     auto *captured_var = find_variable(captured);
     auto *copied = autobuild_copy_variable(captured_var, tmp_var_name, false);
     if (!copied) {
+      delete vars;
       return EX_BADASSIGN;
     }
-    SHELL_VAR *recreated = (SHELL_VAR*)calloc(1, sizeof(SHELL_VAR));
+    SHELL_VAR *recreated = (SHELL_VAR *)calloc(1, sizeof(SHELL_VAR));
     recreated->name = strdup(captured);
     recreated->value = copied->value;
     recreated->attributes = copied->attributes;
