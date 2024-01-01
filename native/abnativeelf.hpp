@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <mutex>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -22,6 +23,21 @@ struct ELFParseResult {
   bool has_debug_info;
 };
 
+template <typename T> class GuardedSet {
+public:
+  GuardedSet() = default;
+  GuardedSet(std::unordered_set<T> set) : m_set{std::move(set)} {}
+  template <typename Iterator> void insert(Iterator begin, Iterator end) {
+    auto lock_guard = std::lock_guard<std::mutex>{m_mutex};
+    m_set.insert(begin, end);
+  }
+  const std::unordered_set<T> &get_set() const { return m_set; }
+
+private:
+  std::mutex m_mutex;
+  std::unordered_set<T> m_set;
+};
+
 constexpr int AB_ELF_STRIP_ONLY = 1 << 0;
 constexpr int AB_ELF_USE_EU_STRIP = 1 << 1;
 constexpr int AB_ELF_FIND_SO_DEPS = 1 << 2;
@@ -29,6 +45,6 @@ constexpr int AB_ELF_FIND_SO_DEPS = 1 << 2;
 int elf_copy_to_symdir(const char *src_path, const char *dst_path,
                        const char *build_id);
 int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
-                           int flags, std::unordered_set<std::string> &so_deps);
+                           int flags, GuardedSet<std::string> &symbols);
 int elf_copy_debug_symbols_parallel(const std::vector<std::string> &directories,
                                     const char *dst_path);

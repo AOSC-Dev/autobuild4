@@ -445,21 +445,6 @@ private:
   size_t m_size;
 };
 
-template <typename T> class GuardedSet {
-public:
-  GuardedSet() = default;
-  GuardedSet(std::unordered_set<T> set) : m_set{std::move(set)} {}
-  template <typename Iterator> void insert(Iterator begin, Iterator end) {
-    auto lock_guard = std::lock_guard<std::mutex>{m_mutex};
-    m_set.insert(begin, end);
-  }
-  const std::unordered_set<T> &get_set() const { return m_set; }
-
-private:
-  std::mutex m_mutex;
-  std::unordered_set<T> m_set;
-};
-
 static inline int forked_execvp(const char *path, char *const argv[]) {
   pid_t pid = fork();
   if (pid == 0) {

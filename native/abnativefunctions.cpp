@@ -760,7 +760,7 @@ static int abelf_copy_dbg(WORD_LIST *list) {
   const auto *dst = get_argv1(lists);
   if (!dst)
     return EX_BADUSAGE;
-  std::unordered_set<std::string> symbols{};
+  GuardedSet<std::string> symbols{};
   int ret = elf_copy_debug_symbols(src, dst, AB_ELF_USE_EU_STRIP, symbols);
   if (ret < 0)
     return 10;
