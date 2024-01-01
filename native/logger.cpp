@@ -77,7 +77,6 @@ void PlainLogger::logException(std::string message) {
 }
 
 using json = nlohmann::json;
-using namespace nlohmann::literals;
 
 void JsonLogger::log(LogLevel lvl, std::string message) {
   const json line = {
