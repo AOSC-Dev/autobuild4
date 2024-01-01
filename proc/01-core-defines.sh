@@ -15,7 +15,7 @@ export PKGDIR="$SRCDIR/abdist"
 export SYMDIR="$SRCDIR/abdist-dbg"
 
 # Autobuild settings
-load_strict /etc/autobuild/ab3_defcfg.sh
+load_strict "$AB"/lib/default.sh
 load_strict "$AB/arch/_common.sh"
 load_strict "$AB/arch/${ABHOST//\//_}.sh"
 
