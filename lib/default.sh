@@ -168,7 +168,7 @@ __GOFLAGS=(
 GOFLAGS="${__GOFLAGS[*]}"
 unset -f __GOFLAGS
 
-. /etc/autobuild/ab3cfg.sh
+. /etc/autobuild/ab4cfg.sh
 
 if bool "$ABSTAGE2"; then
 	abwarn "Autobuild3 running in stage2 mode ..."
