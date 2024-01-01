@@ -1,0 +1,13 @@
+set(COMMON_SRC
+  bashincludes.h
+  bashinterface.cpp
+  bashinterface.hpp
+  abnativefunctions.cpp
+  abnativefunctions.h
+  abnativeelf.cpp
+  logger.hpp
+  logger.cpp
+  pm.hpp
+  pm.cpp
+  ${CMAKE_CURRENT_BINARY_DIR}/abconfig.h
+)

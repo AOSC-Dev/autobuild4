@@ -3,10 +3,10 @@
 ##@copyright GPL-2.0+
 
 # Basic environment declarations
-export ABSET=/etc/autobuild
+AB="@AB_PREFIX@"
 
-if [ ! "$AB" ]; then
-	AB=$(cat "$ABSET/prefix" || dirname "$(readlink -e "$0")")
+if [ ! -d "$AB" ]; then
+	AB="$(dirname "$(readlink -e "$0")")"
 fi
 
 enable -f "${AB}"/libautobuild.so autobuild

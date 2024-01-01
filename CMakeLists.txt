@@ -101,7 +101,14 @@ message(STATUS "Using std::format")
   target_compile_definitions(autobuild PRIVATE HAS_STD_FMT)
 endif()
 
-install(PROGRAMS ab4.sh DESTINATION "${CMAKE_INSTALL_BINDIR}" RENAME autobuild)
+add_custom_target(ab4.sh ALL cmake
+  -DAB_PREFIX="${AB_INSTALL_PREFIX}"
+  -DAB_INPUT_FILE="${CMAKE_CURRENT_SOURCE_DIR}/ab4.sh.in"
+  -DAB_OUTPUT_FILE="${CMAKE_CURRENT_BINARY_DIR}/ab4.sh"
+  -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/GeneratePrefixFile.cmake"
+)
+
+install(PROGRAMS "${CMAKE_CURRENT_BINARY_DIR}/ab4.sh" DESTINATION "${CMAKE_INSTALL_BINDIR}" RENAME autobuild)
 install(TARGETS autobuild LIBRARY DESTINATION "${AB_INSTALL_PREFIX}")
 install(DIRECTORY arch filters lib pm proc qa sets templates DESTINATION "${AB_INSTALL_PREFIX}")
 install(DIRECTORY etc/autobuild DESTINATION "${CMAKE_INSTALL_FULL_SYSCONFDIR}")
