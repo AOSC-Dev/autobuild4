@@ -162,7 +162,7 @@ static inline std::string arch_findfile_inner(const std::string &path,
 }
 
 static inline void bash_array_push(ARRAY *array, char *value) {
-  auto *new_ae = array_create_element(0, value);
+  auto *new_ae = array_create_element(array->num_elements, value);
   // new element is the last element of the array (tail of the linked-list)
   new_ae->prev = array->lastref;
   if (array->lastref) {
