@@ -31,8 +31,7 @@ fi
 cd "$SRCDIR" || abdie "Unable to cd $SRCDIR: $?."
 
 __overrides=
-arch_findfile -2 overrides __overrides
-if [ -d "${__overrides}" ]; then
+if arch_findfile -2 overrides __overrides && [ -d "${__overrides}" ]; then
     abinfo "Deploying files in overrides ..."
 	cp -arvT "${__overrides}"/ "$PKGDIR/" || \
 		abdie "Failed to deploy files in overrides: $?."
