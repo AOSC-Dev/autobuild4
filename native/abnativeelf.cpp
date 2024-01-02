@@ -512,11 +512,15 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
       fmt::format("Saving and stripping debug symbols from {0}", src_path));
 
   if (result.build_id.empty()) {
-    return -2;
+    // change to strip only
+    flags |= AB_ELF_STRIP_ONLY;
+    get_logger()->warning(fmt::format("No build id found in {0}", src_path));
   }
 
   if (!result.has_debug_info) {
-    return -3;
+    flags |= AB_ELF_STRIP_ONLY;
+    get_logger()->warning(
+        fmt::format("No debug symbols found in {0}", src_path));
   }
   const fs::path final_path =
       get_filename_from_build_id(result.build_id, dst_path);
@@ -535,8 +539,7 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     }
     args.emplace_back(src_path);
     args.emplace_back(nullptr);
-    forked_execvp("eu-strip", const_cast<char *const *>(args.data()));
-    return 0;
+    return forked_execvp("eu-strip", const_cast<char *const *>(args.data()));
   }
   if (!(flags & AB_ELF_STRIP_ONLY)) {
     auto path = final_path.string();

@@ -15,14 +15,15 @@ ab_arch_setflags() {
 
     for feature in "${AB_FLAGS_FEATURES[@]}"; do
         if (("USE$feature")); then
-            features+=("$feature")
+            features+=("_$feature")
         elif (("NO$feature")); then
-            features+=("NO$feature")
+            features+=("_NO$feature")
         fi
     done
 
     for flagtype in "${flagtypes[@]}"; do
-        declare -a "$flagtype"
+        declare "$flagtype"=""  # initialize the variable
+        declare -a "$flagtype"  # convert to an array
         for suffix in "${AB_FLAGS_TYPES[@]}"; do
             for f in "${features[@]}"; do
                 for cc in "${_cc}" 'COMMON'; do
