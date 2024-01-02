@@ -508,6 +508,9 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     break;
   }
 
+  get_logger()->info(
+      fmt::format("Saving and stripping debug symbols from {0}", src_path));
+
   if (result.build_id.empty()) {
     return -2;
   }
@@ -568,8 +571,6 @@ class ELFWorkerPool : public ThreadPool<std::string, int> {
 public:
   ELFWorkerPool(const std::string symdir)
       : ThreadPool<std::string, int>([&](const std::string src_path) {
-          get_logger()->info(fmt::format(
-              "Saving and stripping debug symbols from {0}", src_path));
           return elf_copy_debug_symbols(
               src_path.c_str(), m_symdir.c_str(),
               AB_ELF_USE_EU_STRIP | AB_ELF_FIND_SO_DEPS, m_sodeps);
