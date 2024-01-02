@@ -170,7 +170,8 @@ SHELL_VAR *autobuild_copy_variable(SHELL_VAR *src, const char *dst_name,
     return dst;
   }
   if (reference) {
-    const char *args[3]{"-n", dst_name, nullptr};
+    const auto expr = std::string{dst_name} + "=" + src->name;
+    const char *args[3]{"-n", expr.c_str(), nullptr};
     auto options = std::unique_ptr<WORD_LIST, decltype(&dispose_words)>{
         strvec_to_word_list((char **)args, true, 0), &dispose_words};
     declare_builtin(options.get());

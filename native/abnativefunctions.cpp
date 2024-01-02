@@ -443,7 +443,7 @@ static inline int arch_loadvar_inner(const std::string &var_name) {
   // ABHOST_GROUP needs to be an array
   if (!ag_v || !(ag_v->attributes & att_array))
     return 1;
-  aliases.emplace_back(arch_v->value);
+  aliases.emplace_back(string_to_uppercase(arch_v->value));
   const auto ag_a = array_cell(ag_v);
   for (ARRAY_ELEMENT *ae = element_forw(ag_a->head); ae != ag_a->head;
        ae = element_forw(ae)) {
@@ -1095,6 +1095,9 @@ void register_all_native_functions() {
 
 int register_builtin_variables() {
   int ret = 0;
+  // Initialize logger
+  if (!logger)
+    register_logger_from_env();
   if ((ret = setup_default_env_variables())) {
     get_logger()->error(
         fmt::format("Failed to setup default env variables: {0}", ret));
