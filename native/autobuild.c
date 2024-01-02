@@ -52,7 +52,7 @@ void autobuild_builtin_unload(char *name) {}
 
 char *autobuild_doc[] = {"autobuild",
                          "The next generation of autobuild for AOSC OS. \n"
-                         "See GitHub wiki at AOSC-Dev/autobuild3 for "
+                         "See GitHub wiki at AOSC-Dev/autobuild4 for "
                          "information on usage and hacking.",
                          (char *)NULL};
 

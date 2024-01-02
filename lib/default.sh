@@ -171,7 +171,7 @@ unset -f __GOFLAGS
 . /etc/autobuild/ab4cfg.sh
 
 if bool "$ABSTAGE2"; then
-	abwarn "Autobuild3 running in stage2 mode ..."
+	abwarn "Autobuild4 running in stage2 mode ..."
 	NOCARGOAUDIT=yes
 	NONPMAUDIT=yes
 	ABSPLITDBG=no
