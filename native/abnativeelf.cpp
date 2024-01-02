@@ -515,12 +515,14 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     // change to strip only
     flags |= AB_ELF_STRIP_ONLY;
     get_logger()->warning(fmt::format("No build id found in {0}", src_path));
+    return -2;
   }
 
   if (!result.has_debug_info) {
     flags |= AB_ELF_STRIP_ONLY;
     get_logger()->warning(
         fmt::format("No debug symbols found in {0}", src_path));
+    return -3;
   }
   const fs::path final_path =
       get_filename_from_build_id(result.build_id, dst_path);
