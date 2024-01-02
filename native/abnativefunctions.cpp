@@ -105,7 +105,7 @@ static inline std::string arch_findfile_maybe_stage2(std::string &path,
                                                      bool is_stage2) {
   auto test_path_stage2 = path + ".stage2";
   if (is_stage2 && access(test_path_stage2.c_str(), F_OK) == 0) {
-    return path;
+    return test_path_stage2;
   }
   if (access(path.c_str(), F_OK) == 0) {
     if (is_stage2) {
