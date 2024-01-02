@@ -18,8 +18,7 @@ EOF
 
 scriptlet_alternative() {
     local _altFile
-    _altFile="$(arch_findfile -2 alternatives || true)"
-    if [ -z "$_altFile" ]; then
+    if ! arch_findfile -2 alternatives _altFile; then
         abinfo "No alternatives file found."
         return 0
     fi
@@ -46,8 +45,7 @@ scriptlet_pax() {
         echo "fi" >> abscripts/postinst
     }
     local _paxFile
-    _paxFile="$(arch_findfile -2 pax || true)"
-    if [ -z "$_paxFile" ]; then
+    if ! arch_findfile -2 _paxFile; then
         abinfo "No pax file found."
         return 0
     fi

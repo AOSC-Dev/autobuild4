@@ -104,16 +104,15 @@ static inline std::string string_to_uppercase(const std::string &str) {
 static inline std::string arch_findfile_maybe_stage2(std::string &path,
                                                      bool is_stage2) {
   auto test_path_stage2 = path + ".stage2";
-  if (is_stage2) {
-    if (access(test_path_stage2.c_str(), F_OK) == 0) {
-      return path;
-    }
-    // TODO: show warning if stage2 file not found
-    auto *log = reinterpret_cast<BaseLogger *>(logger);
-    log->warning(
-        "Unable to find stage2 defines, falling back to normal defines ...");
+  if (is_stage2 && access(test_path_stage2.c_str(), F_OK) == 0) {
+    return path;
   }
   if (access(path.c_str(), F_OK) == 0) {
+    if (is_stage2) {
+      get_logger()->warning(fmt::format(
+          "Unable to find stage2 {0}, falling back to normal defines ...",
+          path));
+    }
     return path;
   }
   return {};
@@ -644,11 +643,18 @@ static int arch_findfile(WORD_LIST *list) {
   }
   const auto *argv1 = get_argv1(loptend);
   if (!argv1)
-    return 1;
+    return EX_BADUSAGE;
+  const auto *out_varname = get_argv1(loptend->next);
   const auto filepath = arch_findfile_inner(argv1, stage2_aware);
   if (filepath.empty())
     return 127;
-  std::cout << filepath << std::endl;
+  // check only mode
+  if (!out_varname)
+    return 0;
+  const auto *out_var = bind_variable(
+      out_varname, const_cast<char *>(filepath.c_str()), ASS_FORCE);
+  if (!out_var)
+    return EX_BADASSIGN;
   return 0;
 }
 
