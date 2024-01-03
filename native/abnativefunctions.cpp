@@ -1043,6 +1043,44 @@ static int abfp_lambda(WORD_LIST *list) {
   return 0;
 }
 
+static int abmm_array_mine(WORD_LIST *list) {
+  const auto *array_name = get_argv1(list);
+  if (!array_name)
+    return EX_BADUSAGE;
+  auto *array_var = find_variable(array_name);
+  if (!array_var || !(array_var->attributes & att_array)) {
+    return EX_BADUSAGE;
+  }
+  auto *array = array_cell(array_var);
+  if (array->num_elements < 1)
+    return EX_BADASSIGN;
+  auto *trip_mine = array_create_element(
+      0, const_cast<char *>("---PLEASE_MIGRATE_TO_ARRAY---"));
+  // we create an intentionally broken reference to trip_mine
+  // so bash will break when it tries to convert it to a string
+  array->lastref = trip_mine;
+  trip_mine->next = array->head;
+  return 0;
+}
+
+static int abmm_array_mine_remove(WORD_LIST *list) {
+  const auto *array_name = get_argv1(list);
+  if (!array_name)
+    return EX_BADUSAGE;
+  auto *array_var = find_variable(array_name);
+  if (!array_var || !(array_var->attributes & att_array)) {
+    return EX_BADUSAGE;
+  }
+  auto *array = array_cell(array_var);
+  if (array->num_elements < 1)
+    return EX_BADASSIGN;
+  auto *trip_mine = array->lastref;
+  array->lastref = trip_mine->next;
+  trip_mine->next = nullptr;
+  array_dispose_element(trip_mine);
+  return 0;
+}
+
 extern "C" {
 void register_all_native_functions() {
   if (set_registered_flag())
@@ -1084,7 +1122,8 @@ void register_all_native_functions() {
       {"abpp_gil", abpp_gil},
       {"abfp_lambda", abfp_lambda},
       {"abfp_lambda_restore", abfp_lambda_restore},
-  };
+      {"abmm_array_mine", abmm_array_mine},
+      {"abmm_array_mine_remove", abmm_array_mine_remove}};
 
   // Initialize logger
   if (!logger)
