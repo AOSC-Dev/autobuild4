@@ -163,9 +163,10 @@ __GOFLAGS=(
 	'-mod=readonly'  # Ensure module files are not updated during building process.
 	'-trimpath'      # Required for reproducible build.
 	'-modcacherw'    # Ensures that go modules creates a write-able path.
-	'buildmode=pie'  # Hardening binary.
+	'-buildmode=pie'  # Hardening binary.
 )
 GOFLAGS="${__GOFLAGS[*]}"
+GO_LDFLAGS=()
 unset -f __GOFLAGS
 
 if [ -f /etc/autobuild/ab3cfg.sh ]; then

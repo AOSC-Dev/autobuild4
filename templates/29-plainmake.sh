@@ -5,10 +5,14 @@ build_plainmake_probe(){
 	false;
 }
 
-build_plainmake_configure() {
+build_plainmake_warning() {
 	abwarn 'The plainmake template is not reliable.'
 	abwarn 'Please avoid using ABTYPE=plainmake and write a custom build script instead.'
 	abwarn 'This template maybe removed in a future release of autobuild.'
+}
+
+build_plainmake_configure() {
+	build_plainmake_warning
 	BUILD_START
 	if [ -e "$BUILD_PLAINMAKE_DOTCONFIG" ]; then
 		abinfo 'Copying .config file as defined in $BUILD_PLAINMAKE_DOTCONFIG ...'
@@ -33,6 +37,8 @@ build_plainmake_install(){
 		BUILDROOT="$PKGDIR" DESTDIR="$PKGDIR" \
 		"${MAKE_INSTALL_DEF[@]}" "${MAKE_AFTER[@]}" \
 		|| abdie "Failed to install binaries: $?."
+	# repeat the warning
+	build_plainmake_warning
 }
 
 ab_register_template plainmake -- make

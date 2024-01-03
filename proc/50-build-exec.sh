@@ -3,21 +3,27 @@
 ##@copyright GPL-2.0+
 
 if arch_findfile -2 prepare > /dev/null; then
+    abinfo 'Running pre-build (prepare) script ...'
     arch_loadfile_strict -2 prepare
 fi
 
 cd "$SRCDIR"
 
 if ab_typecheck -f "build_${ABTYPE}_check"; then
+    abinfo "${ABTYPE} > Running check step ..."
     "build_${ABTYPE}_check"
 fi
 
 if ab_typecheck -f "build_${ABTYPE}_audit"; then
+    abinfo "${ABTYPE} > Running audit step ..."
     "build_${ABTYPE}_audit" || abdie "Audit failed: $?."
 fi
 
+abinfo "${ABTYPE} > Running configure step ..."
 "build_${ABTYPE}_configure" || abdie "Configure failed: $?."
+abinfo "${ABTYPE} > Running build step ..."
 "build_${ABTYPE}_build" || abdie "Build failed: $?."
+abinfo "${ABTYPE} > Running install step ..."
 "build_${ABTYPE}_install" || abdie "Install failed: $?."
 
 cd "$SRCDIR" || abdie "Unable to cd $SRCDIR: $?."
@@ -25,6 +31,7 @@ cd "$SRCDIR" || abdie "Unable to cd $SRCDIR: $?."
 [ -d "$PKGDIR" ] || abdie "50-build: Suspecting build failure due to missing PKGDIR."
 
 if arch_findfile -2 beyond; then
+    abinfo 'Running after-build (beyond) script ...'
     arch_loadfile_strict -2 beyond
 fi
 

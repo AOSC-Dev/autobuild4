@@ -39,6 +39,7 @@ ab_arch_setflags() {
         # convert to string
         declare -n _tmp="_${flagtype}"
         export "${flagtype}"="${_tmp[*]}"
+        abdbg "${flagtype}=${_tmp[*]}"
     done
 }
 

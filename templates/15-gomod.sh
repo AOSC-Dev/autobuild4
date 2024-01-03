@@ -3,11 +3,14 @@
 ##@copyright GPL-2.0+
 
 ab_go_build() {
-	local strip_flags
-	if ! bool ABSPLITDBG || ! bool ABSTRIP; then
-	    strip_flags="-s -w"
+	ab_typecheck -a GO_LDFLAGS
+	if ! bool ABSPLITDBG || bool ABSTRIP; then
+	    GO_LDFLAGS+=(-s -w)
 	fi
-	go build -v -ldflags "${strip_flags} ${GO_LDFLAGS[*]} -extldflags '-Wl,-z,relro -Wl,-z,now -specs=/usr/lib/autobuild3/specs/hardened-ld'" "$@"
+	(
+		set -x
+		go build -v -ldflags "${GO_LDFLAGS[*]} -extldflags '-Wl,-z,relro -Wl,-z,now -specs=/usr/lib/autobuild3/specs/hardened-ld'" "$@"
+	)
 }
 
 build_gomod_probe() {

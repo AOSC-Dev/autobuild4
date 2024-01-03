@@ -5,7 +5,7 @@
 AB_PACKAGES=()
 
 for i in "${ABMPM[@]}"; do
-	abinfo "Building $i package(s) ..."
+	abinfo "Packing $i package(s) ..."
 	source "$AB"/pm/"$i".sh || aberr "$i packing returned $?."
     pm_build_package
     if [[ -d "${SYMDIR}" ]] && [ "$(ls -A "$SYMDIR")" ]; then

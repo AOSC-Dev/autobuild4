@@ -14,3 +14,9 @@ fi
 if [ -z "$ABTYPE" ]; then
 	abdie "Cannot determine build type."
 fi
+
+if [ "$ABTYPE" = 'self' ]; then
+	abinfo 'Using free-formed build script'
+else
+	abinfo "Build template selected: $ABTYPE"
+fi

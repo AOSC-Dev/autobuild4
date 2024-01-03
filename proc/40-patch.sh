@@ -11,7 +11,8 @@ if [ -f "$SRCDIR"/autobuild/patch ]; then
     touch "$SRCDIR"/.patch
 elif [ -f "$SRCDIR"/autobuild/patches/series ]; then
     series_file=
-    arch_findfile -2 series_file
+    arch_findfile -2 series series_file
+    abinfo "Applying patches using the listing from ${series_file} ..."
     ab_read_list "${series_file}" patches
     # patches variable is set inside the native function
     # shellcheck disable=SC2154
