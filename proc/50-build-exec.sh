@@ -2,6 +2,12 @@
 ##proc/build_do: So we build it now
 ##@copyright GPL-2.0+
 
+MIGRATE_REQUIRED=(AUTOTOOLS_DEF CMAKE_DEF MESON_DEF WAF_DEF QTPROJ_DEF MAKE_INSTALL_DEF)
+
+for i in "${MIGRATE_REQUIRED[@]}"; do
+    abmm_array_mine "$i"
+done
+
 if arch_findfile -2 prepare > /dev/null; then
     abinfo 'Running pre-build (prepare) script ...'
     arch_loadfile_strict -2 prepare
@@ -48,3 +54,6 @@ cd "$SRCDIR" || abdie "Unable to cd $SRCDIR: $?."
 
 unset -f BUILD_{START,READY,FINAL}
 unset __overrides
+for i in "${MIGRATE_REQUIRED[@]}"; do
+    abmm_array_mine_remove "$i"
+done
