@@ -580,7 +580,7 @@ int elf_copy_to_symdir(const char *src_path, const char *dst_path,
 class ELFWorkerPool : public ThreadPool<std::string, int> {
 public:
   ELFWorkerPool(const std::string symdir, int flags)
-      : ThreadPool<std::string, int>([&](const std::string src_path) {
+      : ThreadPool<std::string, int>([&, flags](const std::string src_path) {
           return elf_copy_debug_symbols(src_path.c_str(), m_symdir.c_str(),
                                         flags, m_sodeps);
         }),
@@ -610,13 +610,14 @@ int elf_copy_debug_symbols_parallel(const std::vector<std::string> &directories,
   }
 
   pool.wait_for_completion();
-  const auto pool_results = pool.get_sodeps();
 
   if (pool.has_error())
     return 1;
 
-  if (flags & AB_ELF_FIND_SO_DEPS)
+  if (flags & AB_ELF_FIND_SO_DEPS) {
+    const auto pool_results = pool.get_sodeps();
     so_deps.insert(pool_results.begin(), pool_results.end());
+  }
 
   return 0;
 }

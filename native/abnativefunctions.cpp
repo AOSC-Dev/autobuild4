@@ -738,7 +738,7 @@ static int abpm_genver(WORD_LIST *list) {
   const auto argv1 = get_argv1(list);
   if (!argv1)
     return EX_BADUSAGE;
-  std::cout << autobuild_to_deb_version(argv1) << std::endl;
+  std::cout << autobuild_to_deb_version(argv1) << "," << std::endl;
   return 0;
 }
 
@@ -775,7 +775,7 @@ static int abelf_copy_dbg(WORD_LIST *list) {
 
 static int abelf_copy_dbg_parallel(WORD_LIST *list) {
   constexpr const char *varname = "__AB_SO_DEPS";
-  int flags = 0x0;
+  int flags = AB_ELF_FIND_SO_DEPS;
 
   reset_internal_getopt();
   int opt = 0;
@@ -809,7 +809,7 @@ static int abelf_copy_dbg_parallel(WORD_LIST *list) {
   var->attributes |= att_readonly;
   auto *var_a = array_cell(var);
   for (const auto &so_dep : so_deps) {
-    bash_array_push(var_a, const_cast<char *>(so_dep.c_str()));
+    array_push(var_a, const_cast<char *>(so_dep.c_str()));
   }
   return 0;
 }

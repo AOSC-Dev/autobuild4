@@ -36,7 +36,7 @@ dpkgpkgver() {
 }
 
 dpkg_get_provides() {
-	dpkg-query --robot -S "$@" | cut -d':' -f1 | sort -u 2>/dev/null
+	dpkg --robot -S "$@" | cut -d':' -f1 | sort -u 2>/dev/null
 }
 
 dpkgfield() {
@@ -64,13 +64,13 @@ dpkgfield() {
 		fi
 		if ((VER_NONE_ALL)); then			# name-only
 			name="${1/%_}"
-			echo "${name/[<>=]=*}";
+			echo "${name/[<>=]=*},";
 		elif [[ "${_v}" =~ [\<\>=]= ]]; then
 			abpm_debver "${_v}"
 		elif ((VER_NONE)) || [[ "$1" =~ _$ ]]; then	
-			echo -n "${1%_}";
+			echo -n "${1%_},";
 		else
-			echo "${_v}>=$(dpkg_getver "${_v}")"
+			echo "${_v}>=$(dpkg_getver "${_v}"),"
 		fi
 	done
 }
