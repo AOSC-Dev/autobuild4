@@ -738,7 +738,7 @@ static int abpm_genver(WORD_LIST *list) {
   const auto argv1 = get_argv1(list);
   if (!argv1)
     return EX_BADUSAGE;
-  std::cout << autobuild_to_deb_version(argv1) << "," << std::endl;
+  std::cout << autobuild_to_deb_version(argv1);
   return 0;
 }
 
@@ -1110,6 +1110,30 @@ static int abmm_array_mine_remove(WORD_LIST *list) {
   return 0;
 }
 
+static int ab_join_elements(WORD_LIST *list) {
+  const auto *array_name = get_argv1(list);
+  if (!array_name)
+    return EX_BADUSAGE;
+  list = list->next;
+  const auto *sep_ = get_argv1(list);
+  if (!sep_)
+    return EX_BADUSAGE;
+  auto *array_var = find_variable(array_name);
+  if (!array_var || !(array_var->attributes & att_array)) {
+    return EX_BADUSAGE;
+  }
+  auto *array = array_cell(array_var);
+  for (ARRAY_ELEMENT *ae = element_forw(array->head); ae != array->head;
+       ae = element_forw(ae)) {
+    if (array->head == element_forw(ae)) {
+      printf("%s", ae->value);
+      continue;
+    }
+    printf("%s%s", ae->value, sep_);
+  }
+  return 0;
+}
+
 extern "C" {
 void register_all_native_functions() {
   if (set_registered_flag())
@@ -1143,6 +1167,7 @@ void register_all_native_functions() {
       {"ab_read_list", ab_read_listing_file},
       {"ab_tostringarray", ab_tostringarray},
       {"ab_typecheck", ab_typecheck},
+      {"ab_join_elements", ab_join_elements},
       {"abelf_copy_dbg_parallel", abelf_copy_dbg_parallel},
       {"abpm_aosc_archive", abpm_aosc_archive_new},
       {"abpm_debver", abpm_genver},

@@ -57,22 +57,24 @@ dpkgfield() {
 		fi
 	done
 	# second-pass: actually fill in the blanks
-	echo -n "$1: "
+	local _buffer=()
 	for _v in "${_string_v[@]}"; do
 		if [[ "${_v}" = '@'* ]]; then
 			continue
 		fi
 		if ((VER_NONE_ALL)); then			# name-only
 			name="${1/%_}"
-			echo "${name/[<>=]=*},";
+			_buffer+=("${name/[<>=]=*}");
 		elif [[ "${_v}" =~ [\<\>=]= ]]; then
-			abpm_debver "${_v}"
+			_buffer+=("$(abpm_debver "${_v}")")
 		elif ((VER_NONE)) || [[ "$1" =~ _$ ]]; then	
-			echo -n "${1%_},";
+			_buffer+=("${1%_}");
 		else
-			echo "${_v}>=$(dpkg_getver "${_v}"),"
+			_buffer+=("$(abpm_debver "${_v}>=$(dpkg_getver "${_v}")")")
 		fi
 	done
+	ab_join_elements _buffer $',\n'
+	echo ''
 }
 
 dpkgctrl() {
