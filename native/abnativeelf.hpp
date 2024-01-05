@@ -47,4 +47,5 @@ int elf_copy_to_symdir(const char *src_path, const char *dst_path,
 int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
                            int flags, GuardedSet<std::string> &symbols);
 int elf_copy_debug_symbols_parallel(const std::vector<std::string> &directories,
-                                    const char *dst_path);
+                                    const char *dst_path,
+                                    std::unordered_set<std::string> &so_deps);

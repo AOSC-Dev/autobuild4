@@ -575,11 +575,15 @@ int elf_copy_to_symdir(const char *src_path, const char *dst_path,
 
 class ELFWorkerPool : public ThreadPool<std::string, int> {
 public:
-  ELFWorkerPool(const std::string symdir)
+  ELFWorkerPool(const std::string symdir, bool collect_so_deps = false,
+                bool strip_only = false)
       : ThreadPool<std::string, int>([&](const std::string src_path) {
           return elf_copy_debug_symbols(
               src_path.c_str(), m_symdir.c_str(),
-              AB_ELF_USE_EU_STRIP | AB_ELF_FIND_SO_DEPS, m_sodeps);
+              AB_ELF_USE_EU_STRIP |
+                  (collect_so_deps ? AB_ELF_FIND_SO_DEPS : 0) |
+                  (strip_only ? AB_ELF_STRIP_ONLY : 0),
+              m_sodeps);
         }),
         m_symdir(symdir), m_sodeps() {}
 
@@ -593,8 +597,14 @@ private:
 };
 
 int elf_copy_debug_symbols_parallel(const std::vector<std::string> &directories,
-                                    const char *dst_path) {
-  ELFWorkerPool pool{dst_path};
+                                    const char *dst_path,
+                                    std::unordered_set<std::string> &so_deps) {
+  bool collect_so_deps = false;
+  if (!so_deps.empty()) {
+    collect_so_deps = true;
+    so_deps.clear();
+  }
+  ELFWorkerPool pool{dst_path, collect_so_deps};
   for (const auto &directory : directories) {
     for (const auto &entry : fs::recursive_directory_iterator(directory)) {
       if (entry.is_regular_file() && (!entry.is_symlink())) {
@@ -605,8 +615,13 @@ int elf_copy_debug_symbols_parallel(const std::vector<std::string> &directories,
   }
 
   pool.wait_for_completion();
+  const auto pool_results = pool.get_sodeps();
 
   if (pool.has_error())
     return 1;
+
+  if (collect_so_deps)
+    so_deps.insert(pool_results.begin(), pool_results.end());
+
   return 0;
 }
