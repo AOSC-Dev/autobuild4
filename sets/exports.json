@@ -39,7 +39,8 @@
     "AB_SAN_THR",
     "AB_SAN_LEK",
     "NOLTO",
-    "NOSTATIC"
+    "NOSTATIC",
+    "ABPATCHLAX"
   ],
   "offical_builds": [
     "AUTOTOOLS_AFTER",

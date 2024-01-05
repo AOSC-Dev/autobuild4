@@ -8,6 +8,9 @@ RPATCHFLAGS=("-Rp1" "-t")
 argprint(){ printf '%q ' "$@"; }
 
 ab_apply_patches() {
+	if ! bool "$ABPATCHLAX"; then
+		PATCHFLAGS+=('-F0')
+	fi
 	for i in "$@"; do
 		if [[ -e $i ]];then
 			abinfo "Applying patch $(basename "$i") ..."
@@ -17,6 +20,9 @@ ab_apply_patches() {
 }
 
 ab_reverse_patches() {
+	if ! bool "$ABPATCHLAX"; then
+		PATCHFLAGS+=('-F0')
+	fi
 	for i in "$@"; do
 		if [[ -e $i ]];then
 			abinfo "Reverting patch $(basename "$i") ..."
