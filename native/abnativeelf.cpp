@@ -483,6 +483,9 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     symbols.insert(result.needed_libs.begin(), result.needed_libs.end());
   }
 
+  if (flags & AB_ELF_CHECK_ONLY)
+    return 0;
+
   if (!result.has_debug_info) {
     // no debug info, strip only
     flags |= AB_ELF_STRIP_ONLY;
@@ -576,15 +579,10 @@ int elf_copy_to_symdir(const char *src_path, const char *dst_path,
 
 class ELFWorkerPool : public ThreadPool<std::string, int> {
 public:
-  ELFWorkerPool(const std::string symdir, bool collect_so_deps = false,
-                bool strip_only = false)
+  ELFWorkerPool(const std::string symdir, int flags)
       : ThreadPool<std::string, int>([&](const std::string src_path) {
-          return elf_copy_debug_symbols(
-              src_path.c_str(), m_symdir.c_str(),
-              AB_ELF_USE_EU_STRIP |
-                  (collect_so_deps ? AB_ELF_FIND_SO_DEPS : 0) |
-                  (strip_only ? AB_ELF_STRIP_ONLY : 0),
-              m_sodeps);
+          return elf_copy_debug_symbols(src_path.c_str(), m_symdir.c_str(),
+                                        flags, m_sodeps);
         }),
         m_symdir(symdir), m_sodeps() {}
 
@@ -599,13 +597,9 @@ private:
 
 int elf_copy_debug_symbols_parallel(const std::vector<std::string> &directories,
                                     const char *dst_path,
-                                    std::unordered_set<std::string> &so_deps) {
-  bool collect_so_deps = false;
-  if (!so_deps.empty()) {
-    collect_so_deps = true;
-    so_deps.clear();
-  }
-  ELFWorkerPool pool{dst_path, collect_so_deps};
+                                    std::unordered_set<std::string> &so_deps,
+                                    int flags) {
+  ELFWorkerPool pool{dst_path, flags};
   for (const auto &directory : directories) {
     for (const auto &entry : fs::recursive_directory_iterator(directory)) {
       if (entry.is_regular_file() && (!entry.is_symlink())) {
@@ -621,7 +615,7 @@ int elf_copy_debug_symbols_parallel(const std::vector<std::string> &directories,
   if (pool.has_error())
     return 1;
 
-  if (collect_so_deps)
+  if (flags & AB_ELF_FIND_SO_DEPS)
     so_deps.insert(pool_results.begin(), pool_results.end());
 
   return 0;

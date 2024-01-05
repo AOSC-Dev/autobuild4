@@ -775,14 +775,33 @@ static int abelf_copy_dbg(WORD_LIST *list) {
 
 static int abelf_copy_dbg_parallel(WORD_LIST *list) {
   constexpr const char *varname = "__AB_SO_DEPS";
-  auto args = get_all_args_vector(list);
+  int flags = 0x0;
+
+  reset_internal_getopt();
+  int opt = 0;
+  while ((opt = internal_getopt(list, const_cast<char *>("exr"))) != -1) {
+    switch (opt) {
+    case 'x':
+      flags |= AB_ELF_STRIP_ONLY;
+      break;
+    case 'r':
+      flags |= AB_ELF_CHECK_ONLY;
+      break;
+    case 'e':
+      flags |= AB_ELF_USE_EU_STRIP;
+      break;
+    default:
+      return 1;
+    }
+  }
+
+  auto args = get_all_args_vector(loptend);
   if (args.empty())
     return EX_BADUSAGE;
   const auto dst = args.back();
   args.pop_back();
   std::unordered_set<std::string> so_deps{};
-  so_deps.insert("_"); // this is poorman's <optional>
-  int ret = elf_copy_debug_symbols_parallel(args, dst.c_str(), so_deps);
+  int ret = elf_copy_debug_symbols_parallel(args, dst.c_str(), so_deps, flags);
   if (ret < 0)
     return 10;
   // copy the data to the bash variable
