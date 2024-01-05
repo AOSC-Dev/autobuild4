@@ -45,9 +45,12 @@ dpkgfield() {
 	# first-pass: check for auto-deps notations
 	for _v in "${_string_v[@]}"; do
 		if [ "${_v}" = "@AB_AUTO_SO_DEPS@" ]; then
+		    if ! ((${#__AB_SO_DEPS})); then
+				abdie "Auto dependency discovery requested, but no ELF dependency was found!" >&2
+            fi
 		    local _data
 			_data="$(dpkg_get_provides "${__AB_SO_DEPS[@]}")"
-			abdbg "Auto dependency discovery found : ${_data}"
+			abdbg "Auto dependency discovery found: ${_data}" >&2
 			while read -r LINE; do
 				_string_v+=("$LINE")
 			done <<< "${_data}"

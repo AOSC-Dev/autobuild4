@@ -3,7 +3,7 @@
 ##@copyright GPL-2.0+
 
 filter_elf() {
-	if ! bool ABSTRIP; then
+	if ! bool "$ABSTRIP"; then
 		abinfo 'Not stripping ELF binaries as requested.'
 	    return 0;
     fi

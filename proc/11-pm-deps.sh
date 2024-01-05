@@ -6,7 +6,14 @@ pm_install_deps() {
     local _tmpdir
     _tmpdir="$(mktemp -d)"
     mkdir -p "${_tmpdir}"/debian/
-    abpm_dump_builddep_req "$@" > "${_tmpdir}"/debian/control
+    local _filtered=()
+    for p in "$@"; do
+        if [[ "$p" = "@"* ]]; then
+            continue
+        fi
+        _filtered+=("$p")
+    done
+    abpm_dump_builddep_req "${_filtered[@]}" > "${_tmpdir}"/debian/control
     apt-get build-dep -y "${_tmpdir}"
     rm -rf "${_tmpdir}"
 }

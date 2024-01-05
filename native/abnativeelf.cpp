@@ -479,6 +479,10 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
   const char *data = static_cast<const char *>(file.addr());
   const ELFParseResult result = identify_binary_data(data, size);
 
+  if (flags & AB_ELF_FIND_SO_DEPS) {
+    symbols.insert(result.needed_libs.begin(), result.needed_libs.end());
+  }
+
   if (!result.has_debug_info) {
     // no debug info, strip only
     flags |= AB_ELF_STRIP_ONLY;
@@ -530,9 +534,6 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
   const fs::path final_prefix = final_path.parent_path();
   fs::create_directories(final_prefix);
 
-  if (flags & AB_ELF_FIND_SO_DEPS) {
-    symbols.insert(result.needed_libs.begin(), result.needed_libs.end());
-  }
   if (flags & AB_ELF_USE_EU_STRIP) {
     args[0] = "eu-strip";
     if (!(flags & AB_ELF_STRIP_ONLY)) {
