@@ -22,8 +22,11 @@ void autobuild_register_builtins(
     std::unordered_map<const char *, builtin_func_t> functions);
 int autobuild_switch_strict_mode(const bool enable);
 int autobuild_copy_variable_value(const char *src_name, const char *dst_name);
-SHELL_VAR *autobuild_copy_variable(SHELL_VAR *src, const char *dst_name, bool reference = true);
+SHELL_VAR *autobuild_copy_variable(SHELL_VAR *src, const char *dst_name,
+                                   bool reference = true);
 int autobuild_load_all_from_directory(const char *directory);
+void *autobuild_get_utility_variable(const char *name);
+bool autobuild_set_utility_variable(const char *name, void *value);
 
 class ABStrictModeGuard {
   inline ABStrictModeGuard() { autobuild_switch_strict_mode(true); }

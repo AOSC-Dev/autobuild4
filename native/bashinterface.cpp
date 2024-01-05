@@ -261,3 +261,24 @@ int autobuild_load_all_from_directory(const char *directory) {
   }
   return 0;
 }
+
+void *autobuild_get_utility_variable(const char *name) {
+  SHELL_VAR *var = find_variable(name);
+  if (!var) {
+    return nullptr;
+  }
+  if (var->attributes & att_special) {
+    return static_cast<void *>(var->value);
+  }
+  return nullptr;
+}
+
+bool autobuild_set_utility_variable(const char *name, void *value) {
+  SHELL_VAR *var = bind_variable(name, nullptr, 0);
+  if (!var) {
+    return false;
+  }
+  var->attributes |= (att_special | att_nofree | att_readonly | att_noassign);
+  var->value = (char *)value;
+  return true;
+}
