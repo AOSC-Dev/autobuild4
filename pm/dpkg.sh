@@ -61,6 +61,9 @@ dpkgfield() {
 	for _v in "${_string_v[@]}"; do
 		if [[ "${_v}" = '@'* ]]; then
 			continue
+		elif [[ "${_v}" = "$PKGNAME" ]]; then
+		    # skip itself
+		    continue
 		fi
 		if ((VER_NONE_ALL)); then			# name-only
 			name="${1/%_}"
@@ -73,8 +76,7 @@ dpkgfield() {
 			_buffer+=("$(abpm_debver "${_v}>=$(dpkg_getver "${_v}")")")
 		fi
 	done
-	ab_join_elements _buffer $',\n'
-	echo ''
+	echo "$1: $(ab_join_elements _buffer $',\n ')"
 }
 
 dpkgctrl() {
