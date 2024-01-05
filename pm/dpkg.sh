@@ -35,6 +35,43 @@ dpkgpkgver() {
 	echo -n "$_ver"
 }
 
+dpkg_get_provides() {
+	dpkg-query --robot -S "$@" | cut -d':' -f1 | sort -u 2>/dev/null
+}
+
+dpkgfield() {
+	local _string_v="$2"
+	ab_tostringarray _string_v
+	# first-pass: check for auto-deps notations
+	for _v in "${_string_v[@]}"; do
+		if [ "${_v}" = "@AB_AUTO_SO_DEPS@" ]; then
+		    local _data
+			_data="$(dpkg_get_provides "${__AB_SO_DEPS[@]}")"
+			abdbg "Auto dependency discovery found : ${_data}"
+			while read -r LINE; do
+				_string_v+=("$LINE")
+			done <<< "${_data}"
+		fi
+	done
+	# second-pass: actually fill in the blanks
+	echo -n "$1: "
+	for _v in "${_string_v[@]}"; do
+		if [[ "${_v}" = '@'* ]]; then
+			continue
+		fi
+		if ((VER_NONE_ALL)); then			# name-only
+			name="${1/%_}"
+			echo "${name/[<>=]=*}";
+		elif [[ "${_v}" =~ [\<\>=]= ]]; then
+			abpm_debver "${_v}"
+		elif ((VER_NONE)) || [[ "$1" =~ _$ ]]; then	
+			echo -n "${1%_}";
+		else
+			echo "${_v}>=$(dpkg_getver "${_v}")"
+		fi
+	done
+}
+
 dpkgctrl() {
 	local arch="${ABHOST%%\/*}"
 	[[ "$arch" == noarch ]] && arch=all
@@ -50,7 +87,16 @@ dpkgctrl() {
 	else
 		echo "Essential: no"
 	fi
-	# TODO: generate pkg control fields
+
+	[ "$PKGDEP" ] && dpkgfield Depends "$PKGDEP"
+	[ "$PKGPRDEP" ] && dpkgfield Pre-Depends "$PKGPRDEP"
+	VER_NONE=1 # We don't autofill versions in optional fields
+	[ "$PKGRECOM" ] && dpkgfield Recommends "$PKGRECOM"
+	[ "$PKGREP" ] && dpkgfield Replaces "$PKGREP"
+	[ "$PKGCONFL" ] && dpkgfield Conflicts "$PKGCONFL"
+	[ "$PKGPROV" ] && VER_NONE=1 dpkgfield Provides "$PKGPROV"
+	[ "$PKGSUG" ] && dpkgfield Suggests "$PKGSUG"
+	[ "$PKGBREAK" ] && dpkgfield Breaks "$PKGBREAK"
 	if [ -e "$SRCDIR"/autobuild/extra-dpkg-control ]; then
 		cat "$SRCDIR"/autobuild/extra-dpkg-control
 	fi
