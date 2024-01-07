@@ -103,7 +103,11 @@ dpkgctrl() {
 	[ "$PKGCONFL" ] && dpkgfield Conflicts "$PKGCONFL"
 	[ "$PKGPROV" ] && VER_NONE=1 dpkgfield Provides "$PKGPROV"
 	[ "$PKGSUG" ] && dpkgfield Suggests "$PKGSUG"
-	[ "$PKGBREAK" ] && dpkgfield Breaks "$PKGBREAK"
+	if [ "${__ABMODIFIERS[PKGBREAK]}" = '0' ]; then
+		abwarn 'Not emitting PKGBREAK due to modifiers' >&2
+	elif [ "$PKGBREAK" ]; then
+		dpkgfield Breaks "$PKGBREAK"
+	fi
 	if [ -e "$SRCDIR"/autobuild/extra-dpkg-control ]; then
 		cat "$SRCDIR"/autobuild/extra-dpkg-control
 	fi

@@ -21,6 +21,8 @@ load_strict "$AB/arch/${ABHOST//\//_}.sh"
 
 export AB ABBUILD ABHOST ABTARGET
 
+ab_parse_set_modifiers
+
 arch_loaddefines -2 defines || abdie "Failed to source defines file: $?."
 
 if abisdefined FAIL_ARCH && abisdefined ALLOW_ARCH; then

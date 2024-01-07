@@ -1134,6 +1134,70 @@ static int ab_join_elements(WORD_LIST *list) {
   return 0;
 }
 
+static int ab_parse_set_modifiers(WORD_LIST *list) {
+  // accepts no arguments
+  // accepted modifiers (as of now) are:
+  // STAGE2 PKGBREAK
+  const char *modifiers_string = getenv("ABMODIFIERS");
+  if (!modifiers_string)
+    return 0;
+  struct ab_modifier {
+    std::string name;
+    bool enabled;
+  };
+  std::vector<ab_modifier> modifiers;
+  uint8_t state = 0;
+  std::string modifier_name{};
+  for (const char *modifier = modifiers_string; *modifier; modifier++) {
+    switch (*modifier) {
+    case '+':
+      state = 1;
+      continue;
+    case '-':
+      state = 2;
+      continue;
+    default:
+      break;
+    }
+    if (state == 0) {
+      return EX_BADASSIGN;
+    }
+    if (*modifier == ',') {
+      if (modifier_name.empty()) {
+        return EX_BADASSIGN;
+      }
+      modifiers.push_back({modifier_name, state == 1 ? true : false});
+      modifier_name.clear();
+      state = 0;
+      continue;
+    }
+    modifier_name.push_back(*modifier);
+  }
+  // last element:
+  if (!modifier_name.empty()) {
+    modifiers.push_back({modifier_name, state == 1 ? true : false});
+  }
+
+  SHELL_VAR *hash_var =
+      make_new_assoc_variable(const_cast<char *>("__ABMODIFIERS"));
+  if (!hash_var)
+    assert("Unable to allocate memory for __ABMODIFIERS");
+  hash_var->attributes |= (att_readonly | att_nofree | att_nounset);
+  auto *hash = assoc_cell(hash_var);
+  auto *logger = get_logger();
+  for (const auto &modifier : modifiers) {
+    const std::string name = string_to_uppercase(modifier.name);
+    logger->info(fmt::format("Setting modifier {0} to {1}", name, modifier.enabled));
+    if (name == "STAGE2" && modifier.enabled) {
+      // compatibility with old versions of autobuild
+      setenv("ABSTAGE2", "1", 1);
+    }
+    auto *elem = hash_insert(strdup(name.c_str()), hash, 0);
+    elem->data = (char *)(modifier.enabled ? "1" : "0");
+  }
+  return 0;
+}
+
 extern "C" {
 void register_all_native_functions() {
   if (set_registered_flag())
@@ -1168,6 +1232,7 @@ void register_all_native_functions() {
       {"ab_tostringarray", ab_tostringarray},
       {"ab_typecheck", ab_typecheck},
       {"ab_join_elements", ab_join_elements},
+      {"ab_parse_set_modifiers", ab_parse_set_modifiers},
       {"abelf_copy_dbg_parallel", abelf_copy_dbg_parallel},
       {"abpm_aosc_archive", abpm_aosc_archive_new},
       {"abpm_debver", abpm_genver},
