@@ -33,7 +33,7 @@ if abisdefined FAIL_ARCH && abisdefined ALLOW_ARCH; then
 fi
 
 # shellcheck disable=SC2053
-if [ -n "$ALLOW_ARCH" ] && [ "${ABHOST%%\/*}" != $ALLOW_ARCH ]; then
+if [ -n "$ALLOW_ARCH" ] && [ "${ABBUILD%%\/*}" != $ALLOW_ARCH ]; then
 	abdie "This package can only be built on $ALLOW_ARCH, not including $ABHOST."
 fi
 # shellcheck disable=SC2053
