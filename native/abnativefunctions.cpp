@@ -932,17 +932,22 @@ static int abpp_parallelize(WORD_LIST *list) {
 static std::mutex ab_gil{};
 
 static int abpp_gil(WORD_LIST *list) {
-  const auto *option = get_argv1(list);
-  if (!option)
-    return 1;
-  if (strcmp(option, "release") == 0) {
-    ab_gil.unlock();
-    return 0;
-  } else if (strcmp(option, "acquire") == 0) {
-    ab_gil.lock();
-    return 0;
-  }
-  return 1;
+  constexpr WORD_LIST empty_list{};
+  const auto *func_name = get_argv1(list);
+  if (!func_name)
+    return EX_BADUSAGE;
+  SHELL_VAR *func_v = find_function(func_name);
+  if (!func_v)
+    return EX_BADSYNTAX;
+  const auto *func_f = function_cell(func_v);
+  if (!func_f)
+    return EX_BADSYNTAX;
+  auto *args = list->next;
+  if (!args)
+    args = const_cast<WORD_LIST *>(&empty_list);
+  // protect the context using GIL
+  std::lock_guard<std::mutex> gil_guard{ab_gil};
+  return execute_shell_function(func_v, args);
 }
 
 struct abfp_lambda_env {
@@ -1165,7 +1170,8 @@ static int ab_parse_set_modifiers(WORD_LIST *list) {
       if (modifier_name.empty()) {
         return EX_BADASSIGN;
       }
-      modifiers.push_back({std::move(modifier_name), state == 1 ? true : false});
+      modifiers.push_back(
+          {std::move(modifier_name), state == 1 ? true : false});
       modifier_name.clear();
       state = 0;
       continue;
@@ -1186,7 +1192,8 @@ static int ab_parse_set_modifiers(WORD_LIST *list) {
   auto *logger = get_logger();
   for (const auto &modifier : modifiers) {
     const std::string name = string_to_uppercase(modifier.name);
-    logger->info(fmt::format("Setting modifier {0} to {1}", name, modifier.enabled));
+    logger->info(
+        fmt::format("Setting modifier {0} to {1}", name, modifier.enabled));
     if (name == "STAGE2" && modifier.enabled) {
       // compatibility with old versions of autobuild
       setenv("ABSTAGE2", "1", 1);
