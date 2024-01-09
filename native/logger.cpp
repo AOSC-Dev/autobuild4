@@ -5,6 +5,8 @@
 #include <fstream>
 #include <iostream>
 
+#include <nlohmann/json.hpp>
+
 typedef std::lock_guard<std::mutex> io_lock_guard;
 
 inline const char *level_to_string(const LogLevel level) {

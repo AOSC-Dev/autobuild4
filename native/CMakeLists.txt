@@ -5,6 +5,8 @@ set(COMMON_SRC
   abnativefunctions.cpp
   abnativefunctions.h
   abnativeelf.cpp
+  abjsondata.hpp
+  abjsondata.cpp
   logger.hpp
   logger.cpp
   pm.hpp

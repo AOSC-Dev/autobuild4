@@ -2,7 +2,6 @@
 
 #include <cstdint>
 #include <mutex>
-#include <nlohmann/json.hpp>
 #include <vector>
 
 #include "common.hpp"

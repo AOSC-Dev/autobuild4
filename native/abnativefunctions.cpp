@@ -1,6 +1,7 @@
 #include "logger.hpp"
 
 #include "abconfig.h"
+#include "abjsondata.hpp"
 #include "abnativeelf.hpp"
 #include "abnativefunctions.h"
 #include "bashinterface.hpp"
@@ -18,8 +19,6 @@
 #include <string>
 #include <unistd.h>
 #include <unordered_set>
-
-using json = nlohmann::json;
 
 extern "C" {
 #include "bashincludes.h"
@@ -101,7 +100,8 @@ static inline bool set_self_path() {
     return false;
   }
 
-  return bind_global_variable("AB", const_cast<char*>(ab_path.c_str()), ASS_FORCE) != nullptr;
+  return bind_global_variable("AB", const_cast<char *>(ab_path.c_str()),
+                              ASS_FORCE) != nullptr;
 }
 
 static inline std::string string_to_uppercase(const std::string &str) {
@@ -385,17 +385,13 @@ static int set_arch_variables() {
     return 1;
   }
   // read targets
-  const auto arch_targets_path = ab_path + "/sets/arch_targets.json";
-  std::ifstream targets_file(arch_targets_path);
-  json arch_targets = json::parse(targets_file);
+  auto map_table = jsondata_get_arch_targets(ab_path);
   auto *arch_target_var =
       make_new_assoc_variable(const_cast<char *>("ARCH_TARGET"));
   auto *arch_target_var_h = assoc_cell(arch_target_var);
-  for (json::iterator it = arch_targets.begin(); it != arch_targets.end();
-       ++it) {
-    assoc_insert(
-        arch_target_var_h, const_cast<char *>(it.key().c_str()),
-        const_cast<char *>(it.value().template get<std::string>().c_str()));
+  for (auto &it : map_table) {
+    assoc_insert(arch_target_var_h, const_cast<char *>(it.first.c_str()),
+                 const_cast<char *>(it.second.c_str()));
   }
 
   // set ARCH variables
@@ -407,8 +403,7 @@ static int set_arch_variables() {
   // ABBUILD=ARCH
   bind_global_variable("ABBUILD", const_cast<char *>(this_arch), ASS_NOEVAL);
 
-  const std::string arch_triple =
-      arch_targets[this_arch].template get<std::string>();
+  const std::string arch_triple = map_table[this_arch];
   // set HOST
   // HOST=${ARCH_TARGET["$ABHOST"]}
   bind_global_variable("HOST", const_cast<char *>(arch_triple.c_str()),
@@ -421,21 +416,10 @@ static int set_arch_variables() {
   // set ABHOST_GROUP
   auto *arch_groups_v =
       make_new_array_variable(const_cast<char *>("ABHOST_GROUP"));
+  auto arch_groups_table = jsondata_get_arch_groups(ab_path, this_arch);
   auto *arch_groups_a = array_cell(arch_groups_v);
-  const auto arch_groups_path = ab_path + "/sets/arch_groups.json";
-  std::ifstream groups_file(arch_groups_path);
-  json arch_groups = json::parse(groups_file);
-  for (json::iterator it = arch_groups.begin(); it != arch_groups.end(); ++it) {
-    const auto &group_name = it.key();
-    auto group = it.value();
-    // search inner array for the target architecture name
-    for (json::iterator it = group.begin(); it != group.end(); ++it) {
-      const auto arch_value = it.value().template get<std::string>();
-      if (arch_value == this_arch) {
-        // append the group name to the array
-        bash_array_push(arch_groups_a, const_cast<char *>(group_name.c_str()));
-      }
-    }
+  for (auto &it : arch_groups_table) {
+    bash_array_push(arch_groups_a, const_cast<char *>(it.c_str()));
   }
 
   return 0;
@@ -511,18 +495,7 @@ static int arch_loaddefines(WORD_LIST *list) {
   if (ab_path.empty()) {
     return 1;
   }
-  const std::string exported_vars_path = ab_path + "/sets/exports.json";
-  std::ifstream exported_vars_file(exported_vars_path);
-  json exported_vars_json = json::parse(exported_vars_file);
-  std::vector<std::string> exported_vars;
-  exported_vars.reserve(64);
-  for (json::iterator it = exported_vars_json.begin();
-       it != exported_vars_json.end(); ++it) {
-    const auto inner_array =
-        it.value().template get<std::vector<std::string>>();
-    exported_vars.insert(exported_vars.end(), inner_array.begin(),
-                         inner_array.end());
-  }
+  std::vector<std::string> exported_vars = jsondata_get_exported_vars(ab_path);
 
   // load the defines file
   const auto defines_path = arch_findfile_inner(argv1, stage2_aware);
