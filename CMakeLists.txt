@@ -69,6 +69,7 @@ add_custom_command(
     -DAB_OUTPUT_FILE="${CMAKE_CURRENT_BINARY_DIR}/abconfig.h"
     -DAB_VERSION="${PROJECT_VERSION}"
     -DAB_URL="${PROJECT_HOMEPAGE_URL}"
+    -DAB_INSTALL_PREFIX="${AB_INSTALL_PREFIX}"
     -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/GenerateConfig.cmake"
   DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/config.h.in

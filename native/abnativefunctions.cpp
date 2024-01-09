@@ -95,6 +95,15 @@ static inline std::string get_self_path() {
   return ab_path;
 }
 
+static inline bool set_self_path() {
+  fs::path ab_path = ab_install_prefix;
+  if (!fs::exists(ab_path)) {
+    return false;
+  }
+
+  return bind_global_variable("AB", const_cast<char*>(ab_path.c_str()), ASS_FORCE) != nullptr;
+}
+
 static inline std::string string_to_uppercase(const std::string &str) {
   std::string result{str};
   std::transform(result.begin(), result.end(), result.begin(), ::toupper);
@@ -372,7 +381,7 @@ static void register_logger_from_env() {
 
 static int set_arch_variables() {
   const std::string ab_path = get_self_path();
-  if (ab_path.empty()) {
+  if (ab_path.empty() && (!set_self_path())) {
     return 1;
   }
   // read targets
