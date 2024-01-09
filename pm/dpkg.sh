@@ -70,8 +70,8 @@ dpkgfield() {
 			_buffer+=("${name/[<>=]=*}");
 		elif [[ "${_v}" =~ [\<\>=]= ]]; then
 			_buffer+=("$(abpm_debver "${_v}")")
-		elif ((VER_NONE)) || [[ "$1" =~ _$ ]]; then	
-			_buffer+=("${1%_}");
+		elif ((VER_NONE)) || [[ "$_v" =~ _$ ]]; then
+			_buffer+=("${_v%_}");
 		else
 			_buffer+=("$(abpm_debver "${_v}>=$(dpkg_getver "${_v}")")")
 		fi
