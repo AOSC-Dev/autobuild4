@@ -73,15 +73,18 @@ PATHS2="$(find "$PKGDIR"/usr -mindepth 1 -maxdepth 1 '(' "${EXPR2[@]}" ')' -type
 PATHS3="$(find "$PKGDIR"/usr/local -mindepth 1 -maxdepth 1 '(' "${EXPR3[@]}" ')' -type d 2>/dev/null || true)"
 
 if [ -n "$PATHS" ]; then
-	aberr "QA (E321): found unexpected path(s) in package:\n\n$PATHS\n"
+	aberr "QA (E321): found unexpected path(s) in package:"
+	echo -ne "\n\n$PATHS\n"
 	return 1
 fi
 if [ -n "$PATHS2" ]; then
-	aberr "QA (E321): found unexpected path(s) in package:\n\n$PATHS2\n"
+	aberr "QA (E321): found unexpected path(s) in package:"
+	echo -ne "\n\n$PATHS2\n"
 	return 1
 fi
 if [ -n "$PATHS3" ]; then
-	aberr "QA (E321): found unexpected path(s) in package:\n\n$PATHS3\n"
+	aberr "QA (E321): found unexpected path(s) in package:"
+	echo -ne "\n\n$PATHS3\n"
 	return 1
 fi
 
