@@ -36,7 +36,7 @@ build_rust_inject_lto() {
 
 build_rust_audit() {
 	# FIXME: cargo-audit >= 0.18 uses rustls, which breaks non-amd64/arm64 architectures.
-	if ab_match_arch "!(amd64|arm64)" && bool "$NOCARGOAUDIT"; then
+	if ab_match_arch "!(amd64|arm64)" || bool "$NOCARGOAUDIT"; then
 		return 0
 	fi
 
