@@ -371,8 +371,14 @@ static int abdie(WORD_LIST *list) {
 
 static void register_logger_from_env() {
   auto *var = find_variable_tempenv("ABREPORTER");
+  auto *no_color_string = getenv("NO_COLOR");
+  bool no_color = no_color_string && no_color_string[0] == '1';
   if (!var || !var->value) {
-    logger = reinterpret_cast<Logger *>(new PlainLogger());
+    if (no_color) {
+      logger = reinterpret_cast<Logger *>(new PlainLogger());
+    } else {
+      logger = reinterpret_cast<Logger *>(new ColorfulLogger());
+    }
     return;
   }
   const char *reporter = var->value;
