@@ -36,6 +36,6 @@ struct DiagnosticFrame {
 
 struct Diagnostic {
   LogLevel level;
-  std::string message;
+  int code;
   std::vector<DiagnosticFrame> frames;
 };

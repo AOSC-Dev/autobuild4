@@ -60,7 +60,7 @@ void PlainLogger::logDiagnostic(Diagnostic diagnostic) {
     printf("%s(%zu): In function `%s':\n", filename.c_str(), diag.line,
            function.c_str());
   }
-  std::cout << diagnostic.message << std::endl;
+  std::cout << fmt::format("Command exited with {0}.", diagnostic.code) << std::endl;
 }
 
 void PlainLogger::logException(std::string message) {
@@ -90,7 +90,7 @@ void JsonLogger::log(LogLevel lvl, std::string message) {
 void JsonLogger::logDiagnostic(Diagnostic diagnostic) {
   json line = {{"event", "diagnostic"},
                {"level", level_to_string(diagnostic.level)},
-               {"message", diagnostic.message}};
+               {"exit_code", diagnostic.code}};
   line["frames"] = json::array();
   for (const auto &frame : diagnostic.frames) {
     line["frames"].push_back({{"file", frame.file},
@@ -165,10 +165,11 @@ void ColorfulLogger::logDiagnostic(Diagnostic diagnostic) {
     }
     if ((it + 1) == diagnostic.frames.rend()) {
       // last call
-      buffer += fmt::format("{0}:{1}: \e[0mIn function `\e[1m{2}':\n"
-                            "{0}:{1}: \e[91merror: \e[39m{3}\e[0m\n",
-                            frame.file, frame.line, frame.function,
-                            diagnostic.message);
+      buffer +=
+          fmt::format("{0}:{1}: \e[0mIn function `\e[1m{2}':\n"
+                      "{0}:{1}: \e[91merror: \e[39mcommand exited with "
+                      "\e[93m{3}\e[39m\e[0m\n",
+                      frame.file, frame.line, frame.function, diagnostic.code);
       buffer += get_snippet(frame.file, frame.line);
       continue;
     }

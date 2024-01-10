@@ -1,9 +1,9 @@
+#include <algorithm>
 #include <fstream>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <algorithm>
 
 #include "bashinterface.hpp"
 #include "common.hpp"
@@ -66,9 +66,7 @@ Diagnostic autobuild_get_backtrace() {
     });
   }
 
-  diag.message = fmt::format("Command exited with {0}.",
-                             running_trap ? trap_saved_exit_value
-                                          : last_command_exit_value);
+  diag.code = running_trap ? trap_saved_exit_value : last_command_exit_value;
   return diag;
 }
 
