@@ -793,9 +793,10 @@ static int abelf_copy_dbg_parallel(WORD_LIST *list) {
   auto args = get_all_args_vector(loptend);
   if (args.empty())
     return EX_BADUSAGE;
-  const auto dst = args.erase(args.end() - 1);
+  const auto dst = std::string{args.back()};
+  args.pop_back();
   std::unordered_set<std::string> so_deps{};
-  int ret = elf_copy_debug_symbols_parallel(args, dst->c_str(), so_deps, flags);
+  int ret = elf_copy_debug_symbols_parallel(args, dst.c_str(), so_deps, flags);
   if (ret < 0)
     return 10;
   // copy the data to the bash variable
