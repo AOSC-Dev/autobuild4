@@ -35,6 +35,11 @@ build_rust_inject_lto() {
 }
 
 build_rust_audit() {
+	# FIXME: cargo-audit >= 0.18 uses rustls, which breaks non-amd64/arm64 architectures.
+	if ab_match_arch "!(amd64|arm64)" && bool "$NOCARGOAUDIT"; then
+		return 0
+	fi
+
 	abinfo 'Auditing dependencies...'
 	if ! command -v cargo-audit > /dev/null; then
 		abdie "cargo-audit not found: $?."
@@ -68,12 +73,6 @@ build_rust_configure() {
 	if ab_match_arch "ppc64" && \
 		! bool "$NOLTO"; then
 		build_rust_inject_lto
-	fi
-
-	# FIXME: cargo-audit >= 0.18 uses rustls, which breaks non-amd64/arm64 architectures.
-	if ab_match_arch "amd64" || ab_match_arch "arm64" && \
-		! bool "$NOCARGOAUDIT"; then
-		build_rust_audit
 	fi
 }
 
