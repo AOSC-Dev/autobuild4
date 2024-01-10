@@ -2,6 +2,7 @@
 
 #include "abconfig.h"
 #include "abjsondata.hpp"
+#include "abserialize.hpp"
 #include "abnativeelf.hpp"
 #include "abnativefunctions.h"
 #include "bashinterface.hpp"
@@ -1186,6 +1187,11 @@ static int ab_parse_set_modifiers(WORD_LIST *list) {
   return 0;
 }
 
+static int ab_dump_variables(const std::vector<std::string> &names) {
+  std::cout << autobuild_serialized_variables(names) << std::endl;
+  return 0;
+}
+
 extern "C" {
 void register_all_native_functions() {
   if (set_registered_flag())
@@ -1261,5 +1267,20 @@ int start_proc_00() {
   autobuild_switch_strict_mode(true);
   const std::string self_path = get_self_path() + "/proc";
   return autobuild_load_all_from_directory(self_path.c_str());
+}
+
+int dump_defines() {
+  const std::vector<std::string> names =
+      jsondata_get_exported_vars(get_self_path());
+  constexpr const char *precond_scripts[] = {"00-python-defines.sh", "01-core-defines.sh"};
+  for (const auto &script : precond_scripts) {
+    const std::string path = get_self_path() + "/proc/" + script;
+    const int ret = autobuild_load_file(path.c_str(), false);
+    if (ret != 0) {
+      get_logger()->error(fmt::format("Failed to load {0}: {1}", path, ret));
+      return ret;
+    }
+  }
+  return ab_dump_variables(names);
 }
 } // extern "C"

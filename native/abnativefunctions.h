@@ -10,6 +10,7 @@ extern struct Logger *logger;
 void register_all_native_functions();
 int register_builtin_variables();
 int start_proc_00();
+int dump_defines();
 
 #ifdef __cplusplus
 } // extern "C"

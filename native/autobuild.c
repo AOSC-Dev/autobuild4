@@ -19,12 +19,14 @@ int autobuild_builtin(WORD_LIST *list) {
   prctl(PR_SET_NAME, "autobuild");
 
   reset_internal_getopt();
-  while ((opt = internal_getopt(list, "E:")) != -1) {
+  while ((opt = internal_getopt(list, "E:p")) != -1) {
     switch (opt) {
       CASE_HELPOPT;
     case 'E':
       // TODO: tools
       return 0;
+    case 'p':
+      return dump_defines();
     default:
       builtin_usage();
       return (EX_USAGE);

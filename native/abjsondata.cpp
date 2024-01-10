@@ -32,7 +32,7 @@ jsondata_get_arch_targets(const std::string &ab_path) {
   auto arch_target_var = std::unordered_map<std::string, std::string>{};
   for (json::iterator it = arch_targets.begin(); it != arch_targets.end();
        ++it) {
-    arch_target_var.insert(it.key(), it.value().template get<std::string>());
+    arch_target_var.emplace(it.key(), it.value().template get<std::string>());
   }
   return arch_target_var;
 }
@@ -58,4 +58,8 @@ jsondata_get_arch_groups(const std::string &ab_path,
   }
 
   return groups;
+}
+
+std::string jsondata_serialize_map(const std::unordered_map<std::string, const char*> &map) {
+  return json{map}.dump();
 }

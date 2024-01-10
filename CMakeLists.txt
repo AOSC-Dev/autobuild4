@@ -53,6 +53,10 @@ set(COMMON_SRC
   native/abnativefunctions.cpp
   native/abnativefunctions.h
   native/abnativeelf.cpp
+  native/abjsondata.cpp
+  native/abjsondata.hpp
+  native/abserialize.cpp
+  native/abserialize.hpp
   native/logger.hpp
   native/logger.cpp
   native/pm.hpp
