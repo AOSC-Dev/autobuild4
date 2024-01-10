@@ -2,9 +2,9 @@
 
 #include "abconfig.h"
 #include "abjsondata.hpp"
-#include "abserialize.hpp"
 #include "abnativeelf.hpp"
 #include "abnativefunctions.h"
+#include "abserialize.hpp"
 #include "bashinterface.hpp"
 #include "pm.hpp"
 #include "stdwrapper.hpp"
@@ -349,7 +349,8 @@ static int abdie(WORD_LIST *list) {
   // we want to continue the execution if no errors occurred
   if (running_trap && trap_saved_exit_value == 0)
     return 0;
-  const int exit_code = exit_value ? std::atoi(exit_value) : real_exit_code;
+  const int exit_code = exit_value ? std::atoi(exit_value)
+                                   : (real_exit_code ? real_exit_code : 1);
 
   auto *log = reinterpret_cast<BaseLogger *>(logger);
 
@@ -1272,7 +1273,8 @@ int start_proc_00() {
 int dump_defines() {
   const std::vector<std::string> names =
       jsondata_get_exported_vars(get_self_path());
-  constexpr const char *precond_scripts[] = {"00-python-defines.sh", "01-core-defines.sh"};
+  constexpr const char *precond_scripts[] = {"00-python-defines.sh",
+                                             "01-core-defines.sh"};
   for (const auto &script : precond_scripts) {
     const std::string path = get_self_path() + "/proc/" + script;
     const int ret = autobuild_load_file(path.c_str(), false);
