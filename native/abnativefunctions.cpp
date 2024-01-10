@@ -355,6 +355,11 @@ static int abdie(WORD_LIST *list) {
   auto *log = reinterpret_cast<BaseLogger *>(logger);
 
   const auto diag = autobuild_get_backtrace();
+  // cd "$SRCDIR"
+  const auto *srcdir_v = find_variable("SRCDIR");
+  if (srcdir_v && srcdir_v->value) {
+    chdir(srcdir_v->value);
+  }
   log->logDiagnostic(diag);
   log->logException(message ? message : std::string());
 
