@@ -76,7 +76,7 @@ dpkgfield() {
 			_buffer+=("$(abpm_debver "${_v}>=$(dpkg_getver "${_v}")")")
 		fi
 	done
-	echo "$1: $(ab_join_elements _buffer $',\n ')"
+	echo "$1: $(ab_join_elements _buffer $', ')"
 }
 
 dpkgctrl() {
