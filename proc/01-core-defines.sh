@@ -32,6 +32,9 @@ ab_parse_set_modifiers
 
 arch_loaddefines -2 defines || abdie "Failed to source defines file: $?."
 
+if ! abisdefined DPKG_ARCH ; then
+	export DPKG_ARCH="$ABHOST"
+fi
 if abisdefined FAIL_ARCH && abisdefined ALLOW_ARCH; then
 	abdie "Can not define FAIL_ARCH and ALLOW_ARCH at the same time."
 fi
