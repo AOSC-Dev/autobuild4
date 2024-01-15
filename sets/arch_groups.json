@@ -19,5 +19,8 @@
     "m68k",
     "powerpc",
     "ppc64"
+  ],
+  "optenv": [
+    "optenv32"
   ]
 }
