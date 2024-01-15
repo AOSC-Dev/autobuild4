@@ -20,9 +20,11 @@ export SYMDIR="$SRCDIR/abdist-dbg"
 shopt -s expand_aliases extglob globstar nullglob
 
 # Autobuild settings
-load_strict "$AB"/lib/default.sh
+# Allow $ABHOST to override standard paths
+load_strict "$AB"/lib/default-paths.sh
 load_strict "$AB/arch/_common.sh"
 load_strict "$AB/arch/${ABHOST//\//_}.sh"
+load_strict "$AB"/lib/default-defines.sh
 
 export AB ABBUILD ABHOST ABTARGET
 
