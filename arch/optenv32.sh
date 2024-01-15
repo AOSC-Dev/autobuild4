@@ -20,6 +20,8 @@ QT5DIR="/opt/32/lib/qt5"
 QT4BIN="/opt/32/lib/qt4/bin"
 QT5BIN="/opt/32/lib/qt5/bin"
 
+export DPKG_ARCH="noarch"
+
 CFLAGS_COMMON_ARCH=('-fomit-frame-pointer' '-march=pentium4' '-mtune=core2' '-msse' '-msse2' '-msse3')
 
 export PKG_CONFIG_DIR=/opt/32/lib/pkgconfig

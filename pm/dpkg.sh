@@ -80,7 +80,7 @@ dpkgfield() {
 }
 
 dpkgctrl() {
-	local arch="${ABHOST%%\/*}"
+	local arch="${DPKG_ARCH%%\/*}"
 	[[ "$arch" == noarch ]] && arch=all
 	echo "Package: $PKGNAME"
 	echo "Version: $(dpkgpkgver)"
