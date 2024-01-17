@@ -69,38 +69,6 @@ ABTEST_AUTO_DETECT_STAGE=post-build
 ABTESTTYPE_rust_STAGE=post-build
 NOTEST=yes
 
-##OS basic configuration flags
-AUTOTOOLS_DEF=(
-	--prefix="$PREFIX"
-	--sysconfdir="$SYSCONF"
-	--localstatedir="$STATDIR"
-	--libdir="$LIBDIR"
-	--bindir="$BINDIR"
-	--sbindir="$BINDIR"
-	--mandir="$MANDIR"
-)
-CMAKE_DEF=(
-	-DCMAKE_INSTALL_PREFIX="$PREFIX"
-	-DCMAKE_BUILD_TYPE=RelWithDebInfo
-	-DCMAKE_INSTALL_LIBDIR=lib
-	-DLIB_INSTALL_DIR="$LIBDIR"
-	-DSYSCONF_INSTALL_DIR="$SYSCONF"
-	-DSYSCONFDIR="$SYSCONF"
-	-DCMAKE_INSTALL_SBINDIR="$BINDIR"
-	-DCMAKE_SKIP_INSTALL_RPATH=ON
-	-DCMAKE_VERBOSE_MAKEFILE=ON
-)
-
-
-MESON_DEF=("--prefix=$PREFIX" "--sbindir=$BINDIR")
-WAF_DEF=("--prefix=$PREFIX" "--configdir=$SYSCONF" "--libdir=$LIBDIR")
-QTPROJ_DEF=("PREFIX=$PREFIX" "LIBDIR=/usr/lib" "CONFIG+=force_debug_info")
-MAKE_INSTALL_DEF=(
-	"PREFIX=$PREFIX" "BINDIR=$BINDIR" "SBINDIR=$BINDIR" "LIBDIR=$LIBDIR"
-	"INCDIR=$INCLUDE" "MANDIR=$MANDIR" "prefix=$PREFIX" "bindir=$BINDIR"
-	"sbindir=$BINDIR" "libdir=$LIBDIR" "incdir=$INCLUDE" "mandir=$MANDIR"
-)
-
 # AUTOTOOLS related
 RECONF=yes
 

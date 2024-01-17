@@ -22,15 +22,17 @@ shopt -s expand_aliases extglob globstar nullglob
 # Autobuild settings
 # Allow $ABHOST to override standard paths
 load_strict "$AB"/lib/default-paths.sh
-load_strict "$AB/arch/_common.sh"
-load_strict "$AB/arch/${ABHOST//\//_}.sh"
 load_strict "$AB"/lib/default-defines.sh
+load_strict "$AB/arch/_common.sh"
 
 export AB ABBUILD ABHOST ABTARGET
 
 ab_parse_set_modifiers
 
 arch_loaddefines -2 defines || abdie "Failed to source defines file: $?."
+
+load_strict "$AB/arch/${ABHOST//\//_}.sh"
+load_strict "$AB"/lib/default-flags.sh
 
 if ! abisdefined DPKG_ARCH ; then
 	export DPKG_ARCH="$ABHOST"
