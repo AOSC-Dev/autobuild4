@@ -12,3 +12,4 @@ CFLAGS_COMMON_ARCH=('-march=mips32r6' '-mtune=mips32r6' '-mcompact-branches=alwa
 # R2 and R6 assemblies. Enabling this options instructs rustix to use the libc
 # backend instead.
 RUSTFLAGS_COMMON_ARCH=('-Ctarget-cpu=mips32r6' '-Cdebuginfo=0' '-Cllvm-args=--mips-compact-branches=always' '--cfg=rustix_use_libc')
+RUSTFLAGS_COMMON_OPTI_NOLTO=('-Clink-arg=-fuse-ld=gold' '-Clink-arg=-Wl,-build-id=sha1')
