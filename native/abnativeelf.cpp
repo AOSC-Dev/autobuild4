@@ -248,7 +248,7 @@ get_elf_build_id(const char *file_start,
                                   '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
   std::string build_id{};
   constexpr const char *sh_gnu_build_id = ".note.gnu.build-id";
-  constexpr const char *sh_go_build_id = ".note.go.buildid";
+  // constexpr const char *sh_go_build_id = ".note.go.buildid";
   for (const ElfXX_Shdr &section_header : section_headers) {
     const uint32_t type = section_header.sh_type();
     // build id section is a note section
@@ -303,10 +303,6 @@ is_debug_info_present(const std::vector<ElfXX_Shdr> &section_headers,
                       const char *shstrtab) {
   constexpr const char *sh_debug_info = ".debug_info";
   for (const ElfXX_Shdr &section_header : section_headers) {
-    const uint32_t type = section_header.sh_type();
-    if (type != SHT_PROGBITS) {
-      continue;
-    }
     const uint32_t name_idx = section_header.sh_name();
     const char *section_name =
         reinterpret_cast<const char *>(shstrtab + name_idx);
