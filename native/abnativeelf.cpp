@@ -389,7 +389,7 @@ static ELFParseResult identify_binary_data(const char *data,
   std::vector<ElfXX_Shdr> section_headers{};
   for (uint32_t i = 0; i < num_sections; i++) {
     ElfXX_Shdr shdr = get_section_header(ehdr, i, data);
-    section_headers.emplace_back(std::move(shdr));
+    section_headers.emplace_back(shdr);
   }
 
   // extract build id and library depends
@@ -443,7 +443,7 @@ private:
 };
 
 static inline int forked_execvp(const char *path, char *const argv[]) {
-  pid_t pid = fork();
+  const pid_t pid = fork();
   if (pid == 0) {
     execvp(path, argv);
   }
