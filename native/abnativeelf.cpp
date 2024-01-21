@@ -265,7 +265,7 @@ get_elf_build_id(const char *file_start,
     const char *note_start = file_start + section_header.sh_offset();
     ElfXX_Nhdr note_header = {note_start, section_header.is_64bit(),
                               section_header.endianness()};
-    size_t header_size = note_header.size();
+    const size_t header_size = note_header.size();
     const unsigned char *value =
         reinterpret_cast<const unsigned char *>(note_start) + header_size +
         note_header.n_namesz();
@@ -346,7 +346,7 @@ static ELFParseResult identify_binary_data(const char *data,
     result.bin_type = BinaryType::Invalid;
     return result;
   }
-  Endianness endian =
+  const Endianness endian =
       (endianness == ELFDATA2LSB ? Endianness::Little : Endianness::Big);
 
   switch (data[EI_CLASS]) {
@@ -466,7 +466,7 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     return -1;
   }
   const size_t size = st.st_size;
-  MappedFile file{fd, size};
+  const MappedFile file{fd, size};
   std::vector<const char *> args{"", "--remove-section=.comment",
                                  "--remove-section=.note"};
   std::vector<const char *> extra_args{}; // for binutils
@@ -545,7 +545,7 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     return forked_execvp("eu-strip", const_cast<char *const *>(args.data()));
   }
   if (!(flags & AB_ELF_STRIP_ONLY)) {
-    auto path = final_path.string();
+    const auto path = final_path.string();
     const char *args[] = {"objcopy", "--only-keep-debug", src_path,
                           path.c_str(), nullptr};
     return forked_execvp("objcopy", const_cast<char *const *>(args));

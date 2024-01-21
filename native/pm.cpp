@@ -7,7 +7,7 @@ std::string autobuild_to_deb_version(const std::string &ab_version) {
   std::string version_part{};
   uint8_t parser_state = 0;
 
-  for (auto ch : ab_version) {
+  for (const auto ch : ab_version) {
     switch (ch) {
     case '<':
       if (parser_state == 0) {

@@ -86,7 +86,7 @@ static inline std::vector<std::string> get_all_args_vector(WORD_LIST *list) {
 }
 
 static inline std::string get_self_path() {
-  auto *path_var = find_variable("AB");
+  const auto *path_var = find_variable("AB");
   if (!path_var) {
     return {};
   }
@@ -96,7 +96,7 @@ static inline std::string get_self_path() {
 }
 
 static inline bool set_self_path() {
-  fs::path ab_path = ab_install_prefix;
+  const fs::path ab_path = ab_install_prefix;
   if (!fs::exists(ab_path)) {
     return false;
   }
@@ -149,7 +149,7 @@ static inline std::string arch_findfile_inner(const std::string &path,
   if (!ag_v || !(ag_v->attributes & att_array))
     return "";
   const auto *ag_a = array_cell(ag_v);
-  for (ARRAY_ELEMENT *ae = element_forw(ag_a->head); ae != ag_a->head;
+  for (const ARRAY_ELEMENT *ae = element_forw(ag_a->head); ae != ag_a->head;
        ae = element_forw(ae)) {
     auto test_path = defines_path + ae->value + "/" + path;
     const auto result = arch_findfile_maybe_stage2(test_path, is_stage2);
@@ -187,7 +187,7 @@ static inline void bash_array_push(ARRAY *array, char *value) {
 }
 
 static int ab_bool(WORD_LIST *list) {
-  char *argv1 = get_argv1(list);
+  const char *argv1 = get_argv1(list);
   if (!argv1)
     return 2;
   const int result = autobuild_bool(argv1);
@@ -204,7 +204,7 @@ static int ab_bool(WORD_LIST *list) {
 }
 
 static int ab_isarray(WORD_LIST *list) {
-  char *argv1 = get_argv1(list);
+  const char *argv1 = get_argv1(list);
   if (!argv1)
     return 1;
   const auto *var = find_variable(argv1);
@@ -218,7 +218,7 @@ static int ab_isarray(WORD_LIST *list) {
 }
 
 static int ab_isdefined(WORD_LIST *list) {
-  char *argv1 = get_argv1(list);
+  const char *argv1 = get_argv1(list);
   if (!argv1)
     return 1;
   const auto *var = find_variable(argv1);
@@ -231,7 +231,7 @@ static int ab_isdefined(WORD_LIST *list) {
 }
 
 static int ab_load_strict(WORD_LIST *list) {
-  char *argv1 = get_argv1(list);
+  const char *argv1 = get_argv1(list);
   if (!argv1)
     return 1;
   const int result = autobuild_load_file(argv1, true);
@@ -266,7 +266,7 @@ int setup_default_env_variables() {
 }
 
 int ab_filter_args(WORD_LIST *list) {
-  char *argv1 = get_argv1(list);
+  const char *argv1 = get_argv1(list);
   if (!argv1)
     return 1;
   auto to_remove = std::unordered_set<std::string>{};
@@ -370,9 +370,9 @@ static int abdie(WORD_LIST *list) {
 }
 
 static void register_logger_from_env() {
-  auto *var = find_variable_tempenv("ABREPORTER");
-  auto *no_color_string = getenv("NO_COLOR");
-  bool no_color = no_color_string && no_color_string[0] == '1';
+  const auto *var = find_variable_tempenv("ABREPORTER");
+  const auto *no_color_string = getenv("NO_COLOR");
+  const bool no_color = no_color_string && no_color_string[0] == '1';
   if (!var || !var->value) {
     if (no_color) {
       logger = reinterpret_cast<Logger *>(new PlainLogger());
@@ -399,7 +399,7 @@ static int set_arch_variables() {
   }
   // read targets
   auto map_table = jsondata_get_arch_targets(ab_path);
-  auto *arch_target_var =
+  const auto *arch_target_var =
       make_new_assoc_variable(const_cast<char *>("ARCH_TARGET"));
   auto *arch_target_var_h = assoc_cell(arch_target_var);
   for (auto &it : map_table) {
@@ -427,9 +427,9 @@ static int set_arch_variables() {
                        ASS_NOEVAL);
 
   // set ABHOST_GROUP
-  auto *arch_groups_v =
+  const auto *arch_groups_v =
       make_new_array_variable(const_cast<char *>("ABHOST_GROUP"));
-  auto arch_groups_table = jsondata_get_arch_groups(ab_path, this_arch);
+  const auto arch_groups_table = jsondata_get_arch_groups(ab_path, this_arch);
   auto *arch_groups_a = array_cell(arch_groups_v);
   for (auto &it : arch_groups_table) {
     bash_array_push(arch_groups_a, const_cast<char *>(it.c_str()));
@@ -508,7 +508,7 @@ static int arch_loaddefines(WORD_LIST *list) {
   if (ab_path.empty()) {
     return 1;
   }
-  std::vector<std::string> exported_vars = jsondata_get_exported_vars(ab_path);
+  const std::vector<std::string> exported_vars = jsondata_get_exported_vars(ab_path);
 
   // load the defines file
   const auto defines_path = arch_findfile_inner(argv1, stage2_aware);
@@ -599,7 +599,7 @@ static int ab_tostringarray(WORD_LIST *list) {
 
   // convert the string to an array
   // save the string value first
-  auto oldval =
+  const auto oldval =
       std::unique_ptr<char, decltype(&free)>(strdup(result_var->value), &free);
   free(result_var->value);
   // override the value to an array
@@ -668,7 +668,7 @@ static int ab_concatarray(WORD_LIST *list) {
     return 1;
   auto *dst_a = array_cell(dst_v);
   const auto *src_a = array_cell(src_v);
-  for (ARRAY_ELEMENT *ae = element_forw(src_a->head); ae != src_a->head;
+  for (const ARRAY_ELEMENT *ae = element_forw(src_a->head); ae != src_a->head;
        ae = element_forw(ae)) {
     bash_array_push(dst_a, ae->value);
   }
@@ -704,7 +704,7 @@ static int ab_typecheck(WORD_LIST *list) {
   const auto *varname = get_argv1(loptend);
   if (!varname)
     return 1;
-  auto *var = find_variable(varname);
+  const auto *var = find_variable(varname);
   if (!var) {
     // find the name in the function context
     var = find_function(varname);
@@ -762,7 +762,7 @@ static int abelf_copy_dbg(WORD_LIST *list) {
   if (!dst)
     return EX_BADUSAGE;
   GuardedSet<std::string> symbols{};
-  int ret = elf_copy_debug_symbols(src, dst, AB_ELF_USE_EU_STRIP, symbols);
+  const int ret = elf_copy_debug_symbols(src, dst, AB_ELF_USE_EU_STRIP, symbols);
   if (ret < 0)
     return 10;
   return 0;
@@ -796,7 +796,7 @@ static int abelf_copy_dbg_parallel(WORD_LIST *list) {
   const auto dst = std::string{args.back()};
   args.pop_back();
   std::unordered_set<std::string> so_deps{};
-  int ret = elf_copy_debug_symbols_parallel(args, dst.c_str(), so_deps, flags);
+  const int ret = elf_copy_debug_symbols_parallel(args, dst.c_str(), so_deps, flags);
   if (ret < 0)
     return 10;
   // copy the data to the bash variable
@@ -851,7 +851,7 @@ static int abpm_aosc_archive_new(WORD_LIST *list) {
   if (!packages_v || !(packages_v->attributes & att_array))
     return 1;
   const auto *packages_a = array_cell(packages_v);
-  for (ARRAY_ELEMENT *ae = element_forw(packages_a->head);
+  for (const ARRAY_ELEMENT *ae = element_forw(packages_a->head);
        ae != packages_a->head; ae = element_forw(ae)) {
     // each element is a package name
     char *package_name = ae->value;
@@ -962,7 +962,7 @@ static int abfp_lambda_restore(WORD_LIST *list) {
   if (!env_ptr_var || !(env_ptr_var->attributes & att_special)) {
     return EX_BADUSAGE;
   }
-  auto *env_ptr = reinterpret_cast<abfp_lambda_env *>(env_ptr_var->value);
+  const auto *env_ptr = reinterpret_cast<abfp_lambda_env *>(env_ptr_var->value);
   if (env_ptr->magic0 != 'E' || env_ptr->magic1 != 'N' ||
       env_ptr->magic2 != 'V' || env_ptr->zero != 0x00) {
     return EX_BADASSIGN;
@@ -1076,7 +1076,7 @@ static int abmm_array_mine(WORD_LIST *list) {
   const auto *array_name = get_argv1(list);
   if (!array_name)
     return EX_BADUSAGE;
-  auto *array_var = find_variable(array_name);
+  const auto *array_var = find_variable(array_name);
   if (!array_var || !(array_var->attributes & att_array)) {
     return EX_BADUSAGE;
   }
@@ -1096,7 +1096,7 @@ static int abmm_array_mine_remove(WORD_LIST *list) {
   const auto *array_name = get_argv1(list);
   if (!array_name)
     return EX_BADUSAGE;
-  auto *array_var = find_variable(array_name);
+  const auto *array_var = find_variable(array_name);
   if (!array_var || !(array_var->attributes & att_array)) {
     return EX_BADUSAGE;
   }
@@ -1118,11 +1118,11 @@ static int ab_join_elements(WORD_LIST *list) {
   const auto *sep_ = get_argv1(list);
   if (!sep_)
     return EX_BADUSAGE;
-  auto *array_var = find_variable(array_name);
+  const auto *array_var = find_variable(array_name);
   if (!array_var || !(array_var->attributes & att_array)) {
     return EX_BADUSAGE;
   }
-  auto *array = array_cell(array_var);
+  const auto *array = array_cell(array_var);
   for (ARRAY_ELEMENT *ae = element_forw(array->head); ae != array->head;
        ae = element_forw(ae)) {
     if (array->head == element_forw(ae)) {

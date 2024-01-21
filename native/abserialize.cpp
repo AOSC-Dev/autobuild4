@@ -28,8 +28,8 @@ inline static json json_from_shell_var(SHELL_VAR *var) {
     j = json::object();
     const HASH_TABLE *ag_h = assoc_cell(var);
     for (size_t i = 0; i < ag_h->nbuckets; i++) {
-      auto *bucket = ag_h->bucket_array[i];
-      for (BUCKET_CONTENTS *bc = bucket; bc; bc = bc->next) {
+      const auto *bucket = ag_h->bucket_array[i];
+      for (const BUCKET_CONTENTS *bc = bucket; bc; bc = bc->next) {
         j[bc->key] = static_cast<char *>(bc->data);
       }
     }

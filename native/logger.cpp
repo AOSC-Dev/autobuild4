@@ -102,7 +102,7 @@ void JsonLogger::logDiagnostic(Diagnostic diagnostic) {
 }
 
 void JsonLogger::logException(std::string message) {
-  json line = {{"event", "exception"}, {"level", "CRIT"}, {"message", message}};
+  const json line = {{"event", "exception"}, {"level", "CRIT"}, {"message", message}};
   io_lock_guard guard(this->m_io_mutex);
   std::cout << line.dump() << std::endl;
 }

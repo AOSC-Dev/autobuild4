@@ -29,19 +29,19 @@ Diagnostic autobuild_get_backtrace() {
 
   array_push(bash_lineno_a, itos(executing_line_number()));
 
-  funcname_cursor = funcname_a->head;
-  bash_lineno_cursor = bash_lineno_a->head;
-  bash_source_cursor = bash_source_a->head;
+  const ARRAY_ELEMENT *funcname_cursor = funcname_a->head;
+  const ARRAY_ELEMENT *bash_lineno_cursor = bash_lineno_a->head;
+  const ARRAY_ELEMENT *bash_source_cursor = bash_source_a->head;
   size_t max_depth = bash_source_a->num_elements + 1;
   diag.frames.reserve(max_depth);
 
   // reverse order, most recent call last
   while (bash_lineno_cursor != NULL && bash_lineno_cursor->next != NULL &&
          max_depth > 0) {
-    auto lineno_str = bash_lineno_cursor->value;
-    auto source_str = bash_source_cursor->value;
-    auto func_str = funcname_cursor->value;
-    auto lineno = lineno_str ? atoi(lineno_str) : 0;
+    const auto lineno_str = bash_lineno_cursor->value;
+    const auto source_str = bash_source_cursor->value;
+    const auto func_str = funcname_cursor->value;
+    const auto lineno = lineno_str ? atoi(lineno_str) : 0;
     // skip empty frames
     if (lineno_str || source_str || func_str) {
       diag.frames.push_back({
@@ -71,9 +71,9 @@ Diagnostic autobuild_get_backtrace() {
 }
 
 void autobuild_register_builtins(
-    std::unordered_map<const char *, builtin_func_t> functions) {
+    const std::unordered_map<const char *, builtin_func_t>& functions) {
   // add the number for the new builtins
-  size_t total_builtins = num_shell_builtins + functions.size();
+  const size_t total_builtins = num_shell_builtins + functions.size();
   // requires one extra sentinel slot at the end
   struct builtin *new_shell_builtins = static_cast<struct builtin *>(
       calloc(total_builtins + 1, sizeof(struct builtin)));
@@ -171,7 +171,7 @@ SHELL_VAR *autobuild_copy_variable(SHELL_VAR *src, const char *dst_name,
   if (reference) {
     const auto expr = std::string{dst_name} + "=" + src->name;
     const char *args[3]{"-n", expr.c_str(), nullptr};
-    auto options = std::unique_ptr<WORD_LIST, decltype(&dispose_words)>{
+    const auto options = std::unique_ptr<WORD_LIST, decltype(&dispose_words)>{
         strvec_to_word_list((char **)args, true, 0), &dispose_words};
     declare_builtin(options.get());
   } else {
@@ -185,7 +185,7 @@ int autobuild_copy_variable_value(const char *src_name, const char *dst_name) {
   if (!src) {
     return 1;
   }
-  SHELL_VAR *dst = autobuild_copy_variable(src, dst_name);
+  const SHELL_VAR *dst = autobuild_copy_variable(src, dst_name);
   if (!dst) {
     return 1;
   }
@@ -220,11 +220,11 @@ int autobuild_load_file(const char *filename, bool validate_only) {
     if (!file.is_open()) {
       return 1;
     }
-    std::string input((std::istreambuf_iterator<char>(file)),
-                      (std::istreambuf_iterator<char>()));
+    const std::string input((std::istreambuf_iterator<char>(file)),
+                            (std::istreambuf_iterator<char>()));
     file.close();
-    int ret = evalstring(strdup(input.c_str()), filename,
-                         SEVAL_NOHIST | SEVAL_PARSEONLY);
+    const int ret = evalstring(strdup(input.c_str()), filename,
+                               SEVAL_NOHIST | SEVAL_PARSEONLY);
     line_number = 0;
     return ret;
   }
@@ -237,7 +237,7 @@ int autobuild_switch_strict_mode(const bool enable) {
   const char *args[4]{"abdie", "ERR", "EXIT", nullptr};
   if (!enable)
     args[0] = "-";
-  auto options = std::unique_ptr<WORD_LIST, decltype(&dispose_words)>{
+  const auto options = std::unique_ptr<WORD_LIST, decltype(&dispose_words)>{
       strvec_to_word_list((char **)args, true, 0), &dispose_words};
   return trap_builtin(options.get());
 }
@@ -262,7 +262,7 @@ int autobuild_load_all_from_directory(const char *directory) {
 }
 
 void *autobuild_get_utility_variable(const char *name) {
-  SHELL_VAR *var = find_variable(name);
+  const SHELL_VAR *var = find_variable(name);
   if (!var) {
     return nullptr;
   }
