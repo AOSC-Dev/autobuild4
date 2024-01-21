@@ -138,9 +138,9 @@ static inline std::string arch_findfile_inner(const std::string &path,
       stage2_aware && (stage2_v ? autobuild_bool(stage2_v->value) : false);
   if (arch_name && arch_name->value) {
     auto test_path = defines_path + arch_name->value + "/" + path;
-    const auto result = arch_findfile_maybe_stage2(test_path, is_stage2);
+    auto result = arch_findfile_maybe_stage2(test_path, is_stage2);
     if (!result.empty()) {
-      return result;
+      return std::move(result);
     }
   }
 
@@ -152,19 +152,19 @@ static inline std::string arch_findfile_inner(const std::string &path,
   for (const ARRAY_ELEMENT *ae = element_forw(ag_a->head); ae != ag_a->head;
        ae = element_forw(ae)) {
     auto test_path = defines_path + ae->value + "/" + path;
-    const auto result = arch_findfile_maybe_stage2(test_path, is_stage2);
+    auto result = arch_findfile_maybe_stage2(test_path, is_stage2);
     // TODO: check if the group name is ambiguous
     if (!result.empty()) {
-      return result;
+      return std::move(result);
     }
   }
 
   // lastly, try to find the file in the standard location
   {
     auto test_path = defines_path + path;
-    const auto result = arch_findfile_maybe_stage2(test_path, is_stage2);
+    auto result = arch_findfile_maybe_stage2(test_path, is_stage2);
     if (!result.empty()) {
-      return result;
+      return std::move(result);
     }
   }
   // not found
@@ -252,7 +252,8 @@ int setup_default_env_variables() {
   if (!getenv("SHELL")) {
     char bash_path[4096]{};
     if (!readlink("/proc/self/exe", bash_path, 4096)) {
-      assert("Failed to readlink /proc/self/exe");
+      puts("Failed to readlink /proc/self/exe");
+      return 1;
     }
     setenv("SHELL", bash_path, true);
   }
@@ -451,7 +452,7 @@ static inline int arch_loadvar_inner(const std::string &var_name) {
     return 1;
   aliases.emplace_back(string_to_uppercase(arch_v->value));
   const auto ag_a = array_cell(ag_v);
-  for (ARRAY_ELEMENT *ae = element_forw(ag_a->head); ae != ag_a->head;
+  for (const ARRAY_ELEMENT *ae = element_forw(ag_a->head); ae != ag_a->head;
        ae = element_forw(ae)) {
     aliases.emplace_back(string_to_uppercase(ae->value));
   }
@@ -874,14 +875,14 @@ static int abpm_aosc_archive_new(WORD_LIST *list) {
 static inline COMMAND *generate_function_call(char *name, char *arg) {
   char *args[] = {name, arg, nullptr};
   WORD_LIST *list = strvec_to_word_list(static_cast<char **>(args), true, 0);
-  SIMPLE_COM *conn = (SIMPLE_COM *)calloc(1, sizeof(SIMPLE_COM));
+  SIMPLE_COM *conn = static_cast<SIMPLE_COM *>(calloc(1, sizeof(SIMPLE_COM)));
   *conn = SIMPLE_COM{
       .flags = 0,
       .line = 0,
       .words = list,
       .redirects = nullptr,
   };
-  COMMAND *command = (COMMAND *)calloc(1, sizeof(COMMAND));
+  COMMAND *command = static_cast<COMMAND *>(calloc(1, sizeof(COMMAND)));
   *command = COMMAND{
       .type = cm_simple,
       .flags = 0,
@@ -1027,7 +1028,7 @@ static int abfp_lambda(WORD_LIST *list) {
       delete vars;
       return EX_BADASSIGN;
     }
-    SHELL_VAR *recreated = (SHELL_VAR *)calloc(1, sizeof(SHELL_VAR));
+    SHELL_VAR *recreated = static_cast<SHELL_VAR *>(calloc(1, sizeof(SHELL_VAR)));
     recreated->name = strdup(captured);
     recreated->value = copied->value;
     recreated->attributes = copied->attributes;
@@ -1054,12 +1055,12 @@ static int abfp_lambda(WORD_LIST *list) {
   // patch in a new function call at the function prologue
   COMMAND *retore_call = generate_function_call(
       const_cast<char *>("abfp_lambda_restore"), env_name_str);
-  CONNECTION *conn = (CONNECTION *)calloc(1, sizeof(CONNECTION));
+  CONNECTION *conn = static_cast<CONNECTION *>(calloc(1, sizeof(CONNECTION)));
   conn->first = retore_call;
   conn->second = orig_func_f;
   conn->connector = ';';
   __attribute__((cleanup(cleanup_command))) COMMAND *connector =
-      (COMMAND *)calloc(1, sizeof(COMMAND));
+      static_cast<COMMAND *>(calloc(1, sizeof(COMMAND)));
   connector->type = cm_connection;
   connector->flags = 0;
   connector->redirects = nullptr;
@@ -1123,7 +1124,7 @@ static int ab_join_elements(WORD_LIST *list) {
     return EX_BADUSAGE;
   }
   const auto *array = array_cell(array_var);
-  for (ARRAY_ELEMENT *ae = element_forw(array->head); ae != array->head;
+  for (const ARRAY_ELEMENT *ae = element_forw(array->head); ae != array->head;
        ae = element_forw(ae)) {
     if (array->head == element_forw(ae)) {
       printf("%s", ae->value);
@@ -1176,16 +1177,18 @@ static int ab_parse_set_modifiers(WORD_LIST *list) {
   }
   // last element:
   if (!modifier_name.empty()) {
-    modifiers.push_back({modifier_name, state == 1 ? true : false});
+    modifiers.push_back({std::move(modifier_name), state == 1 ? true : false});
   }
 
+  auto *logger = get_logger();
   SHELL_VAR *hash_var =
       make_new_assoc_variable(const_cast<char *>("__ABMODIFIERS"));
-  if (!hash_var)
-    assert("Unable to allocate memory for __ABMODIFIERS");
+  if (!hash_var) {
+    logger->error("Unable to allocate memory for __ABMODIFIERS");
+    abort();
+  }
   hash_var->attributes |= (att_readonly | att_nofree | att_nounset);
   auto *hash = assoc_cell(hash_var);
-  auto *logger = get_logger();
   for (const auto &modifier : modifiers) {
     const std::string name = string_to_uppercase(modifier.name);
     logger->info(
