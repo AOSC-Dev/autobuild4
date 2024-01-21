@@ -13,9 +13,9 @@
 #include "bashincludes.h"
 
 int autobuild_builtin(WORD_LIST *list) {
-  int opt, rval;
+  int opt;
 
-  rval = EXECUTION_SUCCESS;
+  int rval = EXECUTION_SUCCESS;
   prctl(PR_SET_NAME, "autobuild");
 
   reset_internal_getopt();
