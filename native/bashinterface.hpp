@@ -16,10 +16,10 @@ typedef struct variable SHELL_VAR;
 Diagnostic autobuild_get_backtrace();
 int autobuild_bool(const char *value);
 int autobuild_load_file(const char *filename, bool validate_only);
-int autobuild_get_variable_with_suffix(const std::string name,
-                                       const std::vector<std::string> aliases);
+int autobuild_get_variable_with_suffix(const std::string &name,
+                                       const std::vector<std::string> &aliases);
 void autobuild_register_builtins(
-    std::unordered_map<const char *, builtin_func_t> functions);
+    const std::unordered_map<const char *, builtin_func_t>& functions);
 int autobuild_switch_strict_mode(const bool enable);
 int autobuild_copy_variable_value(const char *src_name, const char *dst_name);
 SHELL_VAR *autobuild_copy_variable(SHELL_VAR *src, const char *dst_name,

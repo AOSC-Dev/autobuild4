@@ -408,7 +408,7 @@ static ELFParseResult identify_binary_data(const char *data,
 
 inline static fs::path get_filename_from_build_id(const std::string &build_id,
                                                   const char *dst_path) {
-  const std::string build_id_str{build_id};
+  const std::string& build_id_str{build_id};
   const std::string prefix = build_id_str.substr(0, 2);
   const std::string suffix = build_id_str.substr(2);
   fs::path final_path{dst_path};
@@ -575,12 +575,12 @@ int elf_copy_to_symdir(const char *src_path, const char *dst_path,
 
 class ELFWorkerPool : public ThreadPool<std::string, int> {
 public:
-  ELFWorkerPool(const std::string symdir, int flags)
-      : ThreadPool<std::string, int>([&, flags](const std::string src_path) {
+  ELFWorkerPool(std::string  symdir, int flags)
+      : ThreadPool<std::string, int>([&, flags](const std::string& src_path) {
           return elf_copy_debug_symbols(src_path.c_str(), m_symdir.c_str(),
                                         flags, m_sodeps);
         }),
-        m_symdir(symdir), m_sodeps() {}
+        m_symdir(std::move(symdir)), m_sodeps() {}
 
   const std::unordered_set<std::string> get_sodeps() const {
     return m_sodeps.get_set();

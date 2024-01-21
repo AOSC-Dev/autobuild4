@@ -192,8 +192,8 @@ int autobuild_copy_variable_value(const char *src_name, const char *dst_name) {
   return 0;
 }
 
-int autobuild_get_variable_with_suffix(const std::string name,
-                                       const std::vector<std::string> aliases) {
+int autobuild_get_variable_with_suffix(const std::string &name,
+                                       const std::vector<std::string> &aliases) {
   bool found = false;
   for (auto it = aliases.begin(); it != aliases.end(); it++) {
     const std::string var_name = name + "__" + *it;
