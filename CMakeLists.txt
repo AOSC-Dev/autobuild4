@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(autobuild VERSION 4.0.10 HOMEPAGE_URL "https://github.com/AOSC-Dev/autobuild4" LANGUAGES C CXX)
+project(autobuild VERSION 4.0.11 HOMEPAGE_URL "https://github.com/AOSC-Dev/autobuild4" LANGUAGES C CXX)
 
 include(GNUInstallDirs)
 include(CheckTypeSize)
