@@ -56,7 +56,7 @@ static inline char *get_argv1(WORD_LIST *list) {
 
 static inline std::string get_all_args(WORD_LIST *list) {
   if (!list)
-    return std::string();
+    return {};
   std::string args{};
   args.reserve(16);
   while (list) {
@@ -80,7 +80,7 @@ static inline std::vector<std::string> get_all_args_vector(WORD_LIST *list) {
     const auto *word = get_argv1(list);
     if (!word)
       continue;
-    args.push_back(word);
+    args.emplace_back(word);
   }
   return args;
 }
@@ -366,7 +366,7 @@ static int abdie(WORD_LIST *list) {
   // reset the traps to avoid double-triggering
   autobuild_switch_strict_mode(false);
   exit_shell(exit_code);
-  return exit_code;
+  __builtin_unreachable();
 }
 
 static void register_logger_from_env() {
@@ -893,7 +893,7 @@ static inline COMMAND *generate_function_call(char *name, char *arg) {
 
 class ShellThreadPool : public ThreadPool<char *, int> {
 public:
-  ShellThreadPool(char *func_name)
+  explicit ShellThreadPool(char *func_name)
       : ThreadPool<char *, int>([&](auto arg) {
           COMMAND *call = generate_function_call(func_name_, arg);
           return execute_command(call);

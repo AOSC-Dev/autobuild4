@@ -20,7 +20,6 @@ extern int remember_on_history;
 Diagnostic autobuild_get_backtrace() {
   SHELL_VAR *funcname_v, *bash_source_v, *bash_lineno_v;
   ARRAY *funcname_a, *bash_source_a, *bash_lineno_a;
-  ARRAY_ELEMENT *funcname_cursor, *bash_source_cursor, *bash_lineno_cursor;
   Diagnostic diag{.level = LogLevel::Error};
 
   GET_ARRAY_FROM_VAR("FUNCNAME", funcname_v, funcname_a);
@@ -36,7 +35,7 @@ Diagnostic autobuild_get_backtrace() {
   diag.frames.reserve(max_depth);
 
   // reverse order, most recent call last
-  while (bash_lineno_cursor != NULL && bash_lineno_cursor->next != NULL &&
+  while (bash_lineno_cursor != nullptr && bash_lineno_cursor->next != nullptr &&
          max_depth > 0) {
     const auto lineno_str = bash_lineno_cursor->value;
     const auto source_str = bash_source_cursor->value;
@@ -58,7 +57,7 @@ Diagnostic autobuild_get_backtrace() {
   }
 
   // special case: interactive shell
-  if (interactive_shell && diag.frames.size() == 0) {
+  if (interactive_shell && diag.frames.empty()) {
     diag.frames.push_back({
         .file = "<stdin>",
         .function = "<interactive shell>",
@@ -75,7 +74,7 @@ void autobuild_register_builtins(
   // add the number for the new builtins
   const size_t total_builtins = num_shell_builtins + functions.size();
   // requires one extra sentinel slot at the end
-  struct builtin *new_shell_builtins = static_cast<struct builtin *>(
+  auto *new_shell_builtins = static_cast<struct builtin *>(
       calloc(total_builtins + 1, sizeof(struct builtin)));
   auto new_builtins = std::vector<struct builtin>{};
   new_builtins.reserve(functions.size() + 1);
@@ -147,7 +146,7 @@ SHELL_VAR *autobuild_copy_variable(SHELL_VAR *src, const char *dst_name,
   auto *dst = find_variable(dst_name);
   if (!dst) {
     if (src_types & att_array) {
-      dst = make_new_array_variable((char *)dst_name);
+      dst = make_new_array_variable(const_cast<char *>(dst_name));
     } else {
       dst = bind_variable(dst_name, src->name, 0);
     }
@@ -278,6 +277,6 @@ bool autobuild_set_utility_variable(const char *name, void *value) {
     return false;
   }
   var->attributes |= (att_special | att_nofree | att_readonly | att_noassign);
-  var->value = (char *)value;
+  var->value = static_cast<char *>(value);
   return true;
 }
