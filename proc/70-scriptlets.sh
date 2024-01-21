@@ -9,6 +9,11 @@ for i in postinst prerm postrm preinst; do
 	chmod 755 abscripts/$i
 done
 
+if [ -f "$SRCDIR"/autobuild/templates ]; then
+	abinfo "Installing Debconf templates ..."
+	install -Dvm644 "$SRCDIR"/autobuild/templates abscripts/templates
+fi
+
 load_strict "$AB/lib/scriptlets.sh"
 
 for i in scriptlet_alternative scriptlet_pax scriptlet_usergroup; do
