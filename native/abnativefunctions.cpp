@@ -509,7 +509,8 @@ static int arch_loaddefines(WORD_LIST *list) {
   if (ab_path.empty()) {
     return 1;
   }
-  const std::vector<std::string> exported_vars = jsondata_get_exported_vars(ab_path);
+  const std::vector<std::string> exported_vars =
+      jsondata_get_exported_vars(ab_path);
 
   // load the defines file
   const auto defines_path = arch_findfile_inner(argv1, stage2_aware);
@@ -763,7 +764,8 @@ static int abelf_copy_dbg(WORD_LIST *list) {
   if (!dst)
     return EX_BADUSAGE;
   GuardedSet<std::string> symbols{};
-  const int ret = elf_copy_debug_symbols(src, dst, AB_ELF_USE_EU_STRIP, symbols);
+  const int ret =
+      elf_copy_debug_symbols(src, dst, AB_ELF_USE_EU_STRIP, symbols);
   if (ret < 0)
     return 10;
   return 0;
@@ -797,7 +799,8 @@ static int abelf_copy_dbg_parallel(WORD_LIST *list) {
   const auto dst = std::string{args.back()};
   args.pop_back();
   std::unordered_set<std::string> so_deps{};
-  const int ret = elf_copy_debug_symbols_parallel(args, dst.c_str(), so_deps, flags);
+  const int ret =
+      elf_copy_debug_symbols_parallel(args, dst.c_str(), so_deps, flags);
   if (ret < 0)
     return 10;
   // copy the data to the bash variable
@@ -1028,7 +1031,8 @@ static int abfp_lambda(WORD_LIST *list) {
       delete vars;
       return EX_BADASSIGN;
     }
-    SHELL_VAR *recreated = static_cast<SHELL_VAR *>(calloc(1, sizeof(SHELL_VAR)));
+    SHELL_VAR *recreated =
+        static_cast<SHELL_VAR *>(calloc(1, sizeof(SHELL_VAR)));
     recreated->name = strdup(captured);
     recreated->value = copied->value;
     recreated->attributes = copied->attributes;
