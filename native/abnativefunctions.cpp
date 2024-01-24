@@ -1191,7 +1191,7 @@ static int ab_parse_set_modifiers(WORD_LIST *list) {
     logger->error("Unable to allocate memory for __ABMODIFIERS");
     abort();
   }
-  hash_var->attributes |= (att_readonly | att_nofree | att_nounset);
+  hash_var->attributes |= (att_readonly | att_nofree | att_nounset | att_assoc);
   auto *hash = assoc_cell(hash_var);
   for (const auto &modifier : modifiers) {
     const std::string name = string_to_uppercase(modifier.name);
