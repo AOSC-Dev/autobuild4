@@ -103,7 +103,9 @@ dpkgctrl() {
 	[ "$PKGCONFL" ] && dpkgfield Conflicts "$PKGCONFL"
 	[ "$PKGPROV" ] && VER_NONE=1 dpkgfield Provides "$PKGPROV"
 	[ "$PKGSUG" ] && dpkgfield Suggests "$PKGSUG"
-	if [ "${__ABMODIFIERS[PKGBREAK]}" = '0' ]; then
+	local _pkgbreak
+	_pkgbreak="$(ab_get_item_by_key __ABMODIFIERS PKGBREAK 1)"
+	if [ "${_pkgbreak}" = '0' ]; then
 		abwarn 'Not emitting PKGBREAK due to modifiers' >&2
 	elif [ "$PKGBREAK" ]; then
 		dpkgfield Breaks "$PKGBREAK"
