@@ -1212,6 +1212,34 @@ static int ab_dump_variables(const std::vector<std::string> &names) {
   return 0;
 }
 
+static int ab_get_item_by_key(WORD_LIST *list) {
+  const auto *array_name = get_argv1(list);
+  if (!array_name)
+    return EX_BADUSAGE;
+  const auto *array_var = find_variable(array_name);
+  if (!array_var || !(array_var->attributes & att_assoc)) {
+    return EX_BADUSAGE;
+  }
+  auto *array = assoc_cell(array_var);
+  list = list->next;
+  const auto *key = get_argv1(list);
+  if (!key)
+    return EX_BADUSAGE;
+  list = list->next;
+  const auto *default_value = get_argv1(list);
+  auto *elem = hash_search(key, array, 0);
+  if (!elem) {
+    if (default_value) {
+      std::cout << default_value << std::endl;
+      return 0;
+    } else {
+      return EX_BADASSIGN;
+    }
+  }
+  std::cout << static_cast<char *>(elem->data) << std::endl;
+  return 0;
+}
+
 extern "C" {
 void register_all_native_functions() {
   if (set_registered_flag())
@@ -1256,7 +1284,8 @@ void register_all_native_functions() {
       {"abfp_lambda", abfp_lambda},
       {"abfp_lambda_restore", abfp_lambda_restore},
       {"abmm_array_mine", abmm_array_mine},
-      {"abmm_array_mine_remove", abmm_array_mine_remove}};
+      {"abmm_array_mine_remove", abmm_array_mine_remove},
+      {"ab_get_item_by_key", ab_get_item_by_key}};
 
   // Initialize logger
   if (!logger)
