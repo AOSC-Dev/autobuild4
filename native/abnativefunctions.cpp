@@ -609,7 +609,11 @@ static int ab_tostringarray(WORD_LIST *list) {
   // override the attributes to be an array type
   result_var->attributes |= att_array;
   // split the string into array elements
-  assign_array_var_from_string(result_var, oldval.get(), 0);
+  const size_t string_len = strlen(oldval.get());
+  if (string_len > INT_MAX)
+    assert("attempt to split a string larger than INT_MAX");
+  const auto word_list = split_at_delims(oldval.get(), static_cast<int>(string_len), nullptr, -1, 0, nullptr, nullptr);
+  assign_compound_array_list(result_var, word_list, ASS_NOEVAL | ASS_NOEXPAND | ASS_FORCE);
   return 0;
 }
 
