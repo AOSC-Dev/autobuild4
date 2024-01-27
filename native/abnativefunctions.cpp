@@ -54,16 +54,18 @@ static inline char *get_argv1(WORD_LIST *list) {
   return wd->word;
 }
 
-static inline std::string get_all_args(WORD_LIST *list) {
+static inline std::string get_all_args(WORD_LIST *list, const bool escape = false) {
   if (!list)
     return {};
   std::string args{};
   args.reserve(16);
   while (list) {
-    const auto *word = get_argv1(list);
+    auto *word = get_argv1(list);
     if (!word)
       continue;
-    args += word;
+    int i = 0;
+    int len = 0;
+    args += escape ? ansicstr(word, STRLEN(word), 1, &i, &len) : word;
     if (list->next)
       args += " ";
     list = list->next;
@@ -318,25 +320,25 @@ constexpr const char *ab_get_current_architecture() {
 }
 
 static int abinfo(WORD_LIST *list) {
-  const auto message = get_all_args(list);
+  const auto message = get_all_args(list, true);
   get_logger()->info(message);
   return 0;
 }
 
 static int abwarn(WORD_LIST *list) {
-  const auto message = get_all_args(list);
+  const auto message = get_all_args(list, true);
   get_logger()->warning(message);
   return 0;
 }
 
 static int aberr(WORD_LIST *list) {
-  const auto message = get_all_args(list);
+  const auto message = get_all_args(list, true);
   get_logger()->error(message);
   return 0;
 }
 
 static int abdbg(WORD_LIST *list) {
-  const auto message = get_all_args(list);
+  const auto message = get_all_args(list, true);
   get_logger()->debug(message);
   return 0;
 }
