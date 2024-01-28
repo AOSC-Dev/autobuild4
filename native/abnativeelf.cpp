@@ -460,7 +460,7 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     perror("open");
     return -1;
   }
-  struct stat st;
+  struct stat st{};
   if (fstat(fd, &st) < 0) {
     perror("fstat");
     return -1;
@@ -566,7 +566,7 @@ int elf_copy_to_symdir(const char *src_path, const char *dst_path,
                     fs::copy_options::overwrite_existing)) {
     return 127;
   }
-  int ret = chmod(final_path.c_str(), 0644);
+  const int ret = chmod(final_path.c_str(), 0644);
   if (ret != 0) {
     return ret;
   }
@@ -600,7 +600,7 @@ int elf_copy_debug_symbols_parallel(const std::vector<std::string> &directories,
     for (const auto &entry : fs::recursive_directory_iterator(directory)) {
       if (entry.is_regular_file() && (!entry.is_symlink())) {
         // queue the files
-        pool.enqueue(static_cast<std::string>(entry.path().string()));
+        pool.enqueue(entry.path().string());
       }
     }
   }
