@@ -405,8 +405,8 @@ static int set_arch_variables() {
   const auto *arch_target_var =
       make_new_assoc_variable(const_cast<char *>("ARCH_TARGET"));
   auto *arch_target_var_h = assoc_cell(arch_target_var);
-  for (auto &it : map_table) {
-    assoc_insert(arch_target_var_h, const_cast<char *>(it.first.c_str()),
+  for (auto &it: map_table) {
+    assoc_insert(arch_target_var_h, strdup(it.first.c_str()),
                  const_cast<char *>(it.second.c_str()));
   }
 
