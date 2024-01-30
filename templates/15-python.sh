@@ -12,7 +12,6 @@ build_python_configure() {
 }
 
 build_python_build() {
-	ab_tostringarray MAKE_AFTER
 	for PYTHON in "$(bool "$NOPYTHON2" || command -v python2 || command -v python || echo)" \
 	"$(bool "$NOPYTHON3" || command -v python3 || echo)"; do
 		[ "$PYTHON" ] || continue
@@ -23,7 +22,7 @@ build_python_build() {
 		BUILD_FINAL
 		abinfo "Installing Python (PyPI) package using $PYTHON ..."
 		"$PYTHON" "$SRCDIR"/setup.py install \
-			"${MAKE_AFTER[@]}" --prefix=/usr --root="$PKGDIR" --optimize=1 \
+			--prefix=/usr --root="$PKGDIR" --optimize=1 \
 			|| abdie "Failed to install Python (PyPI) package using ${PYTHON}: $?."
 		abinfo "Cleaning Python (PyPI) package source tree ..."
 		bool "$NOPYTHONCLEAN" \
