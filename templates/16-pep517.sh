@@ -16,16 +16,38 @@ build_pep517_configure() {
 	if ! bool "$NOPYTHON2"; then
 		abwarn "PEP517 is only supported in Python 3. Please specify NOPYTHON2=1 to suppress this warning."
 	fi
+
+	abinfo "Detecting PEP517 build backend..."
+	local __PEP517_BUILD_BACKEND="$(python3 -c "import os; import tomli; build_sys = tomli.load(open(os.path.join('${SRCDIR}','pyproject.toml'), 'rb'))['build-system']; print(build_sys['build-backend']);")"
+	if [[ "$__PEP517_BUILD_BACKEND" == "setuptools.build_meta" ]]; then
+		abinfo "Detected setuptools backend, that needs a workaround."
+		mkdir "${SRCDIR}/.tempsrc"
+		mv * "${SRCDIR}/.tempsrc"
+		mv "${SRCDIR}/.tempsrc" "${SRCDIR}/${PKGNAME}_src"
+		mv "${SRCDIR}/${PKGNAME}_src/"abqaerr.log "${SRCDIR}"
+		mv "${SRCDIR}/${PKGNAME}_src/"acbs-build*.log "${SRCDIR}"
+		mv "${SRCDIR}/${PKGNAME}_src/"autobuild "${SRCDIR}"
+	fi
 }
 
 build_pep517_build() {
 	BUILD_READY
 	abinfo "Building Python (PEP517) package ..."
-	python3 \
-		-m build \
-		--no-isolation \
-		--wheel \
+	if [[ -d "${SRCDIR}"/"${PKGNAME}"_src/ ]]; then
+		python3 \
+			-m build \
+			--no-isolation \
+			--wheel \
+			--outdir "${SRCDIR}/dist" \
+			"${SRCDIR}/${PKGNAME}_src" \
 		|| abdie "Failed to build Python (PEP517) package: $?."
+	else
+		python3 \
+			-m build \
+			--no-isolation \
+			--wheel \
+		|| abdie "Failed to build Python (PEP517) package: $?."
+	fi
 }
 
 build_pep517_install() {
