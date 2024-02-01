@@ -17,16 +17,18 @@ build_pep517_configure() {
 		abwarn "PEP517 is only supported in Python 3. Please specify NOPYTHON2=1 to suppress this warning."
 	fi
 
-	abinfo "Detecting PEP517 build backend..."
-	local __PEP517_BUILD_BACKEND="$(python3 -c "import os; import tomli; build_sys = tomli.load(open(os.path.join('${SRCDIR}','pyproject.toml'), 'rb'))['build-system']; print(build_sys['build-backend']);")"
-	if [[ "$__PEP517_BUILD_BACKEND" == "setuptools.build_meta" ]]; then
-		abinfo "Detected setuptools backend, that needs a workaround."
-		mkdir "${SRCDIR}/.tempsrc"
-		mv * "${SRCDIR}/.tempsrc"
-		mv "${SRCDIR}/.tempsrc" "${SRCDIR}/${PKGNAME}_src"
-		mv "${SRCDIR}/${PKGNAME}_src/"abqaerr.log "${SRCDIR}"
-		mv "${SRCDIR}/${PKGNAME}_src/"acbs-build*.log "${SRCDIR}"
-		mv "${SRCDIR}/${PKGNAME}_src/"autobuild "${SRCDIR}"
+	abinfo "Detecting PEP517 build backend ..."
+	local _backend _helper
+	_helper="${AB}"/helpers/pep517-helper.py
+	_backend="$(python3 "${_helper}" "${SRCDIR}")"
+	if [[ "${_backend}" == 'setuptools.build_meta' ]]; then
+		abinfo "Workaround needed for the ${_backend} backend. Applying workaround ..."
+		mkdir -pv "${SRCDIR}/.tempsrc"
+		mv -- * "${SRCDIR}/.tempsrc"
+		mv -v -- "${SRCDIR}/.tempsrc" "${SRCDIR}/${PKGNAME}_src"
+		mv -v -- "${SRCDIR}/${PKGNAME}_src/"abqaerr.log "${SRCDIR}"
+		mv -v -- "${SRCDIR}/${PKGNAME}_src/"acbs-build*.log "${SRCDIR}"
+		mv -v -- "${SRCDIR}/${PKGNAME}_src/"autobuild "${SRCDIR}"
 	fi
 }
 
