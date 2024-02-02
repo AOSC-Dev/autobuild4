@@ -19,6 +19,7 @@ enum class BinaryType : uint8_t {
 struct ELFParseResult {
   std::vector<const char *> needed_libs;
   std::string build_id;
+  std::string soname;
   BinaryType bin_type;
   bool has_debug_info;
 };

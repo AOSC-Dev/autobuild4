@@ -193,29 +193,36 @@ static inline const ElfXX_Shdr get_section_header(const ElfXX_Ehdr &elf_header,
   }
 }
 
-static std::vector<const char *>
-get_elf_needed(const char *file_start,
-               const std::vector<ElfXX_Shdr> &section_headers,
-               const char *shstrtab) {
+static const char *
+get_elf_dynstrtab(const char *file_start,
+                  const std::vector<ElfXX_Shdr> &section_headers,
+                  const char *shstrtab) {
   // constexpr const char *sh_dyn = ".dynamic";
   constexpr const char *sh_dynstr = ".dynstr";
   const char *dynstrtab = nullptr;
-  std::vector<const char *> needed{};
-
   for (const auto &shdr : section_headers) {
     const uint32_t type = shdr.sh_type();
     if (type != SHT_STRTAB)
       continue;
     const uint32_t name_idx = shdr.sh_name();
     const char *section_name =
-        reinterpret_cast<const char *>(shstrtab + name_idx);
+            reinterpret_cast<const char *>(shstrtab + name_idx);
     if (memcmp(section_name, sh_dynstr, strlen(sh_dynstr)) != 0) {
       continue;
     }
     dynstrtab = reinterpret_cast<const char *>(file_start) + shdr.sh_offset();
     break;
   }
+  return dynstrtab;
+}
 
+static std::vector<const char *>
+get_elf_needed(const char *file_start,
+               const std::vector<ElfXX_Shdr> &section_headers,
+               const char *shstrtab) {
+  auto dynstrtab = get_elf_dynstrtab(file_start, section_headers, shstrtab);
+
+  std::vector<const char *> needed{};
   if (dynstrtab == nullptr)
     return {};
   for (const auto &shdr : section_headers) {
@@ -278,6 +285,34 @@ get_elf_build_id(const char *file_start,
   }
 
   return build_id;
+}
+
+static std::string
+get_elf_soname(const char *file_start,
+               const std::vector<ElfXX_Shdr> &section_headers,
+               const char *shstrtab) {
+  auto dynstrtab = get_elf_dynstrtab(file_start, section_headers, shstrtab);
+  for (const ElfXX_Shdr &shdr : section_headers) {
+    const uint32_t type = shdr.sh_type();
+    // soname section is a dynamic section
+    if (type != SHT_DYNAMIC) {
+      continue;
+    }
+    const char *dyn_start =
+            reinterpret_cast<const char *>(file_start) + shdr.sh_offset();
+    const char *dyn_end = dyn_start + shdr.sh_size();
+    while (dyn_start < dyn_end) {
+      const auto dyn = ElfXX_Dyn{dyn_start, shdr.is_64bit(), shdr.endianness()};
+      if (dyn.d_tag() == DT_SONAME) {
+        const uint32_t name_idx = dyn.d_val();
+        const char *section_name =
+                reinterpret_cast<const char *>(dynstrtab + name_idx);
+        return std::string{section_name};
+      }
+      dyn_start += dyn.size();
+    }
+  }
+  return std::string{};
 }
 
 static bool maybe_kernel_object(const std::vector<ElfXX_Shdr> &section_headers,
@@ -395,6 +430,7 @@ static ELFParseResult identify_binary_data(const char *data,
 
   // extract build id and library depends
   auto build_id = get_elf_build_id(data, section_headers, shstr_start);
+  auto soname = get_elf_soname(data, section_headers, shstr_start);
   if (type == BinaryType::Relocatable &&
       maybe_kernel_object(section_headers, shstr_start)) {
     type = BinaryType::KernelObject;
@@ -403,6 +439,7 @@ static ELFParseResult identify_binary_data(const char *data,
     result.needed_libs = std::move(needed);
   }
   result.build_id = std::move(build_id);
+  result.soname = std::move(soname);
   result.has_debug_info = is_debug_info_present(section_headers, shstr_start);
   return result;
 }
