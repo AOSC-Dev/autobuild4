@@ -10,7 +10,7 @@ filter_mancompress() {
 			if [[ $i == *.gz || $i == *.bz2 || $i = *.zst || $i == *.xz ]]; then
 				continue
 			fi
-		
+
 			if [[ -L $i ]]; then
 				local __mancomp_lnk
 				__mancomp_lnk="$(readlink -f "$i")"
@@ -25,7 +25,7 @@ filter_mancompress() {
 
 		if ((${#__mancomp_todo})); then
 			abinfo "Compressing man page ${__mancomp_todo[*]} ..."
-			xz --lzma2=preset=6e,pb=0 -- "${__mancomp_todo[@]}"
+			xz --lzma2=preset=6e,pb=0 --force -- "${__mancomp_todo[@]}"
 		fi
 	fi
 
