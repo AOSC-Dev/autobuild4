@@ -115,5 +115,5 @@ add_custom_target(ab4.sh ALL cmake
 
 install(PROGRAMS "${CMAKE_CURRENT_BINARY_DIR}/ab4.sh" DESTINATION "${CMAKE_INSTALL_BINDIR}" RENAME autobuild)
 install(TARGETS autobuild LIBRARY DESTINATION "${AB_INSTALL_PREFIX}")
-install(DIRECTORY arch filters lib pm proc qa sets templates DESTINATION "${AB_INSTALL_PREFIX}")
+install(DIRECTORY arch filters helpers lib pm proc qa sets templates DESTINATION "${AB_INSTALL_PREFIX}")
 install(DIRECTORY etc/autobuild DESTINATION "${CMAKE_INSTALL_FULL_SYSCONFDIR}")
