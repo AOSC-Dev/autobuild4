@@ -14,6 +14,11 @@ if [ -f "$SRCDIR"/autobuild/templates ]; then
 	install -Dvm644 "$SRCDIR"/autobuild/templates abscripts/templates
 fi
 
+if [ -f "$SRCDIR"/autobuild/config ]; then
+	abinfo "Installing Debconf configuration script (DEBIAN/config) ..."
+	install -Dvm644 "$SRCDIR"/autobuild/config abscripts/config
+fi
+
 load_strict "$AB/lib/scriptlets.sh"
 
 for i in scriptlet_alternative scriptlet_pax scriptlet_usergroup; do
