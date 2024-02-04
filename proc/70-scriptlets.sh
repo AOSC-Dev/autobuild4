@@ -16,7 +16,8 @@ fi
 
 if [ -f "$SRCDIR"/autobuild/config ]; then
 	abinfo "Installing Debconf configuration script (DEBIAN/config) ..."
-	install -Dvm644 "$SRCDIR"/autobuild/config abscripts/config
+	# Note: dpkg requires executable bit on DEBIAN/config.
+	install -Dvm755 "$SRCDIR"/autobuild/config abscripts/config
 fi
 
 load_strict "$AB/lib/scriptlets.sh"
