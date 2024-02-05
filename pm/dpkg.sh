@@ -142,7 +142,8 @@ dpkgctrl_dbg() {
 
 pm_install_all() {
 	for i in "$@"; do
-		dpkg --force-confnew --auto-deconfigure -i "$i" \
+		DEBIAN_FRONTEND=noninteractive \
+			dpkg --force-confnew --auto-deconfigure -i "$i" \
 		|| abdie "Failed to install $i: $?"
 	done
 }
