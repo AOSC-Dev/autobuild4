@@ -17,6 +17,8 @@ export SYMDIR="$SRCDIR/abdist-dbg"
 # early check
 [ -d "autobuild" ] || abdie "Did not find autobuild directory!"
 
+shopt -s expand_aliases extglob globstar nullglob
+
 # Autobuild settings
 load_strict "$AB"/lib/default.sh
 load_strict "$AB/arch/_common.sh"
