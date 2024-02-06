@@ -36,6 +36,15 @@ ab_arch_setflags() {
                 done
             done
         done
+        # merge flags if needed
+        case "${flagtype}" in
+            CXXFLAGS|OBJCFLAGS)
+            ab_concatarray "_${flagtype}" _CFLAGS
+            ;;
+            OBJCXXFLAGS)
+            ab_concatarray "_${flagtype}" _CXXFLAGS
+            ;;
+        esac
         # convert to string
         declare -n _tmp="_${flagtype}"
         export "${flagtype}"="${_tmp[*]}"
