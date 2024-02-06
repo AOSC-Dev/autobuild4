@@ -83,14 +83,23 @@ build_rust_build() {
 	ab_tostringarray CARGO_AFTER
 	if cargo read-manifest --manifest-path "$SRCDIR"/Cargo.toml > /dev/null; then
 		cargo install --locked -f --path "$SRCDIR" \
-        	"${DEFAULT_CARGO_CONFIG[@]}" \
-			--root="$PKGDIR/usr/" "${CARGO_AFTER[@]}" \
+			"${DEFAULT_CARGO_CONFIG[@]}" \
+			--root="$PKGDIR/usr/" \
+			"${CARGO_AFTER[@]}" \
 			|| abdie "Compilation failed: $?."
 	else
 		abinfo 'Using fallback build method ...'
-        cargo build --workspace "${DEFAULT_CARGO_CONFIG[@]}" --release --locked "${CARGO_AFTER[@]}" || abdie "Compilation failed: $?."
-        abinfo "Installing binaries in the workspace ..."
-        find "$SRCDIR"/target/release -maxdepth 1 -executable -type f ! -name "*.so" -exec 'install' '-Dvm755' '{}' "$PKGDIR/usr/bin/" ';'
+	        cargo build --workspace "${DEFAULT_CARGO_CONFIG[@]}" \
+			--release --locked \
+			"${CARGO_AFTER[@]}" \
+			|| abdie "Compilation failed: $?."
+		abinfo "Installing binaries in the workspace ..."
+	        find "$SRCDIR"/target/release \
+			-maxdepth 1 \
+			-executable \
+			-type f ! \
+			-name "*.so" \
+			-exec 'install' '-Dvm755' '{}' "$PKGDIR/usr/bin/" ';'
 	fi
 }
 
