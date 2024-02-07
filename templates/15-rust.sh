@@ -81,7 +81,10 @@ build_rust_build() {
 	abinfo 'Building Cargo package ...'
 	install -vd "$PKGDIR/usr/bin/"
 	ab_tostringarray CARGO_AFTER
-	if cargo read-manifest --manifest-path "$SRCDIR"/Cargo.toml > /dev/null; then
+	local manifest
+	manifest="$(cargo read-manifest --manifest-path "$SRCDIR"/Cargo.toml || true)"
+	abjson_get_item "${manifest}" "['targets'][0]['kind'][0]" _JSON_OUTPUT || true
+	if [ "${_JSON_OUTPUT}" = 'bin' ]; then
 		cargo install --locked -f --path "$SRCDIR" \
 			"${DEFAULT_CARGO_CONFIG[@]}" \
 			--root="$PKGDIR/usr/" \
@@ -89,12 +92,12 @@ build_rust_build() {
 			|| abdie "Compilation failed: $?."
 	else
 		abinfo 'Using fallback build method ...'
-	        cargo build --workspace "${DEFAULT_CARGO_CONFIG[@]}" \
+	  cargo build --workspace "${DEFAULT_CARGO_CONFIG[@]}" \
 			--release --locked \
 			"${CARGO_AFTER[@]}" \
 			|| abdie "Compilation failed: $?."
 		abinfo "Installing binaries in the workspace ..."
-	        find "$SRCDIR"/target/release \
+	  find "$SRCDIR"/target/release \
 			-maxdepth 1 \
 			-executable \
 			-type f ! \
