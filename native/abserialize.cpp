@@ -78,9 +78,9 @@ int autobuild_deserialize_variable(const std::string &content,
       started = true;
     } else if (query[i] == ']' && i > 0 && query[i - 1] != '\\') {
       started = false;
-      auto key = query.substr(start, i - start - 1);
+      auto key = query.substr(start, i - start);
       if (!key.empty() && key[0] == '\'') {
-        key = key.substr(1, key.size() - 1);
+        key = key.substr(1, key.size() - 2);
         try {
           data = data[key];
         } catch (...) {
