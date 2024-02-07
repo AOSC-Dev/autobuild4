@@ -54,7 +54,8 @@ static inline char *get_argv1(WORD_LIST *list) {
   return wd->word;
 }
 
-static inline std::string get_all_args(WORD_LIST *list, const bool escape = false) {
+static inline std::string get_all_args(WORD_LIST *list,
+                                       const bool escape = false) {
   if (!list)
     return {};
   std::string args{};
@@ -405,7 +406,7 @@ static int set_arch_variables() {
   const auto *arch_target_var =
       make_new_assoc_variable(const_cast<char *>("ARCH_TARGET"));
   auto *arch_target_var_h = assoc_cell(arch_target_var);
-  for (auto &it: map_table) {
+  for (auto &it : map_table) {
     assoc_insert(arch_target_var_h, strdup(it.first.c_str()),
                  const_cast<char *>(it.second.c_str()));
   }
@@ -614,8 +615,11 @@ static int ab_tostringarray(WORD_LIST *list) {
   const size_t string_len = strlen(oldval.get());
   if (string_len > INT_MAX)
     assert("attempt to split a string larger than INT_MAX");
-  const auto word_list = split_at_delims(oldval.get(), static_cast<int>(string_len), nullptr, -1, 0, nullptr, nullptr);
-  assign_compound_array_list(result_var, word_list, ASS_NOEVAL | ASS_NOEXPAND | ASS_FORCE);
+  const auto word_list =
+      split_at_delims(oldval.get(), static_cast<int>(string_len), nullptr, -1,
+                      0, nullptr, nullptr);
+  assign_compound_array_list(result_var, word_list,
+                             ASS_NOEVAL | ASS_NOEXPAND | ASS_FORCE);
   return 0;
 }
 
@@ -1246,6 +1250,37 @@ static int ab_get_item_by_key(WORD_LIST *list) {
   return 0;
 }
 
+static int abjson_get_item(WORD_LIST *list) {
+  const auto *json_data = get_argv1(list);
+  if (!json_data)
+    return EX_BADUSAGE;
+  list = list->next;
+  const auto *key = get_argv1(list);
+  if (!key)
+    return EX_BADUSAGE;
+  list = list->next;
+  const auto *var = get_argv1(list);
+  if (!var)
+    return EX_BADUSAGE;
+  const int ret = autobuild_deserialize_variable(json_data, key, var, false);
+  const auto logger = get_logger();
+  switch (ret) {
+  case 1:
+    logger->error("Invalid JSON input.");
+    break;
+  case 2:
+    logger->error("Invalid JSON query.");
+    break;
+  case 3:
+    logger->error("JSON query returned error.");
+    break;
+  case 4:
+    logger->error("Unable to represent the JSON value in Bash.");
+    break;
+  }
+  return ret;
+}
+
 extern "C" {
 void register_all_native_functions() {
   if (set_registered_flag())
@@ -1291,7 +1326,8 @@ void register_all_native_functions() {
       {"abfp_lambda_restore", abfp_lambda_restore},
       {"abmm_array_mine", abmm_array_mine},
       {"abmm_array_mine_remove", abmm_array_mine_remove},
-      {"ab_get_item_by_key", ab_get_item_by_key}};
+      {"ab_get_item_by_key", ab_get_item_by_key},
+      {"abjson_get_item", abjson_get_item}};
 
   // Initialize logger
   if (!logger)
