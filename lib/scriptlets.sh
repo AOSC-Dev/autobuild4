@@ -61,13 +61,14 @@ scriptlet_usergroup() {
     # shellcheck disable=SC2317
     user() {
         local _numeric_gid=${usermaps["$3"]}
+        local _login="$1"
         if [ -z "$_numeric_gid" ]; then
             _numeric_gid="$3"
         fi
-        echo "u    $1  $2:$_numeric_gid \"$5\" $4  $6"
+        echo "u    ${_login}  $2:$_numeric_gid \"$5\" $4  $6"
         shift 6
         for i in "$@"; do
-            echo "m    $1  $i"
+            echo "m    ${_login}  $i"
         done
     }
     # group NAME GID
