@@ -8,6 +8,6 @@ for i in PKGNAME PKGSEC PKGDES PKGVER; do
     fi
 done
 
-(grep -qF "$PKGSEC" "$AB/sets/section" || \
-	aberr "QA (E104): $PKGSEC not in sets/section.") | \
-		tee -a "$SRCDIR"/abqaerr.log
+if ! grep -qF "$PKGSEC" "$AB/sets/section"; then
+  aberr "QA (E104): $PKGSEC not in sets/section." | tee -a "$SRCDIR"/abqaerr.log
+fi
