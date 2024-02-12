@@ -301,12 +301,13 @@ static bool maybe_kernel_object(const std::vector<ElfXX_Shdr> &section_headers,
 static inline bool
 is_debug_info_present(const std::vector<ElfXX_Shdr> &section_headers,
                       const char *shstrtab) {
-  constexpr const char *sh_debug_info = ".debug_info";
+  constexpr const char *sh_debug_info = ".debug_";
+  const size_t sh_debug_info_sz = strlen(sh_debug_info);
   for (const ElfXX_Shdr &section_header : section_headers) {
     const uint32_t name_idx = section_header.sh_name();
     const char *section_name =
         reinterpret_cast<const char *>(shstrtab + name_idx);
-    if (memcmp(section_name, sh_debug_info, strlen(sh_debug_info)) == 0) {
+    if (strncmp(section_name, sh_debug_info, sh_debug_info_sz) == 0) {
       return true;
     }
   }
