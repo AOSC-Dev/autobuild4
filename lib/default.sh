@@ -21,6 +21,7 @@ ABUSECMAKEBUILD=yes		# Use cmake build for cmake* ABTYPEs?
 ABSPLITDBG=yes			# Split out debug package containing symbols (-dbg)?
 ABBUILDDEPONLY=no		# Avoid installing runtime dependencies when building?
 ABPATCHLAX=no			# Disallow fuzzy patching
+ABSPIRAL=yes			# Enable spiral provides generation
 
 # Strict Autotools option checking?
 AUTOTOOLS_STRICT=yes

@@ -32,6 +32,10 @@ public:
     auto lock_guard = std::lock_guard<std::mutex>{m_mutex};
     m_set.insert(begin, end);
   }
+  void emplace(T elem) {
+    auto lock_guard = std::lock_guard<std::mutex>{m_mutex};
+    m_set.emplace(std::move(elem));
+  }
   const std::unordered_set<T> &get_set() const { return m_set; }
 
 private:

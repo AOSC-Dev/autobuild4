@@ -492,15 +492,14 @@ static inline int forked_execvp(const char *path, char *const argv[]) {
   return status;
 }
 
-std::vector<std::string>
-to_spiral_provides(const std::string &soname) {
-  std::vector<std::string> ret;
-
-  if (soname.empty()) return ret;
+void
+to_spiral_provides(const std::string &soname,
+                   GuardedSet<std::string> &spiral_provides) {
+  if (soname.empty()) return;
 
   // Rule out strings without the ".so" extension name
   const size_t libname_pos = soname.find(".so");
-  if (libname_pos == std::string::npos) return ret;
+  if (libname_pos == std::string::npos) return;
 
   // Extract libname
   auto libname = soname.substr(0, libname_pos);
@@ -517,31 +516,28 @@ to_spiral_provides(const std::string &soname) {
 
     // Contains invalid character
     if ((c < 'a') || (c > 'z')) {
-      return ret;
+      return;
     }
   }
-<<<<<<< Updated upstream
-=======
   // Remove all occurrences of '-'
   libname.erase(std::remove(libname.begin(), libname.end(), '-'), libname.end());
 
   auto dev_name = fmt::format("{}-dev", libname);
->>>>>>> Stashed changes
 
   // Extract the major part of sover, +3 for ".so"
   const size_t sover_start = libname_pos + 3;
   // If there's no sover
   if (sover_start == soname.size()) {
-    ret.emplace_back(libname);
-    ret.emplace_back(fmt::format("{}-dev", libname));
-    return ret;
+    spiral_provides.emplace(dev_name);
+    spiral_provides.emplace(libname);
+    return;
   }
   // Make sure there's the dot
-  if (soname[sover_start] != '.') return ret;
+  if (soname[sover_start] != '.') return;
   size_t sover_major = 0;
   for (const auto &c : soname.substr(sover_start + 1, soname.size())) {
     if (c == '.') break;
-    if ((c < '0') || c > '9') return ret;
+    if ((c < '0') || c > '9') return;
     sover_major *= 10;
     sover_major += c - '0';
   }
@@ -549,15 +545,13 @@ to_spiral_provides(const std::string &soname) {
   // Add a '-' in between libname and sover if libname ends with a digit
   char libname_last = libname[libname.size() - 1];
   if ((libname_last >= '0') && (libname_last <= '9')) {
-    ret.emplace_back(fmt::format("{}-{}", libname, sover_major));
+    spiral_provides.emplace(fmt::format("{}-{}", libname, sover_major));
   } else {
-    ret.emplace_back(fmt::format("{}{}", libname, sover_major));
+    spiral_provides.emplace(fmt::format("{}{}", libname, sover_major));
   }
 
   // Add -dev package name
-  ret.emplace_back(fmt::format("{}-dev", libname));
-
-  return ret;
+  spiral_provides.emplace(dev_name);
 }
 
 int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
@@ -585,12 +579,10 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
 
   if (flags & AB_ELF_GENERATE_SPIRAL_PROVIDES) {
     const std::string filename(basename(src_path));
-    const auto spiral_filename = to_spiral_provides(filename);
-    spiral_provides.insert(spiral_filename.begin(), spiral_filename.end());
+    to_spiral_provides(filename, spiral_provides);
 
-    if (! result.soname.empty()) {
-      const auto spiral_soname = to_spiral_provides(result.soname);
-      spiral_provides.insert(spiral_soname.begin(), spiral_soname.end());
+    if ((! result.soname.empty()) && (result.soname != filename)) {
+      to_spiral_provides(result.soname, spiral_provides);
     }
   }
 
