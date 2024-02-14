@@ -41,19 +41,31 @@ dpkg_get_provides() {
 
 dpkgfield() {
 	local _string_v="$2"
+	local _ver="$(dpkgpkgver)"
 	ab_tostringarray _string_v
 	# first-pass: check for auto-deps notations
 	for _v in "${_string_v[@]}"; do
 		if [ "${_v}" = "@AB_AUTO_SO_DEPS@" ]; then
-		    if ! ((${#__AB_SO_DEPS})); then
+			if ! ((${#__AB_SO_DEPS})); then
 				abdie "Auto dependency discovery requested, but no ELF dependency was found!" >&2
-            fi
-		    local _data
+			fi
+			local _data
 			_data="$(dpkg_get_provides "${__AB_SO_DEPS[@]}")"
 			abdbg "Auto dependency discovery found: ${_data}" >&2
 			while read -r LINE; do
 				_string_v+=("$LINE")
 			done <<< "${_data}"
+		fi
+		if [ "${_v}" = "@AB_SPIRAL_PROVIDES@" ]; then
+			if ! ((${#__AB_SPIRAL_PROVIDES})); then
+				abdbg "No spiral provides generated" >&2
+				continue
+			fi
+			abdbg "Generated spiral provides: ${__AB_SPIRAL_PROVIDES[@]}" >&2
+			for SPIRAL_PROV in "${__AB_SPIRAL_PROVIDES[@]}"; do
+				# Add `_spiral` marker for generated provides
+				_string_v+=("${SPIRAL_PROV}_spiral")
+			done
 		fi
 	done
 	# second-pass: actually fill in the blanks
@@ -62,14 +74,17 @@ dpkgfield() {
 		if [[ "${_v}" = '@'* ]]; then
 			continue
 		elif [[ "${_v}" = "$PKGNAME" ]]; then
-		    # skip itself
-		    continue
+			# skip itself
+			continue
 		fi
 		if ((VER_NONE_ALL)); then			# name-only
 			name="${1/%_}"
 			_buffer+=("${name/[<>=]=*}");
 		elif [[ "${_v}" =~ [\<\>=]= ]]; then
 			_buffer+=("$(abpm_debver "${_v}")")
+		elif [[ "${_v}" =~ _spiral$ ]]; then
+			# Remove _spiral marker, append version
+			_buffer+=("$(abpm_debver "${_v%_spiral}==0:${_ver#*:}")")
 		elif ((VER_NONE)) || [[ "$_v" =~ _$ ]]; then
 			_buffer+=("${_v%_}");
 		else
