@@ -116,7 +116,12 @@ dpkgctrl() {
 	[ "$PKGRECOM" ] && dpkgfield Recommends "$PKGRECOM"
 	[ "$PKGREP" ] && dpkgfield Replaces "$PKGREP"
 	[ "$PKGCONFL" ] && dpkgfield Conflicts "$PKGCONFL"
+
+	if bool "$ABSPIRAL"; then
+		PKGPROV+=" @AB_SPIRAL_PROVIDES@"
+	fi
 	[ "$PKGPROV" ] && VER_NONE=1 dpkgfield Provides "$PKGPROV"
+
 	[ "$PKGSUG" ] && dpkgfield Suggests "$PKGSUG"
 	local _pkgbreak
 	_pkgbreak="$(ab_get_item_by_key __ABMODIFIERS PKGBREAK 1)"
