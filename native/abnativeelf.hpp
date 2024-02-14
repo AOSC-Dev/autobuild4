@@ -44,12 +44,15 @@ constexpr int AB_ELF_USE_EU_STRIP = 1 << 1;
 constexpr int AB_ELF_FIND_SO_DEPS = 1 << 2;
 constexpr int AB_ELF_CHECK_ONLY = 1 << 3;
 constexpr int AB_ELF_SAVE_WITH_PATH = 1 << 4;
+constexpr int AB_ELF_GENERATE_SPIRAL_PROVIDES = 1 << 5;
 
 int elf_copy_to_symdir(const char *src_path, const char *dst_path,
                        const char *build_id);
 int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
-                           int flags, GuardedSet<std::string> &symbols);
+                           int flags, GuardedSet<std::string> &symbols,
+                           GuardedSet<std::string> &spiral_provides);
 int elf_copy_debug_symbols_parallel(const std::vector<std::string> &directories,
                                     const char *dst_path,
                                     std::unordered_set<std::string> &so_deps,
+                                    std::unordered_set<std::string> &spiral_provides,
                                     int flags = AB_ELF_USE_EU_STRIP);
