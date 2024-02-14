@@ -11,6 +11,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <thread>
+#include <algorithm>
 
 #include <elf.h>
 #include <sys/wait.h>
@@ -491,8 +492,75 @@ static inline int forked_execvp(const char *path, char *const argv[]) {
   return status;
 }
 
+std::vector<std::string>
+to_spiral_provides(const std::string &soname) {
+  std::vector<std::string> ret;
+
+  if (soname.empty()) return ret;
+
+  // Rule out strings without the ".so" extension name
+  const size_t libname_pos = soname.find(".so");
+  if (libname_pos == std::string::npos) return ret;
+
+  // Extract libname
+  auto libname = soname.substr(0, libname_pos);
+  for (auto &c : libname) {
+    // - is not allowed
+    if (c == '_') {
+      c = '-';
+      continue;
+    }
+    // Only [a-z0-9.-+] allowed
+    if ((c >= '0') && (c <= '9')) continue;
+    if ((c == '-') || (c == '+') || (c == '.')) continue;
+    c = tolower(c);
+
+    // Contains invalid character
+    if ((c < 'a') || (c > 'z')) {
+      return ret;
+    }
+  }
+
+  // Remove all occurrences of '-'
+  libname.erase(std::remove(libname.begin(), libname.end(), '-'), libname.end());
+
+  auto dev_name = fmt::format("{}-dev", libname);
+
+  // Extract the major part of sover, +3 for ".so"
+  const size_t sover_start = libname_pos + 3;
+  // If there's no sover
+  if (sover_start == soname.size()) {
+    ret.emplace_back(libname);
+    ret.emplace_back(fmt::format("{}-dev", libname));
+    return ret;
+  }
+  // Make sure there's the dot
+  if (soname[sover_start] != '.') return ret;
+  size_t sover_major = 0;
+  for (const auto &c : soname.substr(sover_start + 1, soname.size())) {
+    if (c == '.') break;
+    if ((c < '0') || c > '9') return ret;
+    sover_major *= 10;
+    sover_major += c - '0';
+  }
+
+  // Add a '-' in between libname and sover if libname ends with a digit
+  char libname_last = libname[libname.size() - 1];
+  if ((libname_last >= '0') && (libname_last <= '9')) {
+    ret.emplace_back(fmt::format("{}-{}", libname, sover_major));
+  } else {
+    ret.emplace_back(fmt::format("{}{}", libname, sover_major));
+  }
+
+  // Add -dev package name
+  ret.emplace_back(fmt::format("{}-dev", libname));
+
+  return ret;
+}
+
 int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
-                           int flags, GuardedSet<std::string> &symbols) {
+                           int flags, GuardedSet<std::string> &symbols,
+                           GuardedSet<std::string> &spiral_provides) {
   int fd = open(src_path, O_RDONLY, 0);
   if (fd < 0) {
     perror("open");
@@ -512,6 +580,17 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
   extra_args.reserve(1);
   const char *data = static_cast<const char *>(file.addr());
   const ELFParseResult result = identify_binary_data(data, size);
+
+  if (flags & AB_ELF_GENERATE_SPIRAL_PROVIDES) {
+    const std::string filename(basename(src_path));
+    const auto spiral_filename = to_spiral_provides(filename);
+    spiral_provides.insert(spiral_filename.begin(), spiral_filename.end());
+
+    if (! result.soname.empty()) {
+      const auto spiral_soname = to_spiral_provides(result.soname);
+      spiral_provides.insert(spiral_soname.begin(), spiral_soname.end());
+    }
+  }
 
   if (flags & AB_ELF_FIND_SO_DEPS) {
     symbols.insert(result.needed_libs.begin(), result.needed_libs.end());
@@ -629,22 +708,28 @@ public:
   ELFWorkerPool(std::string  symdir, int flags)
       : ThreadPool<std::string, int>([&, flags](const std::string& src_path) {
           return elf_copy_debug_symbols(src_path.c_str(), m_symdir.c_str(),
-                                        flags, m_sodeps);
+                                        flags, m_sodeps, m_spiral_provides);
         }),
-        m_symdir(std::move(symdir)), m_sodeps() {}
+        m_symdir(std::move(symdir)), m_sodeps(), m_spiral_provides() {}
 
   const std::unordered_set<std::string> get_sodeps() const {
     return m_sodeps.get_set();
   }
 
+  const std::unordered_set<std::string> get_spiral_provides() const {
+    return m_spiral_provides.get_set();
+  }
+
 private:
   const std::string m_symdir;
   GuardedSet<std::string> m_sodeps;
+  GuardedSet<std::string> m_spiral_provides;
 };
 
 int elf_copy_debug_symbols_parallel(const std::vector<std::string> &directories,
                                     const char *dst_path,
                                     std::unordered_set<std::string> &so_deps,
+                                    std::unordered_set<std::string> &spiral_provides,
                                     int flags) {
   ELFWorkerPool pool{dst_path, flags};
   for (const auto &directory : directories) {
@@ -664,6 +749,11 @@ int elf_copy_debug_symbols_parallel(const std::vector<std::string> &directories,
   if (flags & AB_ELF_FIND_SO_DEPS) {
     const auto pool_results = pool.get_sodeps();
     so_deps.insert(pool_results.begin(), pool_results.end());
+  }
+
+  if (flags & AB_ELF_GENERATE_SPIRAL_PROVIDES) {
+    const auto spiral_results = pool.get_spiral_provides();
+    spiral_provides.insert(spiral_results.begin(), spiral_results.end());
   }
 
   return 0;
