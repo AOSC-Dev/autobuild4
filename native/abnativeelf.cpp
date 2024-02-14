@@ -743,9 +743,6 @@ int elf_copy_debug_symbols_parallel(const std::vector<std::string> &directories,
 
   pool.wait_for_completion();
 
-  if (pool.has_error())
-    return 1;
-
   if (flags & AB_ELF_FIND_SO_DEPS) {
     const auto pool_results = pool.get_sodeps();
     so_deps.insert(pool_results.begin(), pool_results.end());
@@ -755,6 +752,9 @@ int elf_copy_debug_symbols_parallel(const std::vector<std::string> &directories,
     const auto spiral_results = pool.get_spiral_provides();
     spiral_provides.insert(spiral_results.begin(), spiral_results.end());
   }
+
+  if (pool.has_error())
+    return 1;
 
   return 0;
 }
