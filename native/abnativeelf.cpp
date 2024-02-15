@@ -577,8 +577,18 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
   const char *data = static_cast<const char *>(file.addr());
   const ELFParseResult result = identify_binary_data(data, size);
 
-  if (flags & AB_ELF_GENERATE_SPIRAL_PROVIDES) {
-    const std::string filename(basename(src_path));
+  constexpr const char *base_path = "/usr/lib/";
+  constexpr const size_t base_len = sizeof(base_path);
+
+  const std::string filename(basename(src_path));
+  const size_t filename_len = filename.size();
+  const size_t src_len = strlen(src_path);
+  bool in_usr_lib = false;
+  if (src_len >= (base_len + filename_len)) {
+    const int src_offset = src_len - base_len - filename_len - 1;
+    in_usr_lib = (memcmp(src_path + src_offset, base_path, base_len) == 0);
+  }
+  if ((flags & AB_ELF_GENERATE_SPIRAL_PROVIDES) && in_usr_lib) {
     to_spiral_provides(filename, spiral_provides);
 
     if ((! result.soname.empty()) && (result.soname != filename)) {
