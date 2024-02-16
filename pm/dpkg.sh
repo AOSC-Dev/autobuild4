@@ -91,7 +91,8 @@ dpkgfield() {
 			_buffer+=("$(abpm_debver "${_v}>=$(dpkg_getver "${_v}")")")
 		fi
 	done
-	echo "$1: $(ab_join_elements _buffer $', ')"
+	local _content="$(ab_join_elements _buffer $', ')"
+	[ "${_content}" ] && echo "$1: ${_content}"
 }
 
 dpkgctrl() {
@@ -110,24 +111,24 @@ dpkgctrl() {
 		echo "Essential: no"
 	fi
 
-	[ "$PKGDEP" ] && dpkgfield Depends "$PKGDEP"
-	[ "$PKGPRDEP" ] && dpkgfield Pre-Depends "$PKGPRDEP"
+	dpkgfield Depends "$PKGDEP"
+	dpkgfield Pre-Depends "$PKGPRDEP"
 	VER_NONE=1 # We don't autofill versions in optional fields
-	[ "$PKGRECOM" ] && dpkgfield Recommends "$PKGRECOM"
-	[ "$PKGREP" ] && dpkgfield Replaces "$PKGREP"
-	[ "$PKGCONFL" ] && dpkgfield Conflicts "$PKGCONFL"
+	dpkgfield Recommends "$PKGRECOM"
+	dpkgfield Replaces "$PKGREP"
+	dpkgfield Conflicts "$PKGCONFL"
 
 	if bool "$ABSPIRAL"; then
 		PKGPROV+=" @AB_SPIRAL_PROVIDES@"
 	fi
-	[ "$PKGPROV" ] && VER_NONE=1 dpkgfield Provides "$PKGPROV"
+	dpkgfield Provides "$PKGPROV"
 
-	[ "$PKGSUG" ] && dpkgfield Suggests "$PKGSUG"
+	dpkgfield Suggests "$PKGSUG"
 	local _pkgbreak
 	_pkgbreak="$(ab_get_item_by_key __ABMODIFIERS PKGBREAK 1)"
 	if [ "${_pkgbreak}" = '0' ]; then
 		abwarn 'Not emitting PKGBREAK due to modifiers' >&2
-	elif [ "$PKGBREAK" ]; then
+	else
 		dpkgfield Breaks "$PKGBREAK"
 	fi
 	if [ -e "$SRCDIR"/autobuild/extra-dpkg-control ]; then
