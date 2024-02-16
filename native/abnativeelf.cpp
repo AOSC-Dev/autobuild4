@@ -535,21 +535,32 @@ to_spiral_provides(const std::string &soname,
   }
   // Make sure there's the dot
   if (soname[sover_start] != '.') return;
-  size_t sover_major = 0;
+  std::vector<size_t> sover{};
+  size_t sover_current = 0;
   for (const auto &c : soname.substr(sover_start + 1, soname.size())) {
-    if (c == '.') break;
+    if (c == '.') {
+      sover.emplace_back(sover_current);
+      sover_current = 0;
+      continue;
+    }
     if ((c < '0') || c > '9') return;
-    sover_major *= 10;
-    sover_major += c - '0';
+    sover_current *= 10;
+    sover_current += c - '0';
   }
+  sover.emplace_back(sover_current);
 
   // Add a '-' in between libname and sover if libname ends with a digit
   char libname_last = libname[libname.size() - 1];
+  std::string pkgname;
   if ((libname_last >= '0') && (libname_last <= '9')) {
-    spiral_provides.emplace(fmt::format("{}-{}", libname, sover_major));
+    pkgname =fmt::format("{}-{}", libname, sover[0]);
   } else {
-    spiral_provides.emplace(fmt::format("{}{}", libname, sover_major));
+    pkgname =fmt::format("{}{}", libname, sover[0]);
   }
+  if (sover.size() > 1) {
+    spiral_provides.emplace(fmt::format("{}.{}", pkgname, sover[1]));
+  }
+  spiral_provides.emplace(pkgname);
 
   // Add -dev package name
   spiral_provides.emplace(dev_name);
