@@ -58,10 +58,10 @@ dpkgfield() {
 		fi
 		if [ "${_v}" = "@AB_SPIRAL_PROVIDES@" ]; then
 			if ! ((${#__AB_SPIRAL_PROVIDES})); then
-				abdbg "No spiral provides generated" >&2
+				abdbg "No Debian-compatible provides generated" >&2
 				continue
 			fi
-			abdbg "Generated spiral provides: ${__AB_SPIRAL_PROVIDES[@]}" >&2
+			abdbg "Generated Debian-compatible (Spiral) provides: ${__AB_SPIRAL_PROVIDES[@]}" >&2
 			for SPIRAL_PROV in "${__AB_SPIRAL_PROVIDES[@]}"; do
 				# Add `_spiral` marker for generated provides
 				_string_v+=("${SPIRAL_PROV}_spiral")
