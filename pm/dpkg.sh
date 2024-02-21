@@ -84,7 +84,7 @@ dpkgfield() {
 			_buffer+=("$(abpm_debver "${_v}")")
 		elif [[ "${_v}" =~ _spiral$ ]]; then
 			# Remove _spiral marker, append version
-			_buffer+=("$(abpm_debver "${_v%_spiral}==0:${_ver#*:}")")
+			_buffer+=("$(abpm_debver "${_v%_spiral}==${PKGEPOCH_SPIRAL:-0}:${_ver#*:}")")
 		elif ((VER_NONE)) || [[ "$_v" =~ _$ ]]; then
 			_buffer+=("${_v%_}");
 		else
