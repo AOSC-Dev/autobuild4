@@ -60,22 +60,24 @@ void PlainLogger::logDiagnostic(Diagnostic diagnostic) {
     printf("%s(%zu): In function `%s':\n", filename.c_str(), diag.line,
            function.c_str());
   }
-  std::cout << fmt::format("Command exited with {0}.", diagnostic.code) << std::endl;
+  std::cerr << fmt::format("Command exited with {0}.", diagnostic.code)
+            << std::endl;
 }
 
 void PlainLogger::logException(std::string message) {
   io_lock_guard guard(this->m_io_mutex);
-  std::cout << "autobuild encountered an error and couldn't continue."
+  std::cerr << "autobuild encountered an error and couldn't continue."
             << std::endl;
   if (!message.empty()) {
-    std::cout << message << std::endl;
+    std::cerr << message << std::endl;
   } else {
-    std::cout << "Look at the stacktrace to see what happened." << std::endl;
+    std::cerr << "Look at the stacktrace to see what happened." << std::endl;
   }
-  printf("------------------------------autobuild "
-         "%s------------------------------\n",
-         ab_version);
-  printf("Go to %s for more information on this error.\n", ab_url);
+  fprintf(stderr,
+          "------------------------------autobuild "
+          "%s------------------------------\n",
+          ab_version);
+  fprintf(stderr, "Go to %s for more information on this error.\n", ab_url);
 }
 
 using json = nlohmann::json;
@@ -102,7 +104,8 @@ void JsonLogger::logDiagnostic(Diagnostic diagnostic) {
 }
 
 void JsonLogger::logException(std::string message) {
-  const json line = {{"event", "exception"}, {"level", "CRIT"}, {"message", message}};
+  const json line = {
+      {"event", "exception"}, {"level", "CRIT"}, {"message", message}};
   io_lock_guard guard(this->m_io_mutex);
   std::cout << line.dump() << std::endl;
 }
@@ -179,24 +182,26 @@ void ColorfulLogger::logDiagnostic(Diagnostic diagnostic) {
   }
 
   io_lock_guard guard(this->m_io_mutex);
-  std::cout << buffer << std::endl;
+  std::cerr << buffer << std::endl;
 }
 
 void ColorfulLogger::logException(std::string message) {
   io_lock_guard guard(this->m_io_mutex);
-  std::cout << "\x1b[1;31m"
+  std::cerr << "\x1b[1;31m"
             << "autobuild encountered an error and couldn't continue."
             << "\x1b[0m" << std::endl;
   if (!message.empty()) {
-    std::cout << message << std::endl;
+    std::cerr << message << std::endl;
   } else {
-    std::cout << "Look at the stacktrace to see what happened." << std::endl;
+    std::cerr << "Look at the stacktrace to see what happened." << std::endl;
   }
-  printf("------------------------------autobuild "
-         "%s------------------------------\n",
-         ab_version);
+  fprintf(stderr,
+          "------------------------------autobuild "
+          "%s------------------------------\n",
+          ab_version);
   std::string colored_url{"‘\e[1m"};
   colored_url += ab_url;
   colored_url += "\x1b[0m’";
-  printf("Go to %s for more information on this error.\n", colored_url.c_str());
+  fprintf(stderr, "Go to %s for more information on this error.\n",
+          colored_url.c_str());
 }
