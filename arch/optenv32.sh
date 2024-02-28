@@ -20,9 +20,14 @@ QT5DIR="/opt/32/lib/qt5"
 QT4BIN="/opt/32/lib/qt4/bin"
 QT5BIN="/opt/32/lib/qt5/bin"
 
-export DPKG_ARCH="noarch"
+# optenv32 packages should be packaged as amd64.
+export DPKG_ARCH="amd64"
+export PATH="$BINDIR:$PATH"
 
-CFLAGS_COMMON_ARCH=('-fomit-frame-pointer' '-march=pentium4' '-mtune=core2' '-msse' '-msse2' '-msse3')
+# linux32 tricks the build system.
+export ABCONFWRAPPER="linux32"
+
+CFLAGS_COMMON_ARCH=('-fomit-frame-pointer' '-march=x86-64' '-mtune=sandybridge' '-msse2' '-m32')
 
 export PKG_CONFIG_DIR=/opt/32/lib/pkgconfig
 unset LDFLAGS_COMMON_CROSS_BASE
