@@ -60,7 +60,10 @@ build_autotools_configure() {
 			|| abdie "Failed to enter shadow build directory: $?."
 	fi
 
-	if [[ "$ABHOST" != "$ABBUILD" ]]
+	if [[ "$ABHOST" = "optenv32" ]]
+	then
+		AUTOTOOLS_TARGET="--host=${ARCH_TARGET[$ABHOST]} --target=${ARCH_TARGET[$ABHOST]}"
+	elif [[ "$ABHOST" != "$ABBUILD" ]]
 	then
 		AUTOTOOLS_TARGET="--host=$HOST"
 	else
@@ -74,6 +77,7 @@ build_autotools_configure() {
 	if bool "$AUTOTOOLS_STRICT"; then
 		AUTOTOOLS_OPTION_CHECKING="--enable-option-checking=fatal"
 	fi
+	$ABCONFWRAPPER \
 	${configure:="$SRCDIR"/configure} \
 			"$AUTOTOOLS_TARGET" "${AUTOTOOLS_DEF[@]}" "${AUTOTOOLS_AFTER[@]}" \
 			"$AUTOTOOLS_OPTION_CHECKING" \
