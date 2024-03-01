@@ -14,10 +14,12 @@ filter_mancompress() {
 				if [[ -L $i ]]; then
 					local __mancomp_lnk
 					local __mancomp_lnk_rel
+					local __mancomp_lnk_dir
 					__mancomp_lnk="$(readlink -f "$i")"
-					__mancomp_lnk_rel="$(realpath --relative-to=$PKGDIR $__mancomp_lnk)"
+					__mancomp_lnk_dir="$(dirname "$i")"
+					__mancomp_lnk_rel="$(realpath --relative-to=$__mancomp_lnk_dir $__mancomp_lnk)"
 					rm "$i"
-					ln -svf /"$__mancomp_lnk_rel".xz "$i"
+					ln -svf "$__mancomp_lnk_rel".xz "$i"
 				elif [[ -f $i ]]; then
 					__mancomp_todo+=("$i")
 				else
