@@ -555,7 +555,10 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     const auto path = final_path.string();
     const char *args[] = {"objcopy", "--only-keep-debug", src_path,
                           path.c_str(), nullptr};
-    return forked_execvp("objcopy", const_cast<char *const *>(args));
+    int ret = forked_execvp("objcopy", const_cast<char *const *>(args));
+    if (ret != 0) {
+      return ret;
+    }
   }
   args[0] = "strip";
   std::copy(extra_args.begin(), extra_args.end(), std::back_inserter(args));
