@@ -516,21 +516,27 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
   get_logger()->info(
       fmt::format("Saving and stripping debug symbols from {0}", src_path));
 
-  if (result.build_id.empty()) {
-    // change to strip only
-    flags |= AB_ELF_STRIP_ONLY;
-    get_logger()->warning(fmt::format("No build id found in {0}", src_path));
-    return -2;
-  }
-
   if (!result.has_debug_info) {
     flags |= AB_ELF_STRIP_ONLY;
     get_logger()->warning(
         fmt::format("No debug symbols found in {0}", src_path));
     return -3;
   }
-  const fs::path final_path =
-      get_filename_from_build_id(result.build_id, dst_path);
+
+  if (result.build_id.empty() && !(flags & AB_ELF_SAVE_WITH_PATH)) {
+    // For binaries without build-id, save with path
+    flags |= AB_ELF_SAVE_WITH_PATH;
+    get_logger()->warning(fmt::format("No build id found in {0}. Saving with relative path", src_path));
+  }
+
+
+  fs::path final_path;
+  if (flags & AB_ELF_SAVE_WITH_PATH) {
+    final_path = fs::path{dst_path} / fs::path{src_path}.filename();
+    get_logger()->debug(fmt::format("Saving to {0}", final_path.string()));
+  } else {
+    final_path = get_filename_from_build_id(result.build_id, dst_path);
+  }
   const fs::path final_prefix = final_path.parent_path();
   fs::create_directories(final_prefix);
 

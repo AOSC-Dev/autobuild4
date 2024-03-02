@@ -765,29 +765,72 @@ static int abelf_elf_copy_to_symdir(WORD_LIST *list) {
   return elf_copy_to_symdir(src, symdir, buildid);
 }
 
+/**
+ * Copy debug symbols for one specific file specified:
+ * @param list arguments of the following form:
+ *      <-flags> <source directories> <destination directory>
+ * @return command status code:
+ *       0  - success
+ *       1  - invalid flags
+ *       2  - bad usage, incorrect number of arguments applied
+ *      10  - error occurred during processing
+ */
 static int abelf_copy_dbg(WORD_LIST *list) {
-  const auto *src = get_argv1(list);
+  int flags = AB_ELF_FIND_SO_DEPS;
+  reset_internal_getopt();
+  int opt = 0;
+  while ((opt = internal_getopt(list, const_cast<char *>("exrp"))) != -1) {
+    switch (opt) {
+      case 'x':
+        flags |= AB_ELF_STRIP_ONLY;
+        break;
+      case 'r':
+        flags |= AB_ELF_CHECK_ONLY;
+        break;
+      case 'e':
+        flags |= AB_ELF_USE_EU_STRIP;
+        break;
+      case 'p':
+        flags |= AB_ELF_SAVE_WITH_PATH;
+        break;
+      default:
+        return 1;
+    }
+  }
+
+  WORD_LIST *lists = loptend;
+  const auto *src = get_argv1(lists);
   if (!src)
     return EX_BADUSAGE;
-  WORD_LIST *lists = list->next;
+  lists = lists->next;
   const auto *dst = get_argv1(lists);
   if (!dst)
     return EX_BADUSAGE;
   GuardedSet<std::string> symbols{};
   const int ret =
-      elf_copy_debug_symbols(src, dst, AB_ELF_USE_EU_STRIP, symbols);
+      elf_copy_debug_symbols(src, dst, flags, symbols);
   if (ret < 0)
     return 10;
   return 0;
 }
 
+/**
+ * Copy debug symbols for all files specified:
+ * @param list arguments of the following form:
+ *      <-flags> <source directories> <destination directory>
+ * @return command status code:
+ *       0  - success
+ *       1  - invalid flags
+ *       2  - bad usage, incorrect number of arguments applied
+ *      10  - error occurred during processing
+ */
 static int abelf_copy_dbg_parallel(WORD_LIST *list) {
   constexpr const char *varname = "__AB_SO_DEPS";
   int flags = AB_ELF_FIND_SO_DEPS;
 
   reset_internal_getopt();
   int opt = 0;
-  while ((opt = internal_getopt(list, const_cast<char *>("exr"))) != -1) {
+  while ((opt = internal_getopt(list, const_cast<char *>("exrp"))) != -1) {
     switch (opt) {
     case 'x':
       flags |= AB_ELF_STRIP_ONLY;
@@ -797,6 +840,9 @@ static int abelf_copy_dbg_parallel(WORD_LIST *list) {
       break;
     case 'e':
       flags |= AB_ELF_USE_EU_STRIP;
+      break;
+    case 'p':
+      flags |= AB_ELF_SAVE_WITH_PATH;
       break;
     default:
       return 1;
@@ -1316,6 +1362,7 @@ void register_all_native_functions() {
       {"ab_typecheck", ab_typecheck},
       {"ab_join_elements", ab_join_elements},
       {"ab_parse_set_modifiers", ab_parse_set_modifiers},
+      {"abelf_copy_dbg", abelf_copy_dbg},
       {"abelf_copy_dbg_parallel", abelf_copy_dbg_parallel},
       {"abpm_aosc_archive", abpm_aosc_archive_new},
       {"abpm_debver", abpm_genver},

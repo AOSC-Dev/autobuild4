@@ -42,6 +42,7 @@ constexpr int AB_ELF_STRIP_ONLY = 1 << 0;
 constexpr int AB_ELF_USE_EU_STRIP = 1 << 1;
 constexpr int AB_ELF_FIND_SO_DEPS = 1 << 2;
 constexpr int AB_ELF_CHECK_ONLY = 1 << 3;
+constexpr int AB_ELF_SAVE_WITH_PATH = 1 << 4;
 
 int elf_copy_to_symdir(const char *src_path, const char *dst_path,
                        const char *build_id);
