@@ -18,7 +18,7 @@ ABCONFIGHACK=yes		# Use config.{sub,guess} replacement for newer architectures?
 NOCARGOAUDIT=no			# Audit Cargo (Rust) dependencies?
 NONPMAUDIT=no			# Audit NPM dependencies?
 ABUSECMAKEBUILD=yes		# Use cmake build for cmake* ABTYPEs?
-ABSPLITDBG=yes			# Split out debug package containing symbols (-dbg)?
+ABSPLITDBG=yes			# Automatically compile with -g and produce debug symbol package ($PKGNAME-dbg)?
 ABBUILDDEPONLY=no		# Avoid installing runtime dependencies when building?
 ABPATCHLAX=no			# Disallow fuzzy patching
 
