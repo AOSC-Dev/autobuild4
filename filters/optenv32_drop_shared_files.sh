@@ -12,6 +12,18 @@ filter_optenv_drop_shared_files() {
 				abinfo "Removing $rmpath from the package directory ..."
 				# Probably way too verbose.
 				rm -r "$PKGDIR"/"$rmpath"
+				abinfo "Replacing with $rmpath symlink ..."
+				case "${rmpath/$PREFIX\//}" in
+					etc)
+						ln -sv /etc "$rmpath"
+						;;
+					var)
+						ln -sv /var "$rmpath"
+						;;
+					share)
+						ln -sv /usr/share "$rmpath"
+						;;
+				esac
 			fi
 		done
 	else
