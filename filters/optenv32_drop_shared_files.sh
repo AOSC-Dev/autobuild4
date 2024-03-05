@@ -1,11 +1,11 @@
 #!/bin/bash
-##filter/retro_drop_docs.sh: Drop /usr/share/{,gtk-}doc for Retro architectures.
+##filter/optenv32_drop_shared_files.sh: Drop shared arch-independent files from optenv runtime packages.
 ##@copyright GPL-2.0+
 
 # Paths to be removed from PKGDIR.
 OPTENV_SHARED_PATHS=("$PREFIX/etc" "$PREFIX/share" "$PREFIX/var" "/etc" "/share" "/var" "/usr")
 filter_optenv_drop_shared_files() {
-	if ab_match_archgroup optenv; then
+	if [[ "$ABHOST" = optenv* ]] ; then
 		abinfo "optenv target detected, removing shared files from the package directory ..."
 		for rmpath in ${OPTENV_SHARED_PATHS[@]} ; do
 			if [ -d "$PKGDIR"/"$rmpath" ] ; then
