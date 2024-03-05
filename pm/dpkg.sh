@@ -177,7 +177,7 @@ dpkgctrl() {
 }
 
 dpkgctrl_dbg() {
-	local arch="${ABHOST%%\/*}"
+	local arch="${DPKG_ARCH%%\/*}"
 	[[ "$arch" == noarch ]] && arch=all
 	echo "Package: $PKGNAME-dbg"
 	echo "Version: $(dpkgpkgver)"
@@ -204,7 +204,7 @@ pm_install_all() {
 }
 
 pm_build_package() {
-	local _file="${PKGNAME}_${PKGVER}-${PKGREL}_${ABHOST%%\/*}.deb"
+	local _file="${PKGNAME}_${PKGVER}-${PKGREL}_${DPKG_ARCH%%\/*}.deb"
 	mkdir -p "$PKGDIR"/DEBIAN \
 		|| abdie "Failed to create DEBIAN directory for .deb metadata: $?."
 	cp -rl "$SRCDIR"/abscripts/* "$PKGDIR"/DEBIAN \
@@ -230,7 +230,7 @@ pm_build_package() {
 }
 
 pm_build_debug_package() {
-	local _file="${PKGNAME}-dbg_${PKGVER}-${PKGREL}_${ABHOST%%\/*}.deb"
+	local _file="${PKGNAME}-dbg_${PKGVER}-${PKGREL}_${DPKG_ARCH%%\/*}.deb"
 	mkdir -p "$SYMDIR"/DEBIAN \
 			|| abdie "Failed to create DEBIAN directory for -dbg .deb metadata: $?."
 		dpkgctrl_dbg > "$SYMDIR"/DEBIAN/control \
