@@ -15,13 +15,13 @@ filter_optenv_drop_shared_files() {
 				abinfo "Replacing with $rmpath symlink ..."
 				case "${rmpath/$PREFIX\//}" in
 					etc)
-						ln -sv /etc "$rmpath"
+						ln -sv /etc "$PKGDIR/$PREFIX/etc"
 						;;
 					var)
-						ln -sv /var "$rmpath"
+						ln -sv /var "$PKGDIR/$PREFIX/var"
 						;;
 					share)
-						ln -sv /usr/share "$rmpath"
+						ln -sv /usr/share "$PKGDIR/$PREFIX/share"
 						;;
 				esac
 			fi
