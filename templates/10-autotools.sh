@@ -60,9 +60,9 @@ build_autotools_configure() {
 			|| abdie "Failed to enter shadow build directory: $?."
 	fi
 
-	if [[ "$ABHOST" = "optenv32" ]]
+	if [[ "$ABHOST" = optenv* ]]
 	then
-		AUTOTOOLS_TARGET=("--host=${ARCH_TARGET[$ABHOST]}" "--target=${ARCH_TARGET[$ABHOST]}")
+		AUTOTOOLS_TARGET=("--host=${ARCH_TARGET[$ABHOST]}" "--target=${ARCH_TARGET[$ABHOST]}" "--build=${ARCH_TARGET[$ABHOST]}")
 	elif [[ "$ABHOST" != "$ABBUILD" ]]
 	then
 		AUTOTOOLS_TARGET=("--host=$HOST")
