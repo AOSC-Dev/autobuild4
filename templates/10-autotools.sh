@@ -62,12 +62,12 @@ build_autotools_configure() {
 
 	if [[ "$ABHOST" = "optenv32" ]]
 	then
-		AUTOTOOLS_TARGET="--host=${ARCH_TARGET[$ABHOST]} --target=${ARCH_TARGET[$ABHOST]}"
+		AUTOTOOLS_TARGET=("--host=${ARCH_TARGET[$ABHOST]}" "--target=${ARCH_TARGET[$ABHOST]}")
 	elif [[ "$ABHOST" != "$ABBUILD" ]]
 	then
-		AUTOTOOLS_TARGET="--host=$HOST"
+		AUTOTOOLS_TARGET=("--host=$HOST")
 	else
-		AUTOTOOLS_TARGET="--build=${ARCH_TARGET[$ARCH]}"
+		AUTOTOOLS_TARGET=("--build=${ARCH_TARGET[$ARCH]}")
 	fi
 
 	BUILD_START
@@ -79,7 +79,7 @@ build_autotools_configure() {
 	fi
 	$ABCONFWRAPPER \
 	${configure:="$SRCDIR"/configure} \
-			"$AUTOTOOLS_TARGET" "${AUTOTOOLS_DEF[@]}" "${AUTOTOOLS_AFTER[@]}" \
+			"${AUTOTOOLS_TARGET[@]}" "${AUTOTOOLS_DEF[@]}" "${AUTOTOOLS_AFTER[@]}" \
 			"$AUTOTOOLS_OPTION_CHECKING" \
 			|| abdie "Failed to run configure: $?."
 }
