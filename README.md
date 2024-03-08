@@ -21,7 +21,7 @@ Installing Autobuild4
 
 - CMake >= 3.12
 - GCC >= 4.9 (Boost >= 1.72 is required if GCC < 9, Fmt >= 8 is required if GCC < 13)
-- nholmann-json >= 3.8
+- nlohmann-json >= 3.8
 - Glibc and Bash headers
 
 ### Building and Installing
