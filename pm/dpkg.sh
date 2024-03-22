@@ -57,11 +57,46 @@ dpkgfield() {
 			done <<< "${_data}"
 		fi
 		if [ "${_v}" = "@AB_SPIRAL_PROVIDES@" ]; then
-			if ! ((${#__AB_SPIRAL_PROVIDES})); then
-				abdbg "No Debian-compatible provides generated" >&2
-				continue
+			if [ -d "$PKGDIR"/usr/lib/girepository-1.0 ]; then
+				for gir in `find "$PKGDIR"/usr/lib/girepository-1.0/ -type f`; do
+					_string_v+=("$(echo gir1.2-$(basename $gir) | \
+						sed -e 's|.typelib$||g' | \
+						tr '[:upper:]' '[:lower:]')")
+				done
 			fi
-			abdbg "Generated Debian-compatible (Spiral) provides: ${__AB_SPIRAL_PROVIDES[@]}" >&2
+			if [ -d "$PKGDIR"/usr/lib/python"$ABPY2VER"/site-packages ]; then
+				for py2mod in `find "$PKGDIR"/usr/lib/python"$ABPY2VER"/site-packages -mindepth 1 -maxdepth 1 -type d`; do
+					_string_v+=("$(echo python${ABPY2VER:0:1}-$(basename $py2mod | cut -f1 -d'-') | \
+						sort -u | \
+						sed -e 's|_|-|g' | \
+						tr '[:upper:]' '[:lower:]')")
+				done
+				for py2mod in `find "$PKGDIR"/usr/lib/python"$ABPY2VER"/site-packages -mindepth 1 -maxdepth 1 -type f -name '*.py'`; do
+					_string_v+=("$(echo python${ABPY2VER:0:1}-$(basename $py2mod | cut -f1 -d'.') | \
+						sort -u | \
+						sed -e 's|_|-|g' | \
+						tr '[:upper:]' '[:lower:]')")
+				done
+			fi
+			if [ -d "$PKGDIR"/usr/lib/python"$ABPY3VER"/site-packages ]; then
+				for py3mod in `find "$PKGDIR"/usr/lib/python"$ABPY3VER"/site-packages -mindepth 1 -maxdepth 1 -type d`; do
+					_string_v+=("$(echo python${ABPY3VER:0:1}-$(basename $py3mod | cut -f1 -d'-') | \
+						sort -u | \
+						sed -e 's|_|-|g' | \
+						tr '[:upper:]' '[:lower:]')")
+				done
+				for py3mod in `find "$PKGDIR"/usr/lib/python"$ABPY3VER"/site-packages -mindepth 1 -maxdepth 1 -type f -name '*.py'`; do
+					_string_v+=("$(echo python${ABPY3VER:0:1}-$(basename $py3mod | cut -f1 -d'.') | \
+						sort -u | \
+						sed -e 's|_|-|g' | \
+						tr '[:upper:]' '[:lower:]')")
+				done
+			fi
+			for SPIRAL_PROV in "${__AB_SPIRAL_PROVIDES[@]}"; do
+				_string_v+=("${SPIRAL_PROV}")
+			done
+			abdbg "Generated Debian-compatible (Spiral) provides: ${_string_v[@]/@AB_SPIRAL_PROVIDES@/}" >&2
+			# FIXME: Duplicate for loop to make the above abdbg() pretty, anyway to make it more elegant?
 			for SPIRAL_PROV in "${__AB_SPIRAL_PROVIDES[@]}"; do
 				# Add `_spiral` marker for generated provides
 				_string_v+=("${SPIRAL_PROV}_spiral")
