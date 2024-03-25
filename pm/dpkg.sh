@@ -57,6 +57,7 @@ dpkgfield() {
 			done <<< "${_data}"
 		fi
 		if [ "${_v}" = "@AB_SPIRAL_PROVIDES@" ]; then
+			abdbg "Generating Debian-compatible (Spiral) provides ..."
 			if [ -d "$PKGDIR"/usr/lib/girepository-1.0 ]; then
 				for gir in `find "$PKGDIR"/usr/lib/girepository-1.0/ -type f`; do
 					_string_v+=("$(echo gir1.2-$(basename $gir) | \
@@ -95,6 +96,8 @@ dpkgfield() {
 			for SPIRAL_PROV in "${__AB_SPIRAL_PROVIDES[@]}"; do
 				_string_v+=("${SPIRAL_PROV}_spiral")
 			done
+			# FIXME: This, while able to print all Spiral provides, causes Autobuild4 to
+			# crash when building packages with manually specified _spiral Provides.
 			abdbg "Generated Debian-compatible (Spiral) provides: ${_string_v[@]/@AB_SPIRAL_PROVIDES@/}" >&2
 		fi
 	done
