@@ -98,7 +98,7 @@ dpkgfield() {
 			done
 			# FIXME: This, while able to print all Spiral provides, causes Autobuild4 to
 			# crash when building packages with manually specified _spiral Provides.
-			abdbg "Generated Debian-compatible (Spiral) provides: ${_string_v[@]/@AB_SPIRAL_PROVIDES@/}" >&2
+			#abdbg "Generated Debian-compatible (Spiral) provides: ${_string_v[@]/@AB_SPIRAL_PROVIDES@/}" >&2
 		fi
 	done
 	# second-pass: actually fill in the blanks
