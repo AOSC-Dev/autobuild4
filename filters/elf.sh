@@ -7,13 +7,9 @@ filter_elf() {
 	if ! bool "$ABSTRIP"; then
 		abinfo 'Not stripping ELF binaries as requested.'
 	    _opts+=('-r')
-    elif ! bool "$ABSPLITDBG"; then
+	elif ! bool "$ABSPLITDBG"; then
 	    abinfo 'Not splitting ELF binaries as requested.'
 		_opts+=('-x')
-	fi
-
-	if command -v eu-strip > /dev/null; then
-		_opts+=('-e')
 	fi
 
 	local _elf_path=()
@@ -22,7 +18,7 @@ filter_elf() {
 			_elf_path+=("$i")
         fi
 	done
-	
+
 	abelf_copy_dbg_parallel "${_opts[@]}" "${_elf_path[@]}" "${SYMDIR}"
 }
 
