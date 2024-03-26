@@ -635,6 +635,10 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     // strip all symbols
     args.emplace_back("-s");
     break;
+  case BinaryType::Relocatable:
+    args.emplace_back("--strip-debug");
+    extra_args.emplace_back("--enable-deterministic-archives");
+    break;
   case BinaryType::Dynamic:
   case BinaryType::KernelObject:
     extra_args.emplace_back("--strip-unneeded");
