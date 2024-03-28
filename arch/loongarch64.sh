@@ -1,5 +1,5 @@
 #!/bin/bash
-##arch/loongarch64.sh: Build definitions for Loongson 3A/B 5000.
+##arch/loongarch64.sh: Build definitions for LoongArch targets.
 ##@copyright GPL-2.0+
 
 CFLAGS_GCC_ARCH=('-mabi=lp64d' '-march=loongarch64' '-mtune=la464' '-mlsx')
