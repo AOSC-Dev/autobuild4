@@ -656,11 +656,11 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
   }
 
   if (result.build_id.empty() && !(flags & AB_ELF_SAVE_WITH_PATH)) {
-    // For binaries without build-id, save with path
-    flags |= AB_ELF_SAVE_WITH_PATH;
-    get_logger()->warning(fmt::format("No build id found in {0}. Saving with relative path", src_path));
+    // change to strip only
+    flags |= AB_ELF_STRIP_ONLY;
+    get_logger()->warning(fmt::format("No build id found in {0}", src_path));
+    return -2;
   }
-
 
   fs::path final_path;
   if (flags & AB_ELF_SAVE_WITH_PATH) {
