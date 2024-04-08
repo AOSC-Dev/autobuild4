@@ -636,6 +636,10 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     args.emplace_back("-s");
     break;
   case BinaryType::Relocatable:
+    // disable debug symbol saving for relocatables
+    // also uses GNU binutils strip for compatibility
+    flags |= AB_ELF_STRIP_ONLY;
+    flags &= ~AB_ELF_USE_EU_STRIP;
     args.emplace_back("--strip-debug");
     extra_args.emplace_back("--enable-deterministic-archives");
     break;
@@ -649,7 +653,6 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
       fmt::format("Saving and stripping debug symbols from {0}", src_path));
 
   if (!result.has_debug_info) {
-    flags |= AB_ELF_STRIP_ONLY;
     get_logger()->warning(
         fmt::format("No debug symbols found in {0}", src_path));
     return -3;
