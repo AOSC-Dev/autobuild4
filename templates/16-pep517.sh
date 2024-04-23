@@ -25,6 +25,7 @@ build_pep517_configure() {
 		abinfo "Workaround needed for the ${_backend} backend. Applying workaround ..."
 		mkdir -pv "${SRCDIR}/.tempsrc"
 		mv -- * "${SRCDIR}/.tempsrc"
+		mv -- .git "${SRCDIR}/.tempsrc"
 		mv -v -- "${SRCDIR}/.tempsrc" "${SRCDIR}/${PKGNAME}_src"
 		mv -v -- "${SRCDIR}/${PKGNAME}_src/"abqaerr.log "${SRCDIR}"
 		mv -v -- "${SRCDIR}/${PKGNAME}_src/"acbs-build*.log "${SRCDIR}"
