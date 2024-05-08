@@ -43,15 +43,6 @@ fi
 
 cd "$SRCDIR" || abdie "Unable to cd $SRCDIR: $?."
 
-__overrides=
-if arch_findfile -2 overrides __overrides && [ -d "${__overrides}" ]; then
-    abinfo "Deploying files in overrides ..."
-	cp -arvT "${__overrides}"/ "$PKGDIR/" || \
-		abdie "Failed to deploy files in overrides: $?."
-fi
-
-cd "$SRCDIR" || abdie "Unable to cd $SRCDIR: $?."
-
 unset -f BUILD_{START,READY,FINAL}
 unset __overrides
 for i in "${MIGRATE_REQUIRED[@]}"; do
