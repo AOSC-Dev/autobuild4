@@ -62,7 +62,8 @@ build_autotools_configure() {
 
 	if [[ "$ABHOST" = optenv* ]]
 	then
-		AUTOTOOLS_TARGET=("--host=${ARCH_TARGET[$ABHOST]}" "--target=${ARCH_TARGET[$ABHOST]}" "--build=${ARCH_TARGET[$ABHOST]}")
+		AUTOTOOLS_TARGET=("--host=${ARCH_TARGET[$ABHOST]}" "--target=${ARCH_TARGET[$ABHOST]}" "--build=${ARCH_TARGET[$ABHOST]}"
+				  "CC=$CC" "CXX=$CXX" "OBJC=$OBJC" "OBJCXX=$OBJCXX" LD="$LD")
 	elif [[ "$ABHOST" != "$ABBUILD" ]]
 	then
 		AUTOTOOLS_TARGET=("--host=$HOST")
