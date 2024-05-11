@@ -81,7 +81,7 @@ build_autotools_configure() {
 	$ABCONFWRAPPER \
 	${configure:="$SRCDIR"/configure} \
 			"${AUTOTOOLS_TARGET[@]}" "${AUTOTOOLS_DEF[@]}" "${AUTOTOOLS_AFTER[@]}" \
-			"$AUTOTOOLS_OPTION_CHECKING" \
+			"${AUTOTOOLS_OPTION_CHECKING[@]}" \
 			|| abdie "Failed to run configure: $?."
 }
 
