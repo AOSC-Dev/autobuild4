@@ -5,6 +5,7 @@
 #include "abnativeelf.hpp"
 #include "abnativefunctions.h"
 #include "abserialize.hpp"
+#include "abspiral.hpp"
 #include "bashinterface.hpp"
 #include "pm.hpp"
 #include "stdwrapper.hpp"
@@ -1335,6 +1336,23 @@ static int abjson_get_item(WORD_LIST *list) {
   return ret;
 }
 
+static int abspiral_from_sonames(WORD_LIST *list) {
+  constexpr const char *varname_spiral_provides_sonames = "__ABSPIRAL_PROVIDES_SONAMES";
+  const auto *lut_file_cstr = get_argv1(list);
+  if (! lut_file_cstr)
+    return EX_BADUSAGE;
+  const std::string lut_file(lut_file_cstr);
+  auto sonames = get_all_args_vector(list->next);
+  if (sonames.empty())
+    return EX_BADUSAGE;
+  std::unordered_set<std::string> spiral_provides_sonames{};
+  const int ret = spiral_from_sonames(lut_file, sonames, spiral_provides_sonames);
+  if (ret != 0)
+    return ret;
+  ab_set_to_bash_array(varname_spiral_provides_sonames, spiral_provides_sonames);
+  return 0;
+}
+
 extern "C" {
 void register_all_native_functions() {
   if (set_registered_flag())
@@ -1382,7 +1400,8 @@ void register_all_native_functions() {
       {"abmm_array_mine", abmm_array_mine},
       {"abmm_array_mine_remove", abmm_array_mine_remove},
       {"ab_get_item_by_key", ab_get_item_by_key},
-      {"abjson_get_item", abjson_get_item}};
+      {"abjson_get_item", abjson_get_item},
+      {"abspiral_from_sonames", abspiral_from_sonames}};
 
   // Initialize logger
   if (!logger)

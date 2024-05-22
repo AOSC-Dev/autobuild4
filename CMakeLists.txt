@@ -57,6 +57,8 @@ set(COMMON_SRC
   native/abjsondata.hpp
   native/abserialize.cpp
   native/abserialize.hpp
+  native/abspiral.cpp
+  native/abspiral.hpp
   native/logger.hpp
   native/logger.cpp
   native/pm.hpp
