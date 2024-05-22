@@ -807,9 +807,9 @@ static int abelf_copy_dbg(WORD_LIST *list) {
   if (!dst)
     return EX_BADUSAGE;
   GuardedSet<std::string> symbols{};
-  GuardedSet<std::string> spiral_provides;
+  GuardedSet<std::string> sonames;
   const int ret =
-      elf_copy_debug_symbols(src, dst, flags, symbols, spiral_provides);
+      elf_copy_debug_symbols(src, dst, flags, symbols, sonames);
   if (ret < 0)
     return 10;
   return 0;
@@ -836,8 +836,8 @@ static void ab_set_to_bash_array(const char *varname, const std::unordered_set<s
  */
 static int abelf_copy_dbg_parallel(WORD_LIST *list) {
   constexpr const char *varname_so_deps = "__AB_SO_DEPS";
-  constexpr const char *varname_spiral = "__AB_SPIRAL_PROVIDES";
-  int flags = AB_ELF_FIND_SO_DEPS | AB_ELF_GENERATE_SPIRAL_PROVIDES;
+  constexpr const char *varname_sonames = "__AB_SONAMES";
+  int flags = AB_ELF_FIND_SO_DEPS | AB_ELF_FIND_SONAMES;
 
   reset_internal_getopt();
   int opt = 0;
@@ -866,14 +866,14 @@ static int abelf_copy_dbg_parallel(WORD_LIST *list) {
   const auto dst = std::string{args.back()};
   args.pop_back();
   std::unordered_set<std::string> so_deps{};
-  std::unordered_set<std::string> spiral_provides;
+  std::unordered_set<std::string> sonames;
   const int ret =
-      elf_copy_debug_symbols_parallel(args, dst.c_str(), so_deps, spiral_provides, flags);
+      elf_copy_debug_symbols_parallel(args, dst.c_str(), so_deps, sonames, flags);
   if (ret < 0)
     return 10;
   // copy the data to the bash variable
   ab_set_to_bash_array(varname_so_deps, so_deps);
-  ab_set_to_bash_array(varname_spiral, spiral_provides);
+  ab_set_to_bash_array(varname_sonames, sonames);
   return 0;
 }
 

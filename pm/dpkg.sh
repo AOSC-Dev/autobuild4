@@ -92,9 +92,9 @@ dpkgfield() {
 						tr '[:upper:]' '[:lower:]')_spiral")
 				done
 			fi
-			for SPIRAL_PROV in "${__AB_SPIRAL_PROVIDES[@]}"; do
-				_string_v+=("${SPIRAL_PROV}_spiral")
-			done
+			# for SPIRAL_PROV in "${__AB_SPIRAL_PROVIDES[@]}"; do
+			# 	_string_v+=("${SPIRAL_PROV}_spiral")
+			# done
 			# FIXME: This, while able to print all Spiral provides, causes Autobuild4 to
 			# crash when building packages with manually specified _spiral Provides.
 			#abdbg "Generated Debian-compatible (Spiral) provides: ${_string_v[@]/@AB_SPIRAL_PROVIDES@/}" >&2
