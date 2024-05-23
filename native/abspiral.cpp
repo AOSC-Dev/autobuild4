@@ -36,7 +36,12 @@ insert_from_lut(const lut_t &lut,
                 std::unordered_set<std::string> &out) {
   const auto search = lut.find(key);
   if (search != lut.end()) {
-    out.insert(search->second.cbegin(), search->second.cend());
+    for (const auto &prov : search->second) {
+      out.emplace(prov);
+      if (prov.substr(prov.size() - 4, prov.size() - 1) == "t64") {
+        out.emplace(prov.substr(0, prov.size() - 3));
+      }
+    }
   }
 }
 
