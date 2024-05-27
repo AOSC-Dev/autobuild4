@@ -29,6 +29,15 @@ constexpr std::array<uint8_t, 8> ar_thin_magic = {0x21, 0x3C, 0x74, 0x68,
 // {'B', 'C', '\xC0', '\xDE'}
 constexpr std::array<uint8_t, 4> llvm_bc_magic = {0x42, 0x43, 0xC0, 0xDE};
 
+// Loongson2F (MIPS-III)
+constexpr uint32_t elf_flags_loongson2f = 0x20000007;
+
+// Loongson3 (MIPS)
+constexpr uint32_t elf_flags_loongson3 = 0x80a20007;
+
+// MIPS64R6EL
+constexpr uint32_t elf_flags_mips64r6el = 0xa0000407;
+
 constexpr uint32_t elf_min_size = sizeof(Elf32_Ehdr);
 
 enum class Endianness : bool {
@@ -124,6 +133,8 @@ public:
   ELFXX_ADD_GETTER(e_shnum);
   ELFXX_ADD_GETTER(e_shstrndx);
   ELFXX_ADD_GETTER(e_shoff);
+  ELFXX_ADD_GETTER(e_machine);
+  ELFXX_ADD_GETTER(e_flags);
 };
 
 class ElfXX_Shdr
@@ -194,38 +205,47 @@ static inline const ElfXX_Shdr get_section_header(const ElfXX_Ehdr &elf_header,
   }
 }
 
+static const ElfXX_Shdr *
+find_elf_section_header(const std::vector<ElfXX_Shdr> &section_headers,
+                        const char *shstrtab,
+                        const char *name,
+                        const uint32_t type) {
+  for (const auto &shdr : section_headers) {
+    const uint32_t sh_type = shdr.sh_type();
+    if (sh_type != type)
+      continue;
+    const uint32_t name_idx = shdr.sh_name();
+    const char *section_name =
+            reinterpret_cast<const char *>(shstrtab + name_idx);
+    if (memcmp(section_name, name, strlen(name)) != 0)
+      continue;
+    return &shdr;
+  }
+  return nullptr;
+}
+
 static const char *
 get_elf_dynstrtab(const char *file_start,
                   const std::vector<ElfXX_Shdr> &section_headers,
                   const char *shstrtab) {
   // constexpr const char *sh_dyn = ".dynamic";
   constexpr const char *sh_dynstr = ".dynstr";
-  const char *dynstrtab = nullptr;
-  for (const auto &shdr : section_headers) {
-    const uint32_t type = shdr.sh_type();
-    if (type != SHT_STRTAB)
-      continue;
-    const uint32_t name_idx = shdr.sh_name();
-    const char *section_name =
-            reinterpret_cast<const char *>(shstrtab + name_idx);
-    if (memcmp(section_name, sh_dynstr, strlen(sh_dynstr)) != 0) {
-      continue;
-    }
-    dynstrtab = reinterpret_cast<const char *>(file_start) + shdr.sh_offset();
-    break;
+  const auto shdr = find_elf_section_header(
+          section_headers, shstrtab, sh_dynstr, SHT_STRTAB);
+  if (shdr != nullptr) {
+    return reinterpret_cast<const char *>(file_start) + shdr->sh_offset();
+  } else {
+    return nullptr;
   }
-  return dynstrtab;
 }
 
 static std::vector<const char *>
 get_elf_needed(const char *file_start,
                const std::vector<ElfXX_Shdr> &section_headers,
-               const char *shstrtab) {
-  auto dynstrtab = get_elf_dynstrtab(file_start, section_headers, shstrtab);
-
+               const char *dynstrtab) {
   std::vector<const char *> needed{};
   if (dynstrtab == nullptr)
-    return {};
+    return needed;
   for (const auto &shdr : section_headers) {
     const uint32_t type = shdr.sh_type();
     if (type != SHT_DYNAMIC)
@@ -257,42 +277,159 @@ get_elf_build_id(const char *file_start,
   std::string build_id{};
   constexpr const char *sh_gnu_build_id = ".note.gnu.build-id";
   // constexpr const char *sh_go_build_id = ".note.go.buildid";
-  for (const ElfXX_Shdr &section_header : section_headers) {
-    const uint32_t type = section_header.sh_type();
-    // build id section is a note section
-    if (type != SHT_NOTE) {
-      continue;
-    }
-    const uint32_t name_idx = section_header.sh_name();
-    const char *section_name =
-        reinterpret_cast<const char *>(shstrtab + name_idx);
-    if (memcmp(section_name, sh_gnu_build_id, strlen(sh_gnu_build_id)) != 0) {
-      continue;
-    }
-
-    const char *note_start = file_start + section_header.sh_offset();
-    ElfXX_Nhdr note_header = {note_start, section_header.is_64bit(),
-                              section_header.endianness()};
-    const size_t header_size = note_header.size();
-    const unsigned char *value =
-        reinterpret_cast<const unsigned char *>(note_start) + header_size +
-        note_header.n_namesz();
-    for (size_t i = 0; i < note_header.n_descsz(); i++) {
-      const unsigned char hi = table[(value[i] & 0xF0) >> 4];
-      const unsigned char lo = table[(value[i] & 0x0F) >> 0];
-      build_id += hi;
-      build_id += lo;
-    }
+  const auto section_header = find_elf_section_header(
+          section_headers, shstrtab, sh_gnu_build_id, SHT_NOTE);
+  if (section_header == nullptr)
+    return build_id;
+  const char *note_start = file_start + section_header->sh_offset();
+  ElfXX_Nhdr note_header = {note_start, section_header->is_64bit(),
+                            section_header->endianness()};
+  const size_t header_size = note_header.size();
+  const unsigned char *value =
+      reinterpret_cast<const unsigned char *>(note_start) + header_size +
+      note_header.n_namesz();
+  for (size_t i = 0; i < note_header.n_descsz(); i++) {
+    const unsigned char hi = table[(value[i] & 0xF0) >> 4];
+    const unsigned char lo = table[(value[i] & 0x0F) >> 0];
+    build_id += hi;
+    build_id += lo;
   }
 
   return build_id;
 }
 
+static const uint64_t
+decode_uleb128(const unsigned char *start, const size_t pos_max, size_t &pos) {
+  uint64_t ret = 0;
+  uint8_t shift = 0;
+  while (pos < pos_max) {
+    ret |= (start[pos] & 0x7F) << shift;
+    pos += 1;
+    if ((start[pos] & 0x80) == 0)
+      break;
+    shift += 7;
+  }
+  return le64toh(ret);
+}
+
+static const bool
+is_null_terminated_string(const uint64_t tag) {
+  // Tags with null-terminated string as values: 4: CPU_raw_name, 5: CPU_name, 67: conformance
+  constexpr const uint64_t tag_string[] = {4, 5, 67};
+  for (const auto i : tag_string) {
+    if (i == tag) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Ref: ELF for the Arm Architecture - Section 5.3.6
+// Ref: readelf.c from binutils
+static AOSCArch
+get_elf_arm_arch(const char *file_start,
+                 const std::vector<ElfXX_Shdr> &section_headers,
+                 const char *shstrtab) {
+  constexpr const char *sh_abi_tag = ".ARM.attributes";
+  constexpr const char *vendor_name = "aeabi";
+  bool hard_float = false;
+  const auto vendor_name_len = strlen(vendor_name);
+  auto ret = AOSCArch::NONE;
+  const auto section_header = find_elf_section_header(
+          section_headers, shstrtab, sh_abi_tag, SHT_ARM_ATTRIBUTES);
+  if (section_header == nullptr)
+    return ret;
+  const unsigned char *start = reinterpret_cast<const unsigned char *>(file_start) + section_header->sh_offset();
+  const auto size = section_header->sh_size();
+  // Version identifier 'A'
+  if (*start != 'A')
+    return ret;
+  size_t pos = 1;
+
+  // Parse sections
+  while (pos < size) {
+    uint32_t section_length = *reinterpret_cast<const uint32_t *>(start + pos);
+    if (section_header->endianness() == Endianness::Little) {
+      section_length = le32toh(section_length);
+    } else {
+      section_length = be32toh(section_length);
+    }
+    const auto section_end = pos + section_length;
+    pos += 4;
+    // only check section with pseudo-vendor 'aeabi'
+    if (memcmp(start + pos, vendor_name, vendor_name_len) != 0) {
+      pos = section_end;
+      continue;
+    }
+    pos += vendor_name_len + 1;
+
+    // 0x01 marks for Tag_File, ignore other subsections
+    if (start[pos] != 0x01) {
+      pos = section_end;
+      continue;
+    }
+
+    // Read attributes length
+    uint32_t attributes_length = *reinterpret_cast<const uint32_t *>(start + pos + 1);
+    if (pos + attributes_length > section_end)
+      return AOSCArch::NONE;
+    const size_t attributes_end = pos + attributes_length;
+    pos += 5;
+
+    // Parse attributes
+    while (pos < attributes_end) {
+      const auto tag = decode_uleb128(start, attributes_end, pos);
+      if (is_null_terminated_string(tag)) {
+        const size_t val_len = strlen(reinterpret_cast<const char*>(start) + pos);
+        pos += val_len + 1;
+        if (pos > attributes_end) {
+          return AOSCArch::NONE;
+        }
+        continue;
+      }
+      const auto value = decode_uleb128(start, attributes_end, pos);
+      switch (tag) {
+      // CPU_arch
+      case 6:
+        switch (value) {
+        // v4
+        case 1:
+          ret = AOSCArch::ARMV4;
+          break;
+        // v6
+        case 6:
+          ret = AOSCArch::ARMV6HF;
+          break;
+        // v7
+        case 10:
+          ret = AOSCArch::ARMV7HF;
+          break;
+        default:
+          return AOSCArch::NONE;
+        }
+        break;
+      // ABI_VFP_args
+      case 28:
+        // VFP registers
+        if (value == 1)
+          hard_float = true;
+        break;
+      }
+    }
+  }
+  // Detect unsupported combinations
+  if ((ret == AOSCArch::ARMV4) && hard_float) {
+    return AOSCArch::NONE;
+  } else if (((ret == AOSCArch::ARMV6HF) || (ret == AOSCArch::ARMV7HF)) && (! hard_float)) {
+    return AOSCArch::NONE;
+  }
+  return ret;
+}
+
 static std::string
 get_elf_soname(const char *file_start,
                const std::vector<ElfXX_Shdr> &section_headers,
-               const char *shstrtab) {
-  auto dynstrtab = get_elf_dynstrtab(file_start, section_headers, shstrtab);
+               const char *dynstrtab) {
   for (const ElfXX_Shdr &shdr : section_headers) {
     const uint32_t type = shdr.sh_type();
     // soname section is a dynamic section
@@ -430,18 +567,95 @@ static ELFParseResult identify_binary_data(const char *data,
   }
 
   // extract build id and library depends
-  auto build_id = get_elf_build_id(data, section_headers, shstr_start);
-  auto soname = get_elf_soname(data, section_headers, shstr_start);
+  const auto dynstrtab = get_elf_dynstrtab(data, section_headers, shstr_start);
+  const auto build_id = get_elf_build_id(data, section_headers, dynstrtab);
+  const auto soname = get_elf_soname(data, section_headers, dynstrtab);
   if (type == BinaryType::Relocatable &&
       maybe_kernel_object(section_headers, shstr_start)) {
     type = BinaryType::KernelObject;
   } else {
-    auto needed = get_elf_needed(data, section_headers, shstr_start);
+    auto needed = get_elf_needed(data, section_headers, dynstrtab);
     result.needed_libs = std::move(needed);
   }
   result.build_id = std::move(build_id);
   result.soname = std::move(soname);
   result.has_debug_info = is_debug_info_present(section_headers, shstr_start);
+
+  // detect architecture
+  switch (ehdr.e_machine()) {
+  case EM_X86_64:
+    result.arch = AOSCArch::AMD64;
+    break;
+  case EM_AARCH64:
+    result.arch = AOSCArch::ARM64;
+    break;
+  case EM_ARM:
+    // Checks .ARM.attributes
+    result.arch = get_elf_arm_arch(data, section_headers, shstr_start);
+    break;
+  // Assumes EM_386 binaries are always i486-compatible
+  case EM_386:
+    result.arch = AOSCArch::I486;
+    break;
+  case EM_LOONGARCH:
+    if (ehdr.is_64bit()) {
+      result.arch = AOSCArch::LOONGARCH64;
+    } else {
+      result.arch = AOSCArch::NONE;
+    }
+    break;
+  case EM_MIPS:
+    // MIPS{32,64}BE aren't supported
+    if (endian == Endianness::Big) {
+      result.arch = AOSCArch::NONE;
+      break;
+    }
+    // e_flags-based detection
+    switch (ehdr.e_flags()) {
+      case elf_flags_loongson2f:
+        result.arch = AOSCArch::LOONGSON2F;
+        break;
+      case elf_flags_loongson3:
+        result.arch = AOSCArch::LOONGSON3;
+        break;
+      case elf_flags_mips64r6el:
+        result.arch = AOSCArch::MIPS64R6EL;
+        break;
+      default:
+        result.arch = AOSCArch::NONE;
+        break;
+    }
+    break;
+  case EM_PPC:
+    if (endian == Endianness::Big) {
+      result.arch = AOSCArch::POWERPC;
+    } else {
+      result.arch = AOSCArch::NONE;
+    }
+    break;
+  case EM_PPC64:
+    if (endian == Endianness::Big) {
+      result.arch = AOSCArch::PPC64;
+    } else {
+      result.arch = AOSCArch::PPC64EL;
+    }
+    break;
+  case EM_RISCV:
+    // TODO: Check RISC-V attributes for better accuracy
+    if (ehdr.is_64bit()) {
+      result.arch = AOSCArch::RISCV64;
+    } else {
+      result.arch = AOSCArch::NONE;
+    }
+    break;
+  case EM_SPARCV9:
+    result.arch = AOSCArch::SPARC64;
+    break;
+  default:
+    result.arch = AOSCArch::NONE;
+    break;
+  }
+
   return result;
 }
 

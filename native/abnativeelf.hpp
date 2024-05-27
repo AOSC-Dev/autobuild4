@@ -16,11 +16,31 @@ enum class BinaryType : uint8_t {
   LLVM_IR,
 };
 
+enum class AOSCArch : uint8_t {
+  NONE = 0,
+  AMD64,
+  ARM64,
+  ARMV4,
+  ARMV6HF,
+  ARMV7HF,
+  I486,
+  LOONGARCH64,
+  LOONGSON2F,
+  LOONGSON3,
+  MIPS64R6EL,
+  POWERPC,
+  PPC64,
+  PPC64EL,
+  RISCV64,
+  SPARC64,
+};
+
 struct ELFParseResult {
   std::vector<const char *> needed_libs;
   std::string build_id;
   std::string soname;
   BinaryType bin_type;
+  AOSCArch arch;
   bool has_debug_info;
 };
 
