@@ -18,6 +18,11 @@
 #include <unistd.h>
 #include <unordered_set>
 
+// Workaround for older versions of glibc
+#ifndef EM_LOONGARCH
+#define EM_LOONGARCH 258
+#endif // EM_LOONGARCH
+
 // {'!', '<', 'a', 'r', 'c', 'h', '>', '\n'}
 constexpr std::array<uint8_t, 8> ar_magic = {0x21, 0x3C, 0x61, 0x72,
                                              0x63, 0x68, 0x3E, 0x0A};
