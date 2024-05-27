@@ -706,6 +706,42 @@ static inline int forked_execvp(const char *path, char *const argv[]) {
   return status;
 }
 
+std::string
+aosc_arch_to_debian_arch_suffix(AOSCArch arch) {
+  switch (arch) {
+    case AOSCArch::AMD64:
+      return ":amd64";
+    case AOSCArch::ARM64:
+      return ":arm64";
+    case AOSCArch::ARMV4:
+      return ":armel";
+    case AOSCArch::ARMV6HF:
+    case AOSCArch::ARMV7HF:
+      return ":armhf";
+    case AOSCArch::I486:
+      return ":i386";
+    case AOSCArch::LOONGARCH64:
+      return ":loong64";
+    case AOSCArch::LOONGSON2F:
+    case AOSCArch::LOONGSON3:
+      return ":mips64el";
+    case AOSCArch::MIPS64R6EL:
+      return ":mips64r6el";
+    case AOSCArch::POWERPC:
+      return ":powerpc";
+    case AOSCArch::PPC64:
+      return ":ppc64";
+    case AOSCArch::PPC64EL:
+      return ":ppc64el";
+    case AOSCArch::RISCV64:
+      return ":riscv64";
+    case AOSCArch::SPARC64:
+      return ":sparc64";
+    default:
+      return "";
+  }
+}
+
 int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
                            int flags, GuardedSet<std::string> &symbols,
                            GuardedSet<std::string> &sonames) {
@@ -741,7 +777,8 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     in_usr_lib = (memcmp(src_path + src_offset, base_path, base_len) == 0);
   }
   if ((flags & AB_ELF_FIND_SONAMES) && in_usr_lib && (! result.soname.empty())) {
-      sonames.emplace(result.soname);
+    sonames.emplace(
+            fmt::format("{0}{1}", result.soname, aosc_arch_to_debian_arch_suffix(result.arch)));
   }
 
   if (flags & AB_ELF_FIND_SO_DEPS) {
