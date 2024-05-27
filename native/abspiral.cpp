@@ -33,13 +33,14 @@ lut_read(const fs::path &file, lut_t &lut) {
 void
 insert_from_lut(const lut_t &lut,
                 const std::string &key,
+                const std::string &suffix,
                 std::unordered_set<std::string> &out) {
   const auto search = lut.find(key);
   if (search != lut.end()) {
     for (const auto &prov : search->second) {
-      out.emplace(prov);
+      out.emplace(fmt::format("{0}{1}", prov, suffix));
       if (prov.substr(prov.size() - 4, prov.size() - 1) == "t64") {
-        out.emplace(prov.substr(0, prov.size() - 3));
+        out.emplace(fmt::format("{0}{1}", prov.substr(0, prov.size() - 3), suffix));
       }
     }
   }
@@ -53,12 +54,21 @@ spiral_from_sonames(const std::string &lut_file,
   if (lut_read(lut_file, lut) != 0) {
     return 1;
   }
-  for (const auto &soname: sonames) {
-    insert_from_lut(lut, soname, spiral_provides);
+  for (const auto &soname_and_arch: sonames) {
+    std::string soname{};
+    std::string arch_suffix = "";
+    const size_t delim_pos = soname_and_arch.find(':');
+    if (delim_pos != std::string::npos) {
+      soname = soname_and_arch.substr(0, delim_pos);
+      arch_suffix = soname_and_arch.substr(delim_pos, soname_and_arch.length());
+    } else {
+      soname = soname_and_arch;
+    }
+    insert_from_lut(lut, soname, arch_suffix, spiral_provides);
     const size_t suffix_pos = soname.find(".so");
     if (suffix_pos == std::string::npos)
       continue;
-    insert_from_lut(lut, soname.substr(0, suffix_pos + 3), spiral_provides);
+    insert_from_lut(lut, soname.substr(0, suffix_pos + 3), arch_suffix, spiral_provides);
   }
   return 0;
 }
