@@ -573,7 +573,7 @@ static ELFParseResult identify_binary_data(const char *data,
 
   // extract build id and library depends
   const auto dynstrtab = get_elf_dynstrtab(data, section_headers, shstr_start);
-  const auto build_id = get_elf_build_id(data, section_headers, dynstrtab);
+  const auto build_id = get_elf_build_id(data, section_headers, shstr_start);
   const auto soname = get_elf_soname(data, section_headers, dynstrtab);
   if (type == BinaryType::Relocatable &&
       maybe_kernel_object(section_headers, shstr_start)) {
