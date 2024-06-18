@@ -6,9 +6,6 @@
 HAS_HWCAPS=1
 HWCAPS=('x86-64-v2' 'x86-64-v3' 'x86-64-v4')
 
-# CFLAGS without -march and μarch specific tuning.
-CFLAGS_COMMON_ARCH_BASE=('-fomit-frame-pointer')
-
 # Default -march and μarch specific tuning.
 # No need to reference CFLAGS_COMMON_ARCH_BASE, it will be concatenated.
 CFLAGS_COMMON_ARCH=('-march=x86-64' '-mtune=sandybridge' '-msse2')
