@@ -11,7 +11,6 @@ AUTOTOOLS_DEF=(
 	--bindir="$BINDIR"
 	--sbindir="$BINDIR"
 	--mandir="$MANDIR"
-	--runstatedir="$RUNDIR"
 )
 CMAKE_DEF=(
 	-DCMAKE_INSTALL_PREFIX="$PREFIX"
