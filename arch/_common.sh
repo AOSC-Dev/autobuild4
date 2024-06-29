@@ -4,7 +4,7 @@
 
 # C Compiler Flags.
 CFLAGS_COMMON=('-pipe' '-Wno-error')
-CFLAGS_COMMON_OPTI=('-O2')
+CFLAGS_COMMON_OPTI=('-O2' '-fno-omit-frame-pointer' '-mno-omit-leaf-frame-pointer')
 CFLAGS_COMMON_DEBUG=('-O0')	# not that frequently used since autotools know it.
 CFLAGS_GCC=()
 CFLAGS_GCC_OPTI=('-fira-loop-pressure' '-fira-hoist-pressure' '-ftree-vectorize')
@@ -28,7 +28,7 @@ OBJCXXFLAGS_COMMON_WEIRD=()
 OBJCXXFLAGS_COMMON_PERMISSIVE=('-fpermissive')
 # RUST Flags.
 RUSTFLAGS_COMMON=()
-RUSTFLAGS_COMMON_OPTI=('-Ccodegen-units=1' '-Copt-level=3' '-Cdebuginfo=line-tables-only')
+RUSTFLAGS_COMMON_OPTI=('-Ccodegen-units=1' '-Copt-level=3' '-Cdebuginfo=line-tables-only' '-Cforce-frame-pointers=yes')
 RUSTFLAGS_COMMON_WEIRD=()
 # Use clang + lld for processing LTO
 RUSTFLAGS_COMMON_OPTI_LTO=(
