@@ -19,13 +19,19 @@ lut_read(const fs::path &file, lut_t &lut) {
     const size_t delim_pos = line.find(',');
     if (delim_pos == std::string::npos) return -1;
     const auto key = line.substr(0, delim_pos);
-    const auto value = line.substr(delim_pos + 1, line.size());
-    const auto search = lut.find(key);
-    if (search != lut.end()) {
-      search->second.emplace(value);
-    } else {
-      lut.emplace(key, std::unordered_set<std::string>{value});
+    if (const auto search = lut.find(key); search == lut.end()) {
+      lut.emplace(key, std::unordered_set<std::string>());
     }
+    std::unordered_set<std::string> &target = lut.find(key)->second;
+
+    auto value = line.substr(delim_pos + 1, line.size());
+    size_t pos;
+    std::string token;
+    while ((pos = value.find(',')) != std::string::npos) {
+      target.emplace(value.substr(0, pos));
+      value.erase(0, pos + 1);
+    }
+    target.emplace(value.substr(0, value.size()));
   }
   return 0;
 }
@@ -56,7 +62,7 @@ spiral_from_sonames(const std::string &lut_file,
   }
   for (const auto &soname_and_arch: sonames) {
     std::string soname{};
-    std::string arch_suffix = "";
+    std::string arch_suffix;
     const size_t delim_pos = soname_and_arch.find(':');
     if (delim_pos != std::string::npos) {
       soname = soname_and_arch.substr(0, delim_pos);
