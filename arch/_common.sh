@@ -2,6 +2,9 @@
 ##arch/_common.sh: Common arch defs for all ab arches, defines-mutable.
 ##@copyright GPL-2.0+
 
+# HWCAPS is not supported on most targets.
+HAS_HWCAPS=0
+
 # C Compiler Flags.
 CFLAGS_COMMON=('-pipe' '-Wno-error')
 CFLAGS_COMMON_OPTI=('-O2')
