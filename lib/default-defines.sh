@@ -60,6 +60,9 @@ AB_SAN_LEK=0
 # Use BFD LD?
 AB_LD_BFD=1
 
+# Build for HWCAPS subtargets?
+AB_HWCAPS=0
+
 # Default testing flags
 ABTESTS=""
 ABTEST_AUTO_DETECT=yes
