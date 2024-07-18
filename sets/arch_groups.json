@@ -22,5 +22,24 @@
   ],
   "optenv": [
     "optenv32"
+  ],
+  "64bit": [
+    "amd64",
+    "arm64",
+    "loongarch64",
+    "loongson3",
+    "mips64r6el",
+    "ppc64el",
+    "riscv64",
+    "loongson2f",
+    "ppc64"
+  ],
+  "32bit": [
+    "armv4",
+    "armv6hf",
+    "armv7hf",
+    "i486",
+    "m68k",
+    "powerpc"
   ]
 }
