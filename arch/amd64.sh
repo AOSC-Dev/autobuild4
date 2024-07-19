@@ -20,3 +20,7 @@ CFLAGS_HWCAPS_x86_64_v2=("${CFLAGS_COMMON_ARCH_BASE[@]}" "-march=x86-64-v2" "-mt
 CFLAGS_HWCAPS_x86_64_v3=("${CFLAGS_COMMON_ARCH_BASE[@]}" "-march=x86-64-v3" "-mtune=haswell" "-msse2" "-msse4.2" "-mavx2")
 # TBD: Which -mtune to be chosen for x86_64 v4?
 CFLAGS_HWCAPS_x86_64_v4=("${CFLAGS_COMMON_ARCH_BASE[@]}" "-march=x86-64-v4" "-mtune=generic" "-msse2" "-msse4.2" "-mavx2" "-mavx512f" "-mavx512bw" "-mavx512cd" "-mavx512dq" "-mavx512vl")
+
+RUSTFLAGS_HWCAPS_x86_64_v2=("-Ctarget-cpu=x86-64-v2")
+RUSTFLAGS_HWCAPS_x86_64_v3=("-Ctarget-cpu=x86-64-v3")
+RUSTFLAGS_HWCAPS_x86_64_v4=("-Ctarget-cpu=x86-64-v4")
