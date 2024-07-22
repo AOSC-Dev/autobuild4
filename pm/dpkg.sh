@@ -4,18 +4,8 @@
 
 DPKGDEBCOMP=()
 
-# Auto-select xz level, use lower compression level on "Retro" architectures.
-if ab_match_archgroup retro; then
-	DPKGDEBCOMP+=(-Zxz -z3 --threads-max=1)
-# Only 2GiB of user-addressable memory.
-elif ab_match_arch mips32r6el; then
-	DPKGDEBCOMP+=(-Zxz -z6 --threads-max=1)
-# Buggy NUMA implementation on SG2042? Causes dead locks.
-elif ab_match_arch riscv64; then
-	DPKGDEBCOMP+=(-Zxz -z6 --threads-max=1)
-else
-	DPKGDEBCOMP+=(-Zxz -z6)
-fi
+# Use Zstd at the default level: 3 - see zstd(1).
+DPKGDEBCOMP+=(-Zzstd -z3)
 
 dpkg_deb_build() {
 	dpkg-deb "${DPKGDEBCOMP[@]}" -b "$1" "$2"
