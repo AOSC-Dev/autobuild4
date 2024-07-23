@@ -60,7 +60,12 @@ build_autotools_configure() {
 			|| abdie "Failed to enter shadow build directory: $?."
 	fi
 
-	if [[ "$ABHOST" = optenv* ]]
+	if [[ "x${AUTOTOOLS_TARGET[@]}" != "x" ]]
+	then
+		# $AUTOTOOLS_TARGET may be set internally by HWCAPS script.
+		# do nothing.
+		true
+	elif [[ "$ABHOST" = optenv* ]]
 	then
 		AUTOTOOLS_TARGET=("--host=${ARCH_TARGET[$ABHOST]}" "--target=${ARCH_TARGET[$ABHOST]}" "--build=${ARCH_TARGET[$ABHOST]}"
 				  "CC=$CC" "CXX=$CXX" "OBJC=$OBJC" "OBJCXX=$OBJCXX" LD="$LD")
