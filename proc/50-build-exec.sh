@@ -42,9 +42,3 @@ if arch_findfile -2 beyond; then
 fi
 
 cd "$SRCDIR" || abdie "Unable to cd $SRCDIR: $?."
-
-unset -f BUILD_{START,READY,FINAL}
-unset __overrides
-for i in "${MIGRATE_REQUIRED[@]}"; do
-    abmm_array_mine_remove "$i"
-done
