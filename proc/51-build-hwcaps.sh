@@ -10,6 +10,7 @@ if ! bool "$AB_HWCAPS_ACTIVE" ; then
 	for i in "${MIGRATE_REQUIRED[@]}"; do
 		abmm_array_mine_remove "$i"
 	done
+	return
 fi
 
 # We might need to do something specific to builds for HWCAPS subtargtes.
@@ -54,7 +55,7 @@ export OLD_PKGDIR="$PKGDIR"
 if [ "$ABTYPE" != "self" ] ; then
 for cap in "${HWCAPS[@]}" ; do
 	# Set each build flags for the current subtarget
-	flags=(CFLAGS CXXFLAGS LDFLAGS OBJCFLAGS OBJCXXFLAGS RUSTFLAGS)
+	flags=(CPPFLAGS CFLAGS CXXFLAGS LDFLAGS OBJCFLAGS OBJCXXFLAGS RUSTFLAGS)
 	# Files to cleanup before each run. This has to be done if ABSHADOW=0.
 	files=(CMakeFiles CMakeCache.txt config.status)
 	for flag in "${flags[@]}" ; do
@@ -104,27 +105,44 @@ for cap in "${HWCAPS[@]}" ; do
 	"build_${ABTYPE}_install" || abdie "Install failed: $?."
 
 	cd "$SRCDIR" || abdie "Unable to cd $SRCDIR: $?."
+
+	if arch_findfile hwcaps/beyond; then
+		abinfo 'Running after-build (beyond) script ...'
+		arch_loadfile_strict hwcaps/beyond
+	fi
+	[ -d "$PKGDIR" ] || abdie "51-build-hwcaps: Suspecting build failure due to missing PKGDIR."
+	abinfo "[$cap] Harvesting libraries ..."
+	files=($(find "$PKGDIR"/"$LIBDIR" -maxdepth 1 -type f,l -name 'lib*.so.*'))
+	if [ "${#files[@]}" -lt "1" ] ; then
+		abdie "$cap: This build did not produce any libraries. How strange is that!"
+	fi
+	for f in "${files[@]}" ; do
+		install -Dvm755 -t "$OLD_PKGDIR"/usr/lib/glibc-hwcaps/"$cap"/ "$f"
+	done
 done # for cap in "${HWCAPS[@]}" ; do
 else # if [ "$ABTYPE" != "self" ] ; then
-	if [ -n "$HWCAPS_PREPARE" ] ; then
+	if arch_findfile hwcaps/prepare ; then
 		abinfo "[$cap] Running custom prepare script ..."
-		arch_loadfile_strict hwcaps/$(basename $HWCAPS_PREPARE) || abdie "Failed to run custom build script: $?."
+		arch_loadfile_strict hwcaps/prepare || abdie "Failed to run custom build script: $?."
 	fi
 	abinfo "[$cap] Running custom build script ..."
 	arch_loadfile_strict hwcaps/$(basename $HWCAPS_BUILD) || abdie "Failed to run custom build script: $?."
+
+	if arch_findfile hwcaps/beyond; then
+		abinfo 'Running after-build (beyond) script ...'
+		arch_loadfile_strict hwcaps/beyond
+	fi
+
+	if [ ! -d "$PKGDIR"/usr/lib/glibc-hwcaps ] ; then
+		abdie "Hold on! No libraries installed into PKGDIR/usr/lib/glibc-hwcaps. Check your build script."
+	fi
 fi # if [ "$ABTYPE" != "self" ] ; then
-
-[ -d "$PKGDIR" ] || abdie "51-build-hwcaps: Suspecting build failure due to missing PKGDIR."
-
-if arch_findfile hwcaps/beyond; then
-	abinfo 'Running after-build (beyond) script ...'
-	arch_loadfile_strict hwcaps/beyond
-fi
 
 cd "$SRCDIR" || abdie "Unable to cd $SRCDIR: $?."
 
-# TODO harvest artifacts.
-abdie "Enough for this time."
+# Set PKGDIR back to its original value.
+export PKGDIR="$OLD_PKGDIR"
+
 unset -f BUILD_{START,READY,FINAL}
 unset __overrides
 for i in "${MIGRATE_REQUIRED[@]}"; do
