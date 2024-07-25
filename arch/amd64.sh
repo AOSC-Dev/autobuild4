@@ -24,3 +24,7 @@ CFLAGS_HWCAPS_x86_64_v4=("${CFLAGS_COMMON_ARCH_BASE[@]}" "-march=x86-64-v4" "-mt
 RUSTFLAGS_HWCAPS_x86_64_v2=("-Ctarget-cpu=x86-64-v2")
 RUSTFLAGS_HWCAPS_x86_64_v3=("-Ctarget-cpu=x86-64-v3")
 RUSTFLAGS_HWCAPS_x86_64_v4=("-Ctarget-cpu=x86-64-v4")
+
+CPPFLAGS_HWCAPS_x86_64_v2=("-march=x86-64-v2" "-msse2" "-msse4.2")
+CPPFLAGS_HWCAPS_x86_64_v3=("-march=x86-64-v3" "-msse2" "-msse4.2" "-mavx2")
+CPPFLAGS_HWCAPS_x86_64_v4=("-march=x86-64-v4" "-msse2" "-msse4.2" "-mavx2" "-mavx512f" "-mavx512bw" "-mavx512cd" "-mavx512dq" "-mavx512vl")
