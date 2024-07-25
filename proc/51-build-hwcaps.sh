@@ -91,11 +91,19 @@ for cap in "${HWCAPS[@]}" ; do
 		"build_${ABTYPE}_audit" || abdie "Audit failed: $?."
 	fi
 	# Trick autotools into thinking that we are performing a cross
-	# compilation. The resulting $cross_compile is `maybe', thus
+	# compilation. The resulting $cross_compiling is `maybe', thus
 	# skipping a test run.
 	# This problem was observed on a non x86-64-v4 machine, while
 	# building gmp.
-	export AUTOTOOLS_TARGET=("--host=${ARCH_TARGET[$ARCH]}")
+	# mpfr requires $cross_compiling = yes. So we have to do the real
+	# trick by using the generic target for --build.
+	if ! bool "$AB_HWCAPS_REALLY_CROSSING" ; then
+		export AUTOTOOLS_TARGET=("--host=${ARCH_TARGET[$ARCH]}")
+	else
+		generic_triple="${ARCH_TARGET[$ARCH]}"
+		generic_triple="${generic_triple/aosc/unknown}"
+		export AUTOTOOLS_TARGET=("--host=${ARCH_TARGET[$ARCH]}" "--build=${generic_triple}")
+	fi
 
 	abinfo "[$cap] ${ABTYPE} > Running configure step ..."
 	"build_${ABTYPE}_configure" || abdie "Configure failed: $?."
