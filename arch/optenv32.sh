@@ -27,7 +27,7 @@ export PATH="$BINDIR:$PATH"
 # linux32 tricks the build system.
 export ABCONFWRAPPER="linux32"
 
-# Disable Spiral provides geenration.
+# Disable Spiral provides generation.
 ABSPIRAL=0
 
 CFLAGS_COMMON_ARCH=('-fomit-frame-pointer' '-march=x86-64' '-mtune=sandybridge' '-msse2' '-m32')
