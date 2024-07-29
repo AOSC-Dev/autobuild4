@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <sys/file.h>
 #include <thread>
 #include <algorithm>
 
@@ -747,6 +748,20 @@ aosc_arch_to_debian_arch_suffix(AOSCArch arch) {
   }
 }
 
+class FileLockGuard {
+public:
+  FileLockGuard(int fd) : m_fd{fd} {
+    flock(m_fd, LOCK_EX);
+  }
+
+  ~FileLockGuard() {
+    flock(m_fd, LOCK_UN);
+  }
+
+private:
+  int m_fd;
+};
+
 int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
                            int flags, GuardedSet<std::string> &symbols,
                            GuardedSet<std::string> &sonames) {
@@ -755,6 +770,7 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     perror("open");
     return -1;
   }
+  FileLockGuard lock{fd};
   struct stat st{};
   if (fstat(fd, &st) < 0) {
     perror("fstat");
