@@ -22,6 +22,9 @@ dpkgpkgver() {
 	if [ "$PKGREL" != 0 ]; then
 		_ver+="-$PKGREL"
 	fi
+	if [ -n "$VERSTAMP" ]; then
+		_ver+="$VERSTAMP"
+	fi
 	echo -n "$_ver"
 }
 
