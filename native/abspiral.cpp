@@ -45,6 +45,11 @@ insert_from_lut(const lut_t &lut,
   if (search != lut.end()) {
     for (const auto &prov : search->second) {
       out.emplace(fmt::format("{0}{1}", prov, suffix));
+      // Package names can't just be t64 and considered a suffix, a suffixed
+      // package name should always have a length of >= 4.
+      if (prov.size() < 4) {
+        continue;
+      }
       if (prov.substr(prov.size() - 4, prov.size() - 1) == "t64") {
         out.emplace(fmt::format("{0}{1}", prov.substr(0, prov.size() - 3), suffix));
       }
