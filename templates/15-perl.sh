@@ -57,4 +57,5 @@ build_perl_install() {
 		abdie "An error occurred during the installation process: $?."
 	fi
 }
-echo 1
+
+ab_register_template perl -- perl make
