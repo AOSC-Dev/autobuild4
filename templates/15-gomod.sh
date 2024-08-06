@@ -9,7 +9,7 @@ ab_go_build() {
 	fi
 	(
 		set -x
-		go build -v -ldflags "${GO_LDFLAGS[*]} -extldflags '-Wl,-z,relro -Wl,-z,now -specs=/usr/lib/autobuild3/specs/hardened-ld'" "$@"
+		go install -v -ldflags "${GO_LDFLAGS[*]} -extldflags '-Wl,-z,relro -Wl,-z,now -specs=/usr/lib/autobuild3/specs/hardened-ld'" "$@"
 	)
 }
 
@@ -43,18 +43,14 @@ build_gomod_build() {
 	abinfo "Compiling Go module ..."
 	ab_tostringarray GO_BUILD_AFTER
 	GOPATH="$SRCDIR/abgopath" \
+		GOBIN="$PKGDIR/usr/bin/" \
 		ab_go_build "${GO_BUILD_AFTER[@]}" .. \
 		|| abdie "Failed to build Go module: $?."
+	BUILD_FINAL
 }
 
 build_gomod_install() {
-	abinfo "Copying executable file(s) ..."
-	find "$SRCDIR" -type f -executable \
-		-exec cp -av '{}' "$PKGDIR/usr/bin/" ';' \
-		|| abdie "Failed to copy executable file(s): $?."
-	BUILD_FINAL
-	cd "$SRCDIR" \
-		|| abdie "Failed to return to source directory: $?."
+	true
 }
 
 ab_register_template gomod -- go
