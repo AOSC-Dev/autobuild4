@@ -41,9 +41,22 @@
     "m68k",
     "powerpc"
   ],
-  "have_dotnet": [
+  "with_dotnet": [
     "amd64",
     "arm64",
     "armv7hf"
+  ],
+  "without_dotnet": [
+    "loongarch64",
+    "loongson3",
+    "ppc64el",
+    "riscv64",
+    "armv4",
+    "armv6hf",
+    "i486",
+    "loongson2f",
+    "m68k",
+    "powerpc",
+    "ppc64"
   ]
 }
