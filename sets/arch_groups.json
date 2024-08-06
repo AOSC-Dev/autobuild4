@@ -40,5 +40,10 @@
     "i486",
     "m68k",
     "powerpc"
+  ],
+  "have_dotnet": [
+    "amd64",
+    "arm64",
+    "armv7hf"
   ]
 }
