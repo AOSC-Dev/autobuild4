@@ -159,7 +159,7 @@ pm_install_all() {
 pm_build_package() {
 	local _file
 	if [ -n "$VERSTAMP" ]; then
-		_file="${PKGNAME}_${PKGVER}-${PKGREL}-${VERSTAMP}_${DPKG_ARCH%%\/*}.deb"
+		_file="${PKGNAME}_${PKGVER}-${PKGREL}${VERSTAMP}_${DPKG_ARCH%%\/*}.deb"
 	else
 		_file="${PKGNAME}_${PKGVER}-${PKGREL}_${DPKG_ARCH%%\/*}.deb"
 	fi
