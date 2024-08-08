@@ -61,6 +61,7 @@ if [[ $ABHOST == noarch ]]; then
 fi
 
 abisdefined PKGREL || PKGREL=0
+abisdefined VERSTAMP || VERSTAMP=""
 
 load_strict "$AB/arch/_common_switches.sh"
 load_strict "$AB"/lib/builtin.sh

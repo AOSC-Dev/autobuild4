@@ -22,9 +22,7 @@ dpkgpkgver() {
 	if [ "$PKGREL" != 0 ]; then
 		_ver+="-$PKGREL"
 	fi
-	if [ -n "$VERSTAMP" ]; then
-		_ver+="$VERSTAMP"
-	fi
+	_ver+="${VERSTAMP:-}"
 	echo -n "$_ver"
 }
 
@@ -157,12 +155,7 @@ pm_install_all() {
 }
 
 pm_build_package() {
-	local _file
-	if [ -n "$VERSTAMP" ]; then
-		_file="${PKGNAME}_${PKGVER}-${PKGREL}${VERSTAMP}_${DPKG_ARCH%%\/*}.deb"
-	else
-		_file="${PKGNAME}_${PKGVER}-${PKGREL}_${DPKG_ARCH%%\/*}.deb"
-	fi
+	local _file="${PKGNAME}_${PKGVER}-${PKGREL}${VERSTAMP:-}_${DPKG_ARCH%%\/*}.deb"
 	mkdir -p "$PKGDIR"/DEBIAN \
 		|| abdie "Failed to create DEBIAN directory for .deb metadata: $?."
 	cp -rl "$SRCDIR"/abscripts/* "$PKGDIR"/DEBIAN \
@@ -188,7 +181,7 @@ pm_build_package() {
 }
 
 pm_build_debug_package() {
-	local _file="${PKGNAME}-dbg_${PKGVER}-${PKGREL}_${DPKG_ARCH%%\/*}.deb"
+	local _file="${PKGNAME}-dbg_${PKGVER}-${PKGREL}${VERSTAMP:-}_${DPKG_ARCH%%\/*}.deb"
 	mkdir -p "$SYMDIR"/DEBIAN \
 			|| abdie "Failed to create DEBIAN directory for -dbg .deb metadata: $?."
 		dpkgctrl_dbg > "$SYMDIR"/DEBIAN/control \
