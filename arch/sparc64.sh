@@ -1,5 +1,5 @@
 #!/bin/bash
-##arch/sparc64.sh: Build definitions for i486.
+##arch/sparc64.sh: Build definitions for sparc64.
 ##@copyright GPL-2.0+
 
 # Retro: Overriding mainline definitions, and take more interest in reducing code size.
