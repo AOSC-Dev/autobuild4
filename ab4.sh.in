@@ -10,4 +10,4 @@ if [ ! -d "$AB" ]; then
 fi
 
 enable -f "${AB}"/libautobuild.so autobuild
-autobuild
+autobuild "$@"
