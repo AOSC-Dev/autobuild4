@@ -25,6 +25,41 @@ inline const char *level_to_string(const LogLevel level) {
   return "UNK";
 }
 
+void NoLogger::log(const LogLevel lvl, const std::string message) {
+  return;
+}
+
+void NoLogger::logException(const std::string message) {
+  io_lock_guard guard(this->m_io_mutex);
+  std::cerr << "autobuild encountered an error and couldn't continue."
+            << std::endl;
+  if (!message.empty()) {
+    std::cerr << message << std::endl;
+  } else {
+    std::cerr << "Look at the stacktrace to see what happened." << std::endl;
+  }
+  fprintf(stderr,
+          "------------------------------autobuild "
+          "%s------------------------------\n",
+          ab_version);
+  fprintf(stderr, "Go to %s for more information on this error.\n", ab_url);
+}
+
+void NoLogger::logDiagnostic(Diagnostic diagnostic) {
+  this->error("Build error detected ^o^");
+  for (const auto &diag : diagnostic.frames) {
+    const auto filename = diag.file.empty() ? "<unknown>" : diag.file;
+    const auto function = (diag.function.empty() || diag.function == "source")
+                              ? "<unknown>"
+                              : diag.function;
+    io_lock_guard guard(this->m_io_mutex);
+    printf("%s(%zu): In function `%s':\n", filename.c_str(), diag.line,
+           function.c_str());
+  }
+  std::cerr << fmt::format("Command exited with {0}.", diagnostic.code)
+            << std::endl;
+}
+
 void PlainLogger::log(const LogLevel lvl, const std::string message) {
   io_lock_guard guard(this->m_io_mutex);
   switch (lvl) {

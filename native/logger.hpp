@@ -59,3 +59,12 @@ public:
   void logException(std::string message) override;
   const char *loggerName() override { return "ColorfulLogger"; }
 };
+
+class NoLogger final : public BaseLogger {
+public:
+  NoLogger() {}
+  void log(LogLevel lvl, std::string message) override;
+  void logDiagnostic(Diagnostic diagnostic) override;
+  void logException(std::string message) override;
+  const char *loggerName() override { return "NoLogger"; }
+};
