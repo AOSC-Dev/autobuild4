@@ -1272,8 +1272,16 @@ static int ab_parse_set_modifiers(WORD_LIST *list) {
   return 0;
 }
 
-static int ab_dump_variables(const std::vector<std::string> &names) {
-  std::cout << autobuild_serialized_variables(names) << std::endl;
+static int ab_dump_variables(const std::vector<std::string> &names, bool write_to_file) {
+  const std::string res = autobuild_serialized_variables(names);
+  if (write_to_file) {
+    std::ofstream file(".srcinfo.json");
+    file << res;
+    file.close();
+    return 0;
+  }
+
+  std::cout << res << std::endl;
   return 0;
 }
 
@@ -1447,6 +1455,10 @@ int dump_defines() {
       return ret;
     }
   }
-  return ab_dump_variables(names);
+
+  const auto *write_file_string = getenv("AB_WRITE_METADATA");
+  const bool write_file = write_file_string && write_file_string[0] == '1';
+
+  return ab_dump_variables(names, write_file);
 }
 } // extern "C"
