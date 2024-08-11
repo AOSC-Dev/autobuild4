@@ -10,6 +10,7 @@
     "PKGSEC",
     "PKGRECOM",
     "PKGREL",
+    "PKGEPOCH",
     "VERSTAMP",
     "PKGCONFL",
     "PKGPROV",
