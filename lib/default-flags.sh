@@ -23,7 +23,7 @@ CMAKE_DEF=(
 )
 
 
-MESON_DEF=("--prefix=$PREFIX" "--sbindir=$BINDIR")
+MESON_DEF=("--prefix=$PREFIX" "--sbindir=$BINDIR" "--buildtype=debugoptimized")
 WAF_DEF=("--prefix=$PREFIX" "--configdir=$SYSCONF" "--libdir=$LIBDIR")
 QTPROJ_DEF=("PREFIX=$PREFIX" "LIBDIR=$LIBDIR" "CONFIG+=force_debug_info")
 MAKE_INSTALL_DEF=(
