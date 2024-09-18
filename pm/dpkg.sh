@@ -90,6 +90,7 @@ dpkgctrl() {
 	echo "Maintainer: $MTER"
 	echo "Installed-Size: $(du -s "$PKGDIR" | cut -f 1)"
 	echo "Description: $PKGDES"
+	echo "Description-md5: $(echo "$PKGDES" | md5sum | cut -d ' ' -f 1)"
 	if ((PKGESS)); then
 		echo "Essential: yes"
 	else
@@ -137,6 +138,8 @@ dpkgctrl_dbg() {
 	echo "Maintainer: $MTER"
 	echo "Installed-Size: $(du -s "$SYMDIR" | cut -f 1)"
 	echo "Description: Debug symbols for $PKGNAME"
+	echo "Description-md5:  $(echo "Debug symbols for $PKGNAME" | md5sum | cut -d ' ' -f 1)"
+
 	echo "Depends: ${PKGNAME} (=$(dpkgpkgver))"
 	# Record last packager in control, we will switch to another variable
 	# name for this field to differentiate between maintainers and
