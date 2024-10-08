@@ -14,7 +14,7 @@ if ((AB_FLAGS_EXC)); then CFLAGS_COMMON+=('-fexceptions'); fi
 # Clang can handle PIE and PIC properly, let it do the old job.
 if bool "$USECLANG"; then
 	if ((AB_FLAGS_PIC)); then LDFLAGS_COMMON+=('-fPIC') CFLAGS_COMMON+=('-fPIC'); fi
-	if ((AB_FLAGS_PIE)); then LDFLAGS_COMMON+=('-fPIE' '-pie') CFLAGS_COMMON+=('-fPIE'); fi
+	if ((AB_FLAGS_PIE)); then LDFLAGS_COMMON+=('-Wl,-pie') CFLAGS_COMMON+=('-fPIC'); fi
 elif ((AB_FLAGS_SPECS)); then LDFLAGS_COMMON+=("-specs=/usr/lib/gcc/specs/hardened-ld");
 fi
 
