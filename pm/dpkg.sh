@@ -148,7 +148,7 @@ dpkgctrl_dbg() {
 	echo "X-AOSC-Autobuild4-Version: ${AB4VERSION}"
 
 	# Only write this field if it's not empty
-	if [ ! -z "$PKGFTR" ]; do
+	if [ ! -z "$PKGFTR" ]; then
 		echo "X-AOSC-Features: ${PKGFTR}"
 	fi
 
