@@ -4,6 +4,8 @@ project(autobuild VERSION 4.6.7 HOMEPAGE_URL "https://github.com/AOSC-Dev/autobu
 include(GNUInstallDirs)
 include(CheckTypeSize)
 
+option(AB4_REGENERATE_SPRIAL_DATA "Whether to re-generate Autobuild Spiral (Debian/Ubuntu) compatibility data" OFF)
+
 # find bash includes
 find_path(BASH_INCLUDE NAMES bashansi.h PATH_SUFFIXES bash)
 find_path(BASH_INNER_INCLUDE NAMES ansi_stdlib.h PATH_SUFFIXES bash/include)
@@ -69,6 +71,7 @@ set(COMMON_SRC
   native/pm.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/abconfig.h
 )
+set_property(SOURCE native/abspiral_data.cpp APPEND PROPERTY OBJECT_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/data/lut_sonames.cpp.inc")
 
 set(AB_INSTALL_PREFIX "${CMAKE_INSTALL_FULL_LIBDIR}/autobuild4")
 
@@ -85,6 +88,17 @@ add_custom_command(
     ${CMAKE_CURRENT_SOURCE_DIR}/config.h.in
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/GenerateConfig.cmake
 )
+
+if (AB4_REGENERATE_SPRIAL_DATA)
+  find_package(Python3 COMPONENTS Interpreter REQUIRED)
+  add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/data/lut_sonames.cpp.inc"
+    COMMAND "${Python3_EXECUTABLE}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/build_spiral_lut.py"
+    DEPENDS
+      "${CMAKE_CURRENT_SOURCE_DIR}/build_spiral_lut.py"
+  )
+endif()
 
 add_library(autobuild SHARED ${COMMON_SRC} native/autobuild.c)
 target_include_directories(autobuild PRIVATE "${BASH_INCLUDE}" "${BASH_INNER_INCLUDE}" "${CMAKE_CURRENT_BINARY_DIR}")
