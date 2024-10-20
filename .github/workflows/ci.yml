@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - run: sudo apt-get update && sudo apt-get install cmake ninja-build nlohmann-json3-dev libfmt-dev libboost-filesystem-dev bash-builtins
+    - run: sudo apt-get update && sudo apt-get install cmake ninja-build nlohmann-json3-dev libfmt-dev libboost-filesystem-dev libelf-dev bash-builtins
       name: Install dependencies
     - name: Build
       run: |
