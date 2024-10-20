@@ -3,21 +3,24 @@
 #include "stdwrapper.hpp"
 #include "threadpool.hpp"
 
+#include <algorithm>
 #include <cstdarg>
 #include <cstring>
 #include <deque>
 #include <endian.h>
 #include <fcntl.h>
+#include <sys/file.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <sys/file.h>
 #include <thread>
-#include <algorithm>
 
 #include <elf.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #include <unordered_set>
+
+#include <gelf.h>
+#include <libelf.h>
 
 // Workaround for older versions of glibc
 #ifndef EM_LOONGARCH
@@ -35,14 +38,14 @@ constexpr std::array<uint8_t, 8> ar_thin_magic = {0x21, 0x3C, 0x74, 0x68,
 // {'B', 'C', '\xC0', '\xDE'}
 constexpr std::array<uint8_t, 4> llvm_bc_magic = {0x42, 0x43, 0xC0, 0xDE};
 
-// Loongson2F (MIPS-III)
-constexpr uint32_t elf_flags_loongson2f = 0x20000007;
+// Loongson2F (MIPS-III) (= 0x20000000)
+constexpr uint32_t elf_flags_loongson2f = EF_MIPS_ARCH_3;
 
-// Loongson3 (MIPS)
-constexpr uint32_t elf_flags_loongson3 = 0x80a20007;
+// Loongson3 (MIPS) (= 0x80a20000)
+constexpr uint32_t elf_flags_loongson3 = EF_MIPS_ARCH_64R2 | EF_MIPS_MACH_GS464;
 
-// MIPS64R6EL
-constexpr uint32_t elf_flags_mips64r6el = 0xa0000407;
+// MIPS64R6EL (= 0xa0000400)
+constexpr uint32_t elf_flags_mips64r6el = EF_MIPS_ARCH_64R6 | EF_MIPS_NAN2008;
 
 constexpr uint32_t elf_min_size = sizeof(Elf32_Ehdr);
 
@@ -51,178 +54,16 @@ enum class Endianness : bool {
   Big = false,
 };
 
-template <typename ElfXX_Off>
-static inline ElfXX_Off get_offset(const ElfXX_Off offset,
-                                   const Endianness endianness) {
-  constexpr size_t size = sizeof(ElfXX_Off);
-  static_assert(size == 2 || size == 4 || size == 8, "Invalid size");
-  if (endianness == Endianness::Little) {
-    switch (size) {
-    case 2:
-      return le16toh(offset);
-    case 4:
-      return le32toh(offset);
-    case 8:
-      return le64toh(offset);
-    }
-  } else {
-    switch (size) {
-    case 2:
-      return be16toh(offset);
-    case 4:
-      return be32toh(offset);
-    case 8:
-      return be64toh(offset);
-    }
-  }
-  // UNREACHABLE
-  __builtin_unreachable();
-}
-
-#define ELFXX_ADD_GETTER_INNER(name, getter)                                   \
-  using ElfXX_##name##_t = decltype(BaseWrapper::elf64->getter);               \
-  inline ElfXX_##name##_t name() const {                                       \
-    if IFCONSTEXPR (sizeof(ElfXX_##name##_t) > 1)                              \
-      return m_is64bit ? get_offset(m_data.elf64->getter, m_endianness)        \
-                       : get_offset(m_data.elf32->getter, m_endianness);       \
-    else                                                                       \
-      return m_is64bit ? m_data.elf64->getter : m_data.elf32->getter;          \
-  }
-
-#define ELFXX_ADD_GETTER(name) ELFXX_ADD_GETTER_INNER(name, name)
-
-template <typename Elf32Type, typename Elf64Type> class ElfXX_Header_Base {
-public:
-  ElfXX_Header_Base(Elf32Type *elf32, Endianness endianness)
-      : m_is64bit(false), m_data({.elf32 = elf32}), m_endianness(endianness) {}
-  ElfXX_Header_Base(Elf64Type *elf64, Endianness endianness)
-      : m_is64bit(true), m_data({.elf64 = elf64}), m_endianness(endianness) {}
-  ElfXX_Header_Base()
-      : m_is64bit(false), m_data({}), m_endianness(Endianness::Little) {}
-  ElfXX_Header_Base(const char *data, bool is64bit, Endianness endianness)
-      : m_is64bit(is64bit), m_endianness(endianness) {
-    if (m_is64bit) {
-      m_data.elf64 = reinterpret_cast<Elf64Type *>(data);
-    } else {
-      m_data.elf32 = reinterpret_cast<Elf32Type *>(data);
-    }
-  }
-  inline bool is_64bit() const { return m_is64bit; }
-  inline Endianness endianness() const { return m_endianness; }
-  inline size_t size() const {
-    return m_is64bit ? sizeof(Elf64Type) : sizeof(Elf32Type);
-  }
-
-protected:
-  union BaseWrapper {
-    const Elf32Type *elf32;
-    const Elf64Type *elf64;
-  };
-
-  bool m_is64bit;
-  BaseWrapper m_data;
-  Endianness m_endianness;
-};
-
-class ElfXX_Ehdr
-    : public ElfXX_Header_Base<const Elf32_Ehdr, const Elf64_Ehdr> {
-public:
-  ElfXX_Ehdr(const Elf32_Ehdr *elf32, Endianness endianness)
-      : ElfXX_Header_Base(elf32, endianness) {}
-  ElfXX_Ehdr(const Elf64_Ehdr *elf64, Endianness endianness)
-      : ElfXX_Header_Base(elf64, endianness) {}
-  ElfXX_Ehdr() : ElfXX_Header_Base() {}
-
-  // Add getters using macros
-  ELFXX_ADD_GETTER(e_type);
-  ELFXX_ADD_GETTER(e_entry);
-  ELFXX_ADD_GETTER(e_shnum);
-  ELFXX_ADD_GETTER(e_shstrndx);
-  ELFXX_ADD_GETTER(e_shoff);
-  ELFXX_ADD_GETTER(e_machine);
-  ELFXX_ADD_GETTER(e_flags);
-};
-
-class ElfXX_Shdr
-    : public ElfXX_Header_Base<const Elf32_Shdr, const Elf64_Shdr> {
-public:
-  ElfXX_Shdr(const Elf32_Shdr *elf32, Endianness endianness)
-      : ElfXX_Header_Base(elf32, endianness) {}
-  ElfXX_Shdr(const Elf64_Shdr *elf64, Endianness endianness)
-      : ElfXX_Header_Base(elf64, endianness) {}
-  ElfXX_Shdr() : ElfXX_Header_Base() {}
-
-  // Add getters using macros
-  ELFXX_ADD_GETTER(sh_name);
-  ELFXX_ADD_GETTER(sh_type);
-  ELFXX_ADD_GETTER(sh_offset);
-  ELFXX_ADD_GETTER(sh_size);
-};
-
-class ElfXX_Nhdr
-    : public ElfXX_Header_Base<const Elf32_Nhdr, const Elf64_Nhdr> {
-public:
-  ElfXX_Nhdr(const Elf32_Nhdr *elf32, Endianness endianness)
-      : ElfXX_Header_Base(elf32, endianness) {}
-  ElfXX_Nhdr(const Elf64_Nhdr *elf64, Endianness endianness)
-      : ElfXX_Header_Base(elf64, endianness) {}
-  ElfXX_Nhdr() : ElfXX_Header_Base() {}
-  ElfXX_Nhdr(const char *data, bool is64bit, Endianness endianness)
-      : ElfXX_Header_Base(data, is64bit, endianness) {}
-
-  // Add getters using macros
-  ELFXX_ADD_GETTER(n_type);
-  ELFXX_ADD_GETTER(n_namesz);
-  ELFXX_ADD_GETTER(n_descsz);
-};
-
-class ElfXX_Dyn : public ElfXX_Header_Base<const Elf32_Dyn, const Elf64_Dyn> {
-public:
-  ElfXX_Dyn(const Elf32_Dyn *elf32, Endianness endianness)
-      : ElfXX_Header_Base(elf32, endianness) {}
-  ElfXX_Dyn(const Elf64_Dyn *elf64, Endianness endianness)
-      : ElfXX_Header_Base(elf64, endianness) {}
-  ElfXX_Dyn() : ElfXX_Header_Base() {}
-  ElfXX_Dyn(const char *data, bool is64bit, Endianness endianness)
-      : ElfXX_Header_Base(data, is64bit, endianness) {}
-
-  // Add getters using macros
-  ELFXX_ADD_GETTER(d_tag);
-  ELFXX_ADD_GETTER_INNER(d_val, d_un.d_val);
-  ELFXX_ADD_GETTER_INNER(d_ptr, d_un.d_ptr);
-};
-
-#undef ELFXX_ADD_GETTER
-#undef ELFXX_ADD_GETTER_INNER
-
-static inline const ElfXX_Shdr get_section_header(const ElfXX_Ehdr &elf_header,
-                                                  const uint32_t index,
-                                                  const char *file_start) {
-  const char *section_header_start =
-      reinterpret_cast<const char *>(file_start) + elf_header.e_shoff();
-  if (elf_header.is_64bit()) {
-    const auto *shdr =
-        &reinterpret_cast<const Elf64_Shdr *>(section_header_start)[index];
-    return {shdr, elf_header.endianness()};
-  } else {
-    const auto *shdr =
-        &reinterpret_cast<const Elf32_Shdr *>(section_header_start)[index];
-    return {shdr, elf_header.endianness()};
-  }
-}
-
-static const ElfXX_Shdr *
-find_elf_section_header(const std::vector<ElfXX_Shdr> &section_headers,
-                        const char *shstrtab,
-                        const char *name,
+static const GElf_Shdr *
+find_elf_section_header(const std::vector<GElf_Shdr> &section_headers,
+                        Elf *elf_file, size_t shstrndx, const char *name,
                         const uint32_t type) {
   for (const auto &shdr : section_headers) {
-    const uint32_t sh_type = shdr.sh_type();
+    const Elf64_Word sh_type = shdr.sh_type;
     if (sh_type != type)
       continue;
-    const uint32_t name_idx = shdr.sh_name();
-    const char *section_name =
-            reinterpret_cast<const char *>(shstrtab + name_idx);
+    const Elf64_Word name_idx = shdr.sh_name;
+    const char *section_name = elf_strptr(elf_file, shstrndx, name_idx);
     if (memcmp(section_name, name, strlen(name)) != 0)
       continue;
     return &shdr;
@@ -230,71 +71,67 @@ find_elf_section_header(const std::vector<ElfXX_Shdr> &section_headers,
   return nullptr;
 }
 
-static const char *
-get_elf_dynstrtab(const char *file_start,
-                  const std::vector<ElfXX_Shdr> &section_headers,
-                  const char *shstrtab) {
-  // constexpr const char *sh_dyn = ".dynamic";
+static size_t get_elf_dynstrtab(Elf *elf_file,
+                                const std::vector<GElf_Shdr> &section_headers,
+                                size_t shstrndx) {
   constexpr const char *sh_dynstr = ".dynstr";
-  const auto shdr = find_elf_section_header(
-          section_headers, shstrtab, sh_dynstr, SHT_STRTAB);
+  const auto shdr = find_elf_section_header(section_headers, elf_file, shstrndx,
+                                            sh_dynstr, SHT_STRTAB);
   if (shdr != nullptr) {
-    return reinterpret_cast<const char *>(file_start) + shdr->sh_offset();
+    Elf_Scn *scn = gelf_offscn(elf_file, shdr->sh_offset);
+    return elf_ndxscn(scn);
   } else {
-    return nullptr;
+    return 0;
   }
 }
 
 static std::vector<const char *>
-get_elf_needed(const char *file_start,
-               const std::vector<ElfXX_Shdr> &section_headers,
-               const char *dynstrtab) {
+get_elf_needed(Elf *elf_file, const std::vector<GElf_Shdr> &section_headers,
+               GElf_Off dynstrtab) {
   std::vector<const char *> needed{};
-  if (dynstrtab == nullptr)
+  if (!dynstrtab)
     return needed;
   for (const auto &shdr : section_headers) {
-    const uint32_t type = shdr.sh_type();
+    const uint32_t type = shdr.sh_type;
     if (type != SHT_DYNAMIC)
       continue;
 
-    const char *dyn_start =
-        reinterpret_cast<const char *>(file_start) + shdr.sh_offset();
-    const char *dyn_end = dyn_start + shdr.sh_size();
-    while (dyn_start < dyn_end) {
-      const auto dyn = ElfXX_Dyn{dyn_start, shdr.is_64bit(), shdr.endianness()};
-      if (dyn.d_tag() == DT_NEEDED) {
-        const uint32_t name_idx = dyn.d_val();
-        const char *section_name =
-            reinterpret_cast<const char *>(dynstrtab + name_idx);
+    Elf_Scn *section = gelf_offscn(elf_file, shdr.sh_offset);
+    Elf_Data *dyn_data = elf_getdata(section, nullptr);
+    GElf_Dyn dyn{};
+    int entry = 0;
+    while ((gelf_getdyn(dyn_data, entry, &dyn))) {
+      if (dyn.d_tag == DT_NEEDED) {
+        const uint32_t name_idx = dyn.d_un.d_val;
+        const char *section_name = elf_strptr(elf_file, dynstrtab, name_idx);
         needed.push_back(section_name);
       }
-      dyn_start += dyn.size();
+      entry++;
     }
   }
   return needed;
 }
 
 static std::string
-get_elf_build_id(const char *file_start,
-                 const std::vector<ElfXX_Shdr> &section_headers,
-                 const char *shstrtab) {
+get_elf_build_id(Elf *elf_file, const std::vector<GElf_Shdr> &section_headers,
+                 GElf_Off shstrndx) {
   constexpr const char table[] = {'0', '1', '2', '3', '4', '5', '6', '7',
                                   '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
   std::string build_id{};
   constexpr const char *sh_gnu_build_id = ".note.gnu.build-id";
   // constexpr const char *sh_go_build_id = ".note.go.buildid";
   const auto section_header = find_elf_section_header(
-          section_headers, shstrtab, sh_gnu_build_id, SHT_NOTE);
+      section_headers, elf_file, shstrndx, sh_gnu_build_id, SHT_NOTE);
   if (section_header == nullptr)
     return build_id;
-  const char *note_start = file_start + section_header->sh_offset();
-  ElfXX_Nhdr note_header = {note_start, section_header->is_64bit(),
-                            section_header->endianness()};
-  const size_t header_size = note_header.size();
-  const unsigned char *value =
-      reinterpret_cast<const unsigned char *>(note_start) + header_size +
-      note_header.n_namesz();
-  for (size_t i = 0; i < note_header.n_descsz(); i++) {
+  GElf_Nhdr result{};
+  Elf_Scn *section = gelf_offscn(elf_file, section_header->sh_offset);
+  Elf_Data *note_data = elf_getdata(section, nullptr);
+  size_t name_offset = 0;
+  size_t desc_offset = 0;
+  gelf_getnote(note_data, 0, &result, &name_offset, &desc_offset);
+  const unsigned char *value = (unsigned char *)note_data->d_buf + desc_offset;
+  for (size_t i = 0; i < result.n_descsz; i++) {
     const unsigned char hi = table[(value[i] & 0xF0) >> 4];
     const unsigned char lo = table[(value[i] & 0x0F) >> 0];
     build_id += hi;
@@ -304,8 +141,8 @@ get_elf_build_id(const char *file_start,
   return build_id;
 }
 
-static const uint64_t
-decode_uleb128(const unsigned char *start, const size_t pos_max, size_t &pos) {
+static const uint64_t decode_uleb128(const unsigned char *start,
+                                     const size_t pos_max, size_t &pos) {
   uint64_t ret = 0;
   uint8_t shift = 0;
   while (pos < pos_max) {
@@ -318,9 +155,9 @@ decode_uleb128(const unsigned char *start, const size_t pos_max, size_t &pos) {
   return le64toh(ret);
 }
 
-static const bool
-is_null_terminated_string(const uint64_t tag) {
-  // Tags with null-terminated string as values: 4: CPU_raw_name, 5: CPU_name, 67: conformance
+static const bool is_null_terminated_string(const uint64_t tag) {
+  // Tags with null-terminated string as values: 4: CPU_raw_name, 5: CPU_name,
+  // 67: conformance
   constexpr const uint64_t tag_string[] = {4, 5, 67};
   for (const auto i : tag_string) {
     if (i == tag) {
@@ -332,21 +169,22 @@ is_null_terminated_string(const uint64_t tag) {
 
 // Ref: ELF for the Arm Architecture - Section 5.3.6
 // Ref: readelf.c from binutils
-static AOSCArch
-get_elf_arm_arch(const char *file_start,
-                 const std::vector<ElfXX_Shdr> &section_headers,
-                 const char *shstrtab) {
+static AOSCArch get_elf_arm_arch(Elf *elf_file, Endianness endianness,
+                                 const std::vector<GElf_Shdr> &section_headers,
+                                 size_t shstrndx) {
   constexpr const char *sh_abi_tag = ".ARM.attributes";
   constexpr const char *vendor_name = "aeabi";
   bool hard_float = false;
   const auto vendor_name_len = strlen(vendor_name);
   auto ret = AOSCArch::NONE;
   const auto section_header = find_elf_section_header(
-          section_headers, shstrtab, sh_abi_tag, SHT_ARM_ATTRIBUTES);
+      section_headers, elf_file, shstrndx, sh_abi_tag, SHT_ARM_ATTRIBUTES);
   if (section_header == nullptr)
     return ret;
-  const unsigned char *start = reinterpret_cast<const unsigned char *>(file_start) + section_header->sh_offset();
-  const auto size = section_header->sh_size();
+  Elf_Scn *section = gelf_offscn(elf_file, section_header->sh_offset);
+  Elf_Data *dyn_data = elf_getdata(section, nullptr);
+  unsigned char *start = (unsigned char *)dyn_data->d_buf;
+  const auto size = section_header->sh_size;
   // Version identifier 'A'
   if (*start != 'A')
     return ret;
@@ -355,7 +193,7 @@ get_elf_arm_arch(const char *file_start,
   // Parse sections
   while (pos < size) {
     uint32_t section_length = *reinterpret_cast<const uint32_t *>(start + pos);
-    if (section_header->endianness() == Endianness::Little) {
+    if (endianness == Endianness::Little) {
       section_length = le32toh(section_length);
     } else {
       section_length = be32toh(section_length);
@@ -376,7 +214,8 @@ get_elf_arm_arch(const char *file_start,
     }
 
     // Read attributes length
-    uint32_t attributes_length = *reinterpret_cast<const uint32_t *>(start + pos + 1);
+    uint32_t attributes_length =
+        *reinterpret_cast<const uint32_t *>(start + pos + 1);
     if (pos + attributes_length > section_end)
       return AOSCArch::NONE;
     const size_t attributes_end = pos + attributes_length;
@@ -386,7 +225,8 @@ get_elf_arm_arch(const char *file_start,
     while (pos < attributes_end) {
       const auto tag = decode_uleb128(start, attributes_end, pos);
       if (is_null_terminated_string(tag)) {
-        const size_t val_len = strlen(reinterpret_cast<const char*>(start) + pos);
+        const size_t val_len =
+            strlen(reinterpret_cast<const char *>(start) + pos);
         pos += val_len + 1;
         if (pos > attributes_end) {
           return AOSCArch::NONE;
@@ -426,71 +266,121 @@ get_elf_arm_arch(const char *file_start,
   // Detect unsupported combinations
   if ((ret == AOSCArch::ARMV4) && hard_float) {
     return AOSCArch::NONE;
-  } else if (((ret == AOSCArch::ARMV6HF) || (ret == AOSCArch::ARMV7HF)) && (! hard_float)) {
+  } else if (((ret == AOSCArch::ARMV6HF) || (ret == AOSCArch::ARMV7HF)) &&
+             (!hard_float)) {
     return AOSCArch::NONE;
   }
   return ret;
 }
 
-static std::string
-get_elf_soname(const char *file_start,
-               const std::vector<ElfXX_Shdr> &section_headers,
-               const char *dynstrtab) {
-  for (const ElfXX_Shdr &shdr : section_headers) {
-    const uint32_t type = shdr.sh_type();
+static std::string get_elf_soname(Elf *elf_file,
+                                  const std::vector<GElf_Shdr> &section_headers,
+                                  GElf_Off dynstrtab) {
+  for (const GElf_Shdr &shdr : section_headers) {
+    const uint32_t type = shdr.sh_type;
     // soname section is a dynamic section
     if (type != SHT_DYNAMIC) {
       continue;
     }
-    const char *dyn_start =
-            reinterpret_cast<const char *>(file_start) + shdr.sh_offset();
-    const char *dyn_end = dyn_start + shdr.sh_size();
-    while (dyn_start < dyn_end) {
-      const auto dyn = ElfXX_Dyn{dyn_start, shdr.is_64bit(), shdr.endianness()};
-      if (dyn.d_tag() == DT_SONAME) {
-        const uint32_t name_idx = dyn.d_val();
-        const char *section_name =
-                reinterpret_cast<const char *>(dynstrtab + name_idx);
+    Elf_Scn *section = gelf_offscn(elf_file, shdr.sh_offset);
+    Elf_Data *dyn_data = elf_getdata(section, nullptr);
+    GElf_Dyn dyn{};
+    int entry = 0;
+    while ((gelf_getdyn(dyn_data, entry, &dyn))) {
+      if (dyn.d_tag == DT_SONAME) {
+        const uint32_t name_idx = dyn.d_un.d_val;
+        const char *section_name = elf_strptr(elf_file, dynstrtab, name_idx);
         return std::string{section_name};
       }
-      dyn_start += dyn.size();
+      entry++;
     }
   }
   return std::string{};
 }
 
-static bool maybe_kernel_object(const std::vector<ElfXX_Shdr> &section_headers,
-                                const char *shstrtab) {
+static bool maybe_kernel_object(const std::vector<GElf_Shdr> &section_headers,
+                                Elf *elf_file, size_t shstrndx) {
   constexpr const char *sh_note = ".note.Linux";
-  for (const ElfXX_Shdr &section_header : section_headers) {
-    const uint32_t type = section_header.sh_type();
-    if (type != SHT_NOTE) {
+  return find_elf_section_header(section_headers, elf_file, shstrndx, sh_note,
+                                 SHT_NOTE) != nullptr;
+}
+
+static inline bool
+is_debug_info_present(const std::vector<GElf_Shdr> &section_headers,
+                      Elf *elf_file, size_t shstrndx) {
+  constexpr const char *sh_debug_info = ".debug_";
+  const size_t sh_debug_info_sz = strlen(sh_debug_info);
+  for (const auto &shdr : section_headers) {
+    const Elf64_Word name_idx = shdr.sh_name;
+    const char *section_name = elf_strptr(elf_file, shstrndx, name_idx);
+    if (memcmp(section_name, sh_debug_info, sh_debug_info_sz) != 0)
       continue;
-    }
-    const uint32_t name_idx = section_header.sh_name();
-    const char *section_name =
-        reinterpret_cast<const char *>(shstrtab + name_idx);
-    if (memcmp(section_name, sh_note, strlen(sh_note)) == 0) {
-      return true;
-    }
+    return true;
   }
   return false;
 }
 
-static inline bool
-is_debug_info_present(const std::vector<ElfXX_Shdr> &section_headers,
-                      const char *shstrtab) {
-  constexpr const char *sh_debug_info = ".debug_";
-  const size_t sh_debug_info_sz = strlen(sh_debug_info);
-  for (const ElfXX_Shdr &section_header : section_headers) {
-    const uint32_t name_idx = section_header.sh_name();
-    const char *section_name =
-        reinterpret_cast<const char *>(shstrtab + name_idx);
-    if (strncmp(section_name, sh_debug_info, sh_debug_info_sz) == 0) {
-      return true;
+const AOSCArch detect_architecture(Elf *elf_file, GElf_Ehdr &elf_ehdr,
+                                   const Endianness endian,
+                                   std::vector<GElf_Shdr> &section_headers,
+                                   const Elf64_Off dynstrtab,
+                                   const bool is_64bit) {
+  switch (elf_ehdr.e_machine) {
+  case EM_X86_64:
+    return AOSCArch::AMD64;
+  case EM_AARCH64:
+    return AOSCArch::ARM64;
+  case EM_ARM:
+    // Checks .ARM.attributes
+    return get_elf_arm_arch(elf_file, endian, section_headers, dynstrtab);
+  // Assumes EM_386 binaries are always i486-compatible
+  case EM_386:
+    return AOSCArch::I486;
+  case EM_LOONGARCH:
+    if (is_64bit) {
+      return AOSCArch::LOONGARCH64;
+    } else {
+      return AOSCArch::NONE;
     }
+  case EM_MIPS:
+    // MIPS{32,64}BE aren't supported
+    if (endian == Endianness::Big) {
+      return AOSCArch::NONE;
+    }
+    // e_flags-based detection
+    if (elf_ehdr.e_flags & elf_flags_loongson2f) {
+      return AOSCArch::LOONGSON2F;
+    } else if (elf_ehdr.e_flags & elf_flags_loongson3) {
+      return AOSCArch::LOONGSON3;
+    } else if (elf_ehdr.e_flags & elf_flags_mips64r6el) {
+      return AOSCArch::MIPS64R6EL;
+    } else {
+      return AOSCArch::NONE;
+    }
+  case EM_PPC:
+    if (endian == Endianness::Big) {
+      return AOSCArch::POWERPC;
+    } else {
+      return AOSCArch::NONE;
+    }
+  case EM_PPC64:
+    if (endian == Endianness::Big) {
+      return AOSCArch::PPC64;
+    } else {
+      return AOSCArch::PPC64EL;
+    }
+  case EM_RISCV:
+    // TODO: Check RISC-V attributes for better accuracy
+    if (is_64bit) {
+      return AOSCArch::RISCV64;
+    } else {
+      return AOSCArch::NONE;
+    }
+  case EM_SPARCV9:
+    return AOSCArch::SPARC64;
+  default:
+    return AOSCArch::NONE;
   }
-  return false;
 }
 
 static ELFParseResult identify_binary_data(const char *data,
@@ -519,9 +409,11 @@ static ELFParseResult identify_binary_data(const char *data,
     return result;
   }
 
-  ElfXX_Ehdr ehdr{};
+  Elf *elf_file = elf_memory(const_cast<char *>(data), size);
+  GElf_Ehdr elf_ehdr{};
+  gelf_getehdr(elf_file, &elf_ehdr);
   const char *shstr_start = nullptr;
-  const uint8_t endianness = data[EI_DATA];
+  const uint8_t endianness = elf_ehdr.e_ident[EI_DATA];
   if (endianness != ELFDATA2LSB && endianness != ELFDATA2MSB) {
     result.bin_type = BinaryType::Invalid;
     return result;
@@ -529,18 +421,7 @@ static ELFParseResult identify_binary_data(const char *data,
   const Endianness endian =
       (endianness == ELFDATA2LSB ? Endianness::Little : Endianness::Big);
 
-  switch (data[EI_CLASS]) {
-  case ELFCLASS32:
-    ehdr = ElfXX_Ehdr{reinterpret_cast<const Elf32_Ehdr *>(data), endian};
-    break;
-  case ELFCLASS64:
-    ehdr = ElfXX_Ehdr{reinterpret_cast<const Elf64_Ehdr *>(data), endian};
-    break;
-  default:
-    return result;
-  }
-
-  const uint16_t e_type = ehdr.e_type();
+  const uint16_t e_type = elf_ehdr.e_type;
 
   BinaryType type = BinaryType::Invalid;
 
@@ -560,114 +441,46 @@ static ELFParseResult identify_binary_data(const char *data,
   }
 
   result.bin_type = type;
-  if (ehdr.e_shstrndx() == SHN_UNDEF)
+  if (elf_ehdr.e_shstrndx == SHN_UNDEF)
     return result;
-  shstr_start = reinterpret_cast<const char *>(
-      data + get_section_header(ehdr, ehdr.e_shstrndx(), data).sh_offset());
-
-  const size_t num_sections = ehdr.e_shnum();
-  std::vector<ElfXX_Shdr> section_headers{};
-  for (uint32_t i = 0; i < num_sections; i++) {
-    ElfXX_Shdr shdr = get_section_header(ehdr, i, data);
+  Elf_Scn *scn = nullptr;
+  std::vector<GElf_Shdr> section_headers{};
+  while ((scn = elf_nextscn(elf_file, scn))) {
+    GElf_Shdr shdr{};
+    gelf_getshdr(scn, &shdr);
     section_headers.emplace_back(shdr);
   }
 
   // extract build id and library depends
-  const auto dynstrtab = get_elf_dynstrtab(data, section_headers, shstr_start);
-  const auto build_id = get_elf_build_id(data, section_headers, shstr_start);
-  const auto soname = get_elf_soname(data, section_headers, dynstrtab);
+  size_t shstrndx = 0;
+  elf_getshdrstrndx(elf_file, &shstrndx);
+  const auto build_id = get_elf_build_id(elf_file, section_headers, shstrndx);
+  const auto dynstrtab = get_elf_dynstrtab(elf_file, section_headers, shstrndx);
+  const auto soname = get_elf_soname(elf_file, section_headers, dynstrtab);
   if (type == BinaryType::Relocatable &&
-      maybe_kernel_object(section_headers, shstr_start)) {
+      maybe_kernel_object(section_headers, elf_file, shstrndx)) {
     type = BinaryType::KernelObject;
   } else {
-    auto needed = get_elf_needed(data, section_headers, dynstrtab);
+    auto needed = get_elf_needed(elf_file, section_headers, dynstrtab);
     result.needed_libs = std::move(needed);
   }
   result.build_id = std::move(build_id);
   result.soname = std::move(soname);
-  result.has_debug_info = is_debug_info_present(section_headers, shstr_start);
+  result.has_debug_info =
+      is_debug_info_present(section_headers, elf_file, shstrndx);
+  const bool is_64bit = gelf_getclass(elf_file) == ELFCLASS64;
 
   // detect architecture
-  switch (ehdr.e_machine()) {
-  case EM_X86_64:
-    result.arch = AOSCArch::AMD64;
-    break;
-  case EM_AARCH64:
-    result.arch = AOSCArch::ARM64;
-    break;
-  case EM_ARM:
-    // Checks .ARM.attributes
-    result.arch = get_elf_arm_arch(data, section_headers, shstr_start);
-    break;
-  // Assumes EM_386 binaries are always i486-compatible
-  case EM_386:
-    result.arch = AOSCArch::I486;
-    break;
-  case EM_LOONGARCH:
-    if (ehdr.is_64bit()) {
-      result.arch = AOSCArch::LOONGARCH64;
-    } else {
-      result.arch = AOSCArch::NONE;
-    }
-    break;
-  case EM_MIPS:
-    // MIPS{32,64}BE aren't supported
-    if (endian == Endianness::Big) {
-      result.arch = AOSCArch::NONE;
-      break;
-    }
-    // e_flags-based detection
-    switch (ehdr.e_flags()) {
-      case elf_flags_loongson2f:
-        result.arch = AOSCArch::LOONGSON2F;
-        break;
-      case elf_flags_loongson3:
-        result.arch = AOSCArch::LOONGSON3;
-        break;
-      case elf_flags_mips64r6el:
-        result.arch = AOSCArch::MIPS64R6EL;
-        break;
-      default:
-        result.arch = AOSCArch::NONE;
-        break;
-    }
-    break;
-  case EM_PPC:
-    if (endian == Endianness::Big) {
-      result.arch = AOSCArch::POWERPC;
-    } else {
-      result.arch = AOSCArch::NONE;
-    }
-    break;
-  case EM_PPC64:
-    if (endian == Endianness::Big) {
-      result.arch = AOSCArch::PPC64;
-    } else {
-      result.arch = AOSCArch::PPC64EL;
-    }
-    break;
-  case EM_RISCV:
-    // TODO: Check RISC-V attributes for better accuracy
-    if (ehdr.is_64bit()) {
-      result.arch = AOSCArch::RISCV64;
-    } else {
-      result.arch = AOSCArch::NONE;
-    }
-    break;
-  case EM_SPARCV9:
-    result.arch = AOSCArch::SPARC64;
-    break;
-  default:
-    result.arch = AOSCArch::NONE;
-    break;
-  }
+  result.arch = detect_architecture(elf_file, elf_ehdr, endian, section_headers,
+                                    dynstrtab, is_64bit);
 
+  elf_end(elf_file);
   return result;
 }
 
 inline static fs::path get_filename_from_build_id(const std::string &build_id,
                                                   const char *dst_path) {
-  const std::string& build_id_str{build_id};
+  const std::string &build_id_str{build_id};
   const std::string prefix = build_id_str.substr(0, 2);
   const std::string suffix = build_id_str.substr(2);
   fs::path final_path{dst_path};
@@ -712,51 +525,47 @@ static inline int forked_execvp(const char *path, char *const argv[]) {
   return status;
 }
 
-std::unordered_set<std::string>
-aosc_arch_to_debian_arch_suffix(AOSCArch arch) {
+static const std::unordered_set<std::string>
+aosc_arch_to_debian_arch_suffix(const AOSCArch arch) {
   switch (arch) {
-    case AOSCArch::AMD64:
-      return { "amd64"};
-    case AOSCArch::ARM64:
-      return { "arm64"};
-    case AOSCArch::ARMV4:
-      return {"armel"};
-    case AOSCArch::ARMV6HF:
-    case AOSCArch::ARMV7HF:
-      return {"armhf"};
-    case AOSCArch::I486:
-      return {"i386"};
-    case AOSCArch::LOONGARCH64:
-      return {"loong64", "loongarch64"};
-    case AOSCArch::LOONGSON2F:
-    case AOSCArch::LOONGSON3:
-      return {"mips64el"};
-    case AOSCArch::MIPS64R6EL:
-      return {"mips64r6el"};
-    case AOSCArch::POWERPC:
-      return {"powerpc"};
-    case AOSCArch::PPC64:
-      return {"ppc64"};
-    case AOSCArch::PPC64EL:
-      return {"ppc64el"};
-    case AOSCArch::RISCV64:
-      return {"riscv64"};
-    case AOSCArch::SPARC64:
-      return {"sparc64"};
-    default:
-      return {};
+  case AOSCArch::AMD64:
+    return {"amd64"};
+  case AOSCArch::ARM64:
+    return {"arm64"};
+  case AOSCArch::ARMV4:
+    return {"armel"};
+  case AOSCArch::ARMV6HF:
+  case AOSCArch::ARMV7HF:
+    return {"armhf"};
+  case AOSCArch::I486:
+    return {"i386"};
+  case AOSCArch::LOONGARCH64:
+    return {"loong64", "loongarch64"};
+  case AOSCArch::LOONGSON2F:
+  case AOSCArch::LOONGSON3:
+    return {"mips64el"};
+  case AOSCArch::MIPS64R6EL:
+    return {"mips64r6el"};
+  case AOSCArch::POWERPC:
+    return {"powerpc"};
+  case AOSCArch::PPC64:
+    return {"ppc64"};
+  case AOSCArch::PPC64EL:
+    return {"ppc64el"};
+  case AOSCArch::RISCV64:
+    return {"riscv64"};
+  case AOSCArch::SPARC64:
+    return {"sparc64"};
+  default:
+    return {};
   }
 }
 
 class FileLockGuard {
 public:
-  FileLockGuard(int fd) : m_fd{fd} {
-    flock(m_fd, LOCK_EX);
-  }
+  FileLockGuard(int fd) : m_fd{fd} { flock(m_fd, LOCK_EX); }
 
-  ~FileLockGuard() {
-    flock(m_fd, LOCK_UN);
-  }
+  ~FileLockGuard() { flock(m_fd, LOCK_UN); }
 
 private:
   int m_fd;
@@ -771,7 +580,7 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     return -1;
   }
   FileLockGuard lock{fd};
-  struct stat st{};
+  struct stat st {};
   if (fstat(fd, &st) < 0) {
     perror("fstat");
     return -1;
@@ -797,12 +606,12 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     const int src_offset = src_len - base_len - filename_len - 1;
     in_usr_lib = (memcmp(src_path + src_offset, base_path, base_len) == 0);
   }
-  if ((flags & AB_ELF_FIND_SONAMES) && in_usr_lib && (! result.soname.empty())) {
+  if ((flags & AB_ELF_FIND_SONAMES) && in_usr_lib && (!result.soname.empty())) {
     const auto suffixes = aosc_arch_to_debian_arch_suffix(result.arch);
     if (suffixes.empty()) {
       sonames.emplace(result.soname);
     } else {
-      for (const auto& suffix : suffixes) {
+      for (const auto &suffix : suffixes) {
         sonames.emplace(fmt::format("{0}:{1}", result.soname, suffix));
       }
     }
@@ -861,9 +670,9 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
   if (result.build_id.empty() && !(flags & AB_ELF_SAVE_WITH_PATH)) {
     // For binaries without build-id, save with path
     flags |= AB_ELF_SAVE_WITH_PATH;
-    get_logger()->warning(fmt::format("No build id found in {0}. Saving with relative path", src_path));
+    get_logger()->warning(fmt::format(
+        "No build id found in {0}. Saving with relative path", src_path));
   }
-
 
   fs::path final_path;
   if (flags & AB_ELF_SAVE_WITH_PATH) {
@@ -924,8 +733,8 @@ int elf_copy_to_symdir(const char *src_path, const char *dst_path,
 
 class ELFWorkerPool : public ThreadPool<std::string, int> {
 public:
-  ELFWorkerPool(std::string  symdir, int flags)
-      : ThreadPool<std::string, int>([&, flags](const std::string& src_path) {
+  ELFWorkerPool(std::string symdir, int flags)
+      : ThreadPool<std::string, int>([&, flags](const std::string &src_path) {
           return elf_copy_debug_symbols(src_path.c_str(), m_symdir.c_str(),
                                         flags, m_sodeps, m_sonames);
         }),
