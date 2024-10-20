@@ -47,7 +47,7 @@ def parse_contents_chunk(chunk: str, res: Dict[str, Set[str]]) -> str:
 
 
 def parse_ubuntu_contents(
-        codename: str, out: Dict[str, Set[str]], mirror: str = 'https://mirrors.edge.kernel.org/ubuntu'):
+        codename: str, out: Dict[str, Set[str]], mirror: str = 'http://archive.ubuntu.com/ubuntu'):
     url = CONTENTS_URL_TEMPLATE.format(mirror, codename)
     logger.info('Reading {}'.format(url))
     d = zlib.decompressobj(zlib.MAX_WBITS | 32)
@@ -60,12 +60,12 @@ def parse_ubuntu_contents(
 
 
 if __name__ == '__main__':
-    target_path = Path(os.path.dirname(__file__)) / 'data' / 'lut_sonames.csv'
+    target_path = Path(os.path.dirname(__file__)) / 'data' / 'lut_sonames.cpp.inc'
     logger.info('target path: {}'.format(target_path))
     output: Dict[str, Set[str]] = dict()
     for c in CODENAMES:
         parse_ubuntu_contents(c, output)
     logging.info('{} entries found, saving to {}'.format(len(output), target_path))
-    csv = '\n'.join(['{},{}'.format(k, ','.join([pkg for pkg in v])) for (k, v) in output.items()])
+    csv = '\n'.join(['{{"{}","{}"}},'.format(k, ','.join([pkg for pkg in v])) for (k, v) in output.items()])
     with open(target_path, 'w') as target_file:
         target_file.write(csv)
