@@ -30,6 +30,9 @@ set(CMAKE_REQUIRED_FLAGS "-std=c++17")
 set(CMAKE_EXTRA_INCLUDE_FILES filesystem)
 check_type_size("std::filesystem::path" STD_FS LANGUAGE CXX)
 
+find_package(PkgConfig)
+pkg_check_modules(LIBELF libelf)
+
 if (HAVE_STD_FMT)
   set(CMAKE_CXX_STANDARD 20)
 elseif (HAVE_STD_FS)
@@ -106,6 +109,15 @@ if (NOT HAVE_STD_FMT)
 else()
 message(STATUS "Using std::format")
   target_compile_definitions(autobuild PRIVATE HAS_STD_FMT)
+endif()
+
+if (NOT LIBELF_FOUND)
+  message(STATUS "libelf not found on the system, falling back to vendored version")
+  # TODO
+else()
+  target_include_directories(autobuild PRIVATE "${LIBELF_INCLUDE_DIRS}")
+  target_link_directories(autobuild PRIVATE "${LIBELF_LIBRARY_DIRS}")
+  target_link_libraries(autobuild PRIVATE "${LIBELF_LINK_LIBRARIES}")
 endif()
 
 add_custom_target(ab4.sh ALL cmake
