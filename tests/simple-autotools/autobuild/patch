@@ -1,0 +1,3 @@
+set -x
+touch "$SRCDIR"/{COPYING,INSTALL,NEWS,README,AUTHORS,ChangeLog}
+set +x
