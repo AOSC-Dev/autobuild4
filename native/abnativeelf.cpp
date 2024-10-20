@@ -127,9 +127,12 @@ get_elf_build_id(Elf *elf_file, const std::vector<GElf_Shdr> &section_headers,
   GElf_Nhdr result{};
   Elf_Scn *section = gelf_offscn(elf_file, section_header->sh_offset);
   Elf_Data *note_data = elf_getdata(section, nullptr);
+  if (!note_data)
+    return build_id;
   size_t name_offset = 0;
   size_t desc_offset = 0;
-  gelf_getnote(note_data, 0, &result, &name_offset, &desc_offset);
+  if (!gelf_getnote(note_data, 0, &result, &name_offset, &desc_offset))
+    return build_id;
   const unsigned char *value = (unsigned char *)note_data->d_buf + desc_offset;
   for (size_t i = 0; i < result.n_descsz; i++) {
     const unsigned char hi = table[(value[i] & 0xF0) >> 4];
@@ -183,7 +186,7 @@ static AOSCArch get_elf_arm_arch(Elf *elf_file, Endianness endianness,
     return ret;
   Elf_Scn *section = gelf_offscn(elf_file, section_header->sh_offset);
   Elf_Data *dyn_data = elf_getdata(section, nullptr);
-  unsigned char *start = (unsigned char *)dyn_data->d_buf;
+  unsigned char *start = reinterpret_cast<unsigned char *>(dyn_data->d_buf);
   const auto size = section_header->sh_size;
   // Version identifier 'A'
   if (*start != 'A')
@@ -313,7 +316,8 @@ is_debug_info_present(const std::vector<GElf_Shdr> &section_headers,
   for (const auto &shdr : section_headers) {
     const Elf64_Word name_idx = shdr.sh_name;
     const char *section_name = elf_strptr(elf_file, shstrndx, name_idx);
-    if (memcmp(section_name, sh_debug_info, sh_debug_info_sz) != 0)
+    if (strlen(section_name) >= 8 &&
+        memcmp(section_name, sh_debug_info, sh_debug_info_sz) != 0)
       continue;
     return true;
   }

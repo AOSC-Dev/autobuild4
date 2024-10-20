@@ -5,48 +5,39 @@
 if bool "$ABSPIRAL"; then
 	__ABSPIRAL_PROVIDES=()
 	if [[ "${#__AB_SONAMES[@]}" != 0 ]]; then
-		abspiral_from_sonames "$AB/data/lut_sonames.csv" "${__AB_SONAMES[@]}"
+		abspiral_from_sonames "${__AB_SONAMES[@]}"
 		for SPIRAL_PROV in "${__ABSPIRAL_PROVIDES_SONAMES[@]}"; do
 			__ABSPIRAL_PROVIDES+=("${SPIRAL_PROV}")
 		done
 	fi
 	if [ -d "$PKGDIR"/usr/lib/girepository-1.0 ]; then
-		for gir in `find "$PKGDIR"/usr/lib/girepository-1.0/ -type f`; do
-			__ABSPIRAL_PROVIDES+=("$(echo gir1.2-$(basename $gir) | \
-				sed -e 's|.typelib$||g' | \
-				tr '[:upper:]' '[:lower:]')")
-		done
+                while read -r LINE; do
+                    __ABSPIRAL_PROVIDES+=("$LINE")
+                done < <( find "$PKGDIR"/usr/lib/girepository-1.0/ -name '*.typelib' -type f -printf '%f\n' | \
+                   awk '{ sub(/\.typelib$/, "", $1); print "gir-" tolower($1) }' )
 	fi
 	if [ -d "$PKGDIR"/usr/lib/python"$ABPY2VER"/site-packages ]; then
-		for py2mod in `find "$PKGDIR"/usr/lib/python"$ABPY2VER"/site-packages -mindepth 1 -maxdepth 1 -type d`; do
-			__ABSPIRAL_PROVIDES+=("$(echo python${ABPY2VER:0:1}-$(basename $py2mod | cut -f1 -d'-') | \
-				sort -u | \
-				sed -e 's|_|-|g' | \
-				tr '[:upper:]' '[:lower:]')")
-		done
-		for py2mod in `find "$PKGDIR"/usr/lib/python"$ABPY2VER"/site-packages -mindepth 1 -maxdepth 1 -type f -name '*.py'`; do
-			__ABSPIRAL_PROVIDES+=("$(echo python${ABPY2VER:0:1}-$(basename $py2mod | cut -f1 -d'.') | \
-				sort -u | \
-				sed -e 's|_|-|g' | \
-				tr '[:upper:]' '[:lower:]')")
-		done
+                while read -r LINE; do
+                    __ABSPIRAL_PROVIDES+=("$LINE")
+                done < <( find "$PKGDIR"/usr/lib/python"$ABPY2VER"/site-packages -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | \
+                   awk '{ split($1, x, "-"); gsub("_", "-", x[1]); print "python2-" tolower(x[1]); }' | sort -u )
+                while read -r LINE; do
+                    __ABSPIRAL_PROVIDES+=("$LINE")
+                done < <( find "$PKGDIR"/usr/lib/python"$ABPY2VER"/site-packages -mindepth 1 -maxdepth 1 -type f -name "*.py" -printf '%f\n' | \
+                   awk '{ split($1, x, "."); gsub("_", "-", x[1]); print "python2-" tolower(x[1]); }' | sort -u )
 	fi
 	if [ -d "$PKGDIR"/usr/lib/python"$ABPY3VER"/site-packages ]; then
-		for py3mod in `find "$PKGDIR"/usr/lib/python"$ABPY3VER"/site-packages -mindepth 1 -maxdepth 1 -type d`; do
-			__ABSPIRAL_PROVIDES+=("$(echo python${ABPY3VER:0:1}-$(basename $py3mod | cut -f1 -d'-') | \
-				sort -u | \
-				sed -e 's|_|-|g' | \
-				tr '[:upper:]' '[:lower:]')")
-		done
-		for py3mod in `find "$PKGDIR"/usr/lib/python"$ABPY3VER"/site-packages -mindepth 1 -maxdepth 1 -type f -name '*.py'`; do
-			__ABSPIRAL_PROVIDES+=("$(echo python${ABPY3VER:0:1}-$(basename $py3mod | cut -f1 -d'.') | \
-				sort -u | \
-				sed -e 's|_|-|g' | \
-				tr '[:upper:]' '[:lower:]')")
-		done
+                while read -r LINE; do
+                    __ABSPIRAL_PROVIDES+=("$LINE")
+                done < <( find "$PKGDIR"/usr/lib/python"$ABPY3VER"/site-packages -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | \
+                   awk '{ split($1, x, "-"); gsub("_", "-", x[1]); print "python3-" tolower(x[1]); }' | sort -u )
+                while read -r LINE; do
+                    __ABSPIRAL_PROVIDES+=("$LINE")
+                done < <( find "$PKGDIR"/usr/lib/python"$ABPY3VER"/site-packages -mindepth 1 -maxdepth 1 -type f -name "*.py" -printf '%f\n' | \
+                   awk '{ split($1, x, "."); gsub("_", "-", x[1]); print "python3-" tolower(x[1]); }' | sort -u )
 	fi
 	if [[ "${#__ABSPIRAL_PROVIDES[@]}" != 0 ]]; then
-		abdbg "Generated Debian-compatible (Spiral) provides: ${__ABSPIRAL_PROVIDES[@]}"
+		abdbg "Generated Debian-compatible (Spiral) provides: ${__ABSPIRAL_PROVIDES[*]}"
 	else
 		abdbg "No Debian-compatible (Spiral) provides generated"
 	fi
