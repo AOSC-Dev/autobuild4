@@ -1,0 +1,5 @@
+PKGNAME=simple-1
+PKGSEC=devel
+PKGDES="Simple test package"
+
+ABHOST=noarch

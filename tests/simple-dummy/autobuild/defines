@@ -1,0 +1,5 @@
+PKGNAME=simple-0
+PKGSEC=devel
+PKGDES="Simple test package"
+
+ABTYPE=dummy

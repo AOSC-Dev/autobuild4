@@ -1,0 +1,5 @@
+PKGNAME=simple-cmake
+PKGSEC=devel
+PKGDES="Simple CMake test package"
+
+ABHOST=noarch

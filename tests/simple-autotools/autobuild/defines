@@ -1,0 +1,3 @@
+PKGNAME=simple-autotools
+PKGSEC=devel
+PKGDES="Simple AutoConf and AutoMake test package"
