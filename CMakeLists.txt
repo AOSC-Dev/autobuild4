@@ -62,6 +62,7 @@ set(COMMON_SRC
   native/abserialize.hpp
   native/abspiral.cpp
   native/abspiral.hpp
+  native/abspiral_data.cpp
   native/logger.hpp
   native/logger.cpp
   native/pm.hpp
@@ -110,6 +111,9 @@ else()
 message(STATUS "Using std::format")
   target_compile_definitions(autobuild PRIVATE HAS_STD_FMT)
 endif()
+
+add_subdirectory(externals/eternal)
+target_link_libraries(autobuild PRIVATE eternal)
 
 if (NOT LIBELF_FOUND)
   message(STATUS "libelf not found on the system, falling back to vendored version")
