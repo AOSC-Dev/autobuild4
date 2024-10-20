@@ -1,0 +1,2 @@
+mkdir -p "$PKGDIR"/usr/share/simple-1/
+echo 'Test data' > "$PKGDIR"/usr/share/simple-1/data

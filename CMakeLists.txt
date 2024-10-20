@@ -129,6 +129,9 @@ endif()
 add_subdirectory(externals/eternal)
 target_link_libraries(autobuild PRIVATE eternal)
 
+enable_testing()
+add_subdirectory(tests)
+
 if (NOT LIBELF_FOUND)
   message(STATUS "libelf not found on the system, falling back to vendored version")
   # TODO
