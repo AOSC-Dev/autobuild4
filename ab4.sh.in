@@ -3,11 +3,11 @@
 ##@copyright GPL-2.0+
 
 # Basic environment declarations
-AB="@AB_PREFIX@"
+AB="@AB_INSTALL_PREFIX@"
 
 if [ ! -d "$AB" ]; then
 	AB="$(dirname "$(readlink -e "$0")")"
 fi
 
-enable -f "${AB}"/libautobuild.so autobuild
+enable -f "${AB}/$<TARGET_FILE_NAME:autobuild>" autobuild
 autobuild "$@"

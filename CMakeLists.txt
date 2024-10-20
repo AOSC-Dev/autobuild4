@@ -141,12 +141,9 @@ else()
   target_link_libraries(autobuild PRIVATE "${LIBELF_LINK_LIBRARIES}")
 endif()
 
-add_custom_target(ab4.sh ALL cmake
-  -DAB_PREFIX="${AB_INSTALL_PREFIX}"
-  -DAB_INPUT_FILE="${CMAKE_CURRENT_SOURCE_DIR}/ab4.sh.in"
-  -DAB_OUTPUT_FILE="${CMAKE_CURRENT_BINARY_DIR}/ab4.sh"
-  -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/GeneratePrefixFile.cmake"
-)
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/ab4.sh.in" ab4_prefix_file)
+string(CONFIGURE "${ab4_prefix_file}" ab4_prefix_file @ONLY)
+file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/ab4.sh" CONTENT "${ab4_prefix_file}")
 
 install(PROGRAMS "${CMAKE_CURRENT_BINARY_DIR}/ab4.sh" DESTINATION "${CMAKE_INSTALL_BINDIR}" RENAME autobuild)
 install(TARGETS autobuild LIBRARY DESTINATION "${AB_INSTALL_PREFIX}")
