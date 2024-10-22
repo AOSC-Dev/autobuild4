@@ -116,19 +116,24 @@ for cap in "${HWCAPS[@]}" ; do
 
 	cd "$SRCDIR" || abdie "Unable to cd $SRCDIR: $?."
 
-	if arch_findfile hwcaps/beyond; then
+	if arch_findfile hwcaps/beyond ; then
 		abinfo 'Running after-build (beyond) script ...'
 		arch_loadfile_strict hwcaps/beyond
 	fi
 	[ -d "$PKGDIR" ] || abdie "51-build-hwcaps: Suspecting build failure due to missing PKGDIR."
-	abinfo "[$cap] Harvesting libraries ..."
-	files=($(find "$PKGDIR"/"$LIBDIR" -maxdepth 1 -type f,l -name 'lib*.so.*'))
-	if [ "${#files[@]}" -lt "1" ] ; then
-		abdie "$cap: This build did not produce any libraries. How strange is that!"
+	if arch_findfile hwcaps/install ; then
+		abinfo "[$cap] Running custom installation script ..."
+		arch_loadfile_strict hwcaps/install
+	else
+		abinfo "[$cap] Harvesting libraries ..."
+		files=($(find "$PKGDIR"/"$LIBDIR" -maxdepth 1 -type f,l -name 'lib*.so.*'))
+		if [ "${#files[@]}" -lt "1" ] ; then
+			abdie "$cap: This build did not produce any libraries. How strange is that!"
+		fi
+		for f in "${files[@]}" ; do
+			install -Dvm755 -t "$PKG_PKGDIR"/usr/lib/glibc-hwcaps/"$cap"/ "$f"
+		done
 	fi
-	for f in "${files[@]}" ; do
-		install -Dvm755 -t "$PKG_PKGDIR"/usr/lib/glibc-hwcaps/"$cap"/ "$f"
-	done
 done # for cap in "${HWCAPS[@]}" ; do
 else # if [ "$ABTYPE" != "self" ] ; then
 	if arch_findfile hwcaps/prepare ; then
@@ -142,9 +147,14 @@ else # if [ "$ABTYPE" != "self" ] ; then
 		abinfo 'Running after-build (beyond) script ...'
 		arch_loadfile_strict hwcaps/beyond
 	fi
-
+	if arch_findfile hwcaps/install ; then
+		abinfo "[$cap] Running custom installation script ..."
+		arch_loadfile_strict hwcaps/install
+	else
+		abwarn "It is advised to use hwcaps/install script to install libraries built for HWCAPS subtargets."
+	fi
 	if [ ! -d "$PKGDIR"/usr/lib/glibc-hwcaps ] ; then
-		abdie "Hold on! No libraries installed into PKGDIR/usr/lib/glibc-hwcaps. Check your build script."
+		abdie "Hold on! No libraries installed into PKGDIR/usr/lib/glibc-hwcaps. Check your build and install script."
 	fi
 fi # if [ "$ABTYPE" != "self" ] ; then
 
@@ -152,7 +162,7 @@ cd "$SRCDIR" || abdie "Unable to cd $SRCDIR: $?."
 
 # Set PKGDIR back to its original value.
 export PKGDIR="$PKG_PKGDIR"
-
+unset PKG_BLDDIR PKG_PKGDIR HWCAPSDIR CUR_SUBTGT
 unset -f BUILD_{START,READY,FINAL}
 unset __overrides
 for i in "${MIGRATE_REQUIRED[@]}"; do
