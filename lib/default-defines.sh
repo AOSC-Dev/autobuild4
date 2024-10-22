@@ -66,7 +66,7 @@ AB_HWCAPS=0
 # Whether to trick autotools into thinking that we are *REALLY* cross compiling?
 # Set this to 1 in order to work around the issue that autotools trying to run
 # compile tests built for unsupported ISA levels without proper hardware.
-AB_HWCAPS_REALLY_CROSSING=0
+AB_HWCAPS_CROSS=0
 
 # Default testing flags
 ABTESTS=""

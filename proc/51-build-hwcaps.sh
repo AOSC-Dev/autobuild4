@@ -99,7 +99,7 @@ for cap in "${HWCAPS[@]}" ; do
 	# building gmp.
 	# mpfr requires $cross_compiling = yes. So we have to do the real
 	# trick by using the generic target for --build.
-	if ! bool "$AB_HWCAPS_REALLY_CROSSING" ; then
+	if ! bool "$AB_HWCAPS_CROSS" ; then
 		export AUTOTOOLS_TARGET=("--host=${ARCH_TARGET[$ARCH]}")
 	else
 		generic_triple="${ARCH_TARGET[$ARCH]}"
