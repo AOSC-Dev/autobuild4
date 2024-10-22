@@ -21,6 +21,11 @@ HWCAPS_PREPARE=
 HWCAPS_BUILD=
 HWCAPS_BEYOND=
 
+# Saved BLDDIR and PKGDIR.
+export PKG_BLDDIR=$BLDDIR
+export PKG_PKGDIR=$PKGDIR
+export HWCAPSDIR=$PKGDIR/$LIBDIR/glibc-hwcaps
+
 if [ -e "$SRCDIR"/autobuild/hwcaps/prepare ] ; then
 	abinfo "Using prepare script for HWCAPS subtargtes."
 	HWCAPS_PREPARE=hwcaps/prepare
@@ -47,13 +52,10 @@ if [ -e "$SRCDIR"/autobuild/hwcaps/beyond ] ; then
 	HWCAPS_BEYOND=hwcaps/beyond
 fi
 
-# Save BLDDIR and PKGDIR.
-export OLD_BLDDIR="$BLDDIR"
-export OLD_PKGDIR="$PKGDIR"
-
 # If an in-house build script is used, do not run it for every subtarget.
 if [ "$ABTYPE" != "self" ] ; then
 for cap in "${HWCAPS[@]}" ; do
+	export CUR_SUBTGT=$cap
 	# Set each build flags for the current subtarget
 	flags=(CPPFLAGS CFLAGS CXXFLAGS LDFLAGS OBJCFLAGS OBJCXXFLAGS RUSTFLAGS)
 	# Files to cleanup before each run. This has to be done if ABSHADOW=0.
@@ -125,7 +127,7 @@ for cap in "${HWCAPS[@]}" ; do
 		abdie "$cap: This build did not produce any libraries. How strange is that!"
 	fi
 	for f in "${files[@]}" ; do
-		install -Dvm755 -t "$OLD_PKGDIR"/usr/lib/glibc-hwcaps/"$cap"/ "$f"
+		install -Dvm755 -t "$PKG_PKGDIR"/usr/lib/glibc-hwcaps/"$cap"/ "$f"
 	done
 done # for cap in "${HWCAPS[@]}" ; do
 else # if [ "$ABTYPE" != "self" ] ; then
@@ -149,7 +151,7 @@ fi # if [ "$ABTYPE" != "self" ] ; then
 cd "$SRCDIR" || abdie "Unable to cd $SRCDIR: $?."
 
 # Set PKGDIR back to its original value.
-export PKGDIR="$OLD_PKGDIR"
+export PKGDIR="$PKG_PKGDIR"
 
 unset -f BUILD_{START,READY,FINAL}
 unset __overrides
