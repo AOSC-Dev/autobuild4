@@ -66,6 +66,9 @@ AB_HWCAPS=0
 # Whether to trick autotools into thinking that we are *REALLY* cross compiling?
 # Set this to 1 in order to work around the issue that autotools trying to run
 # compile tests built for unsupported ISA levels without proper hardware.
+# This is rather a hack to prevent unsupported code from running, so keeping it
+# disabled. This is also not needed if configure does not run any compiled test
+# code.
 AB_HWCAPS_CROSS=0
 
 # Default testing flags
