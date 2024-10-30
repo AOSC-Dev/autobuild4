@@ -121,7 +121,10 @@ for cap in "${HWCAPS[@]}" ; do
 		arch_loadfile_strict hwcaps/beyond
 	fi
 	[ -d "$PKGDIR" ] || abdie "51-build-hwcaps: Suspecting build failure due to missing PKGDIR."
-	if arch_findfile hwcaps/install ; then
+	if arch_findfile hwcaps/install-"$ARCH" ; then
+		abinfo "[$cap] Running custom installation script ..."
+		arch_loadfile_strict hwcaps/install-"$ARCH"
+	elif arch_findfile hwcaps/install ; then
 		abinfo "[$cap] Running custom installation script ..."
 		arch_loadfile_strict hwcaps/install
 	else
@@ -137,18 +140,21 @@ for cap in "${HWCAPS[@]}" ; do
 done # for cap in "${HWCAPS[@]}" ; do
 else # if [ "$ABTYPE" != "self" ] ; then
 	if arch_findfile hwcaps/prepare ; then
-		abinfo "[$cap] Running custom prepare script ..."
+		abinfo "[HWCAPS] Running custom prepare script ..."
 		arch_loadfile_strict hwcaps/prepare || abdie "Failed to run custom build script: $?."
 	fi
-	abinfo "[$cap] Running custom build script ..."
+	abinfo "[HWCAPS] Running custom build script ..."
 	arch_loadfile_strict hwcaps/$(basename $HWCAPS_BUILD) || abdie "Failed to run custom build script: $?."
 
 	if arch_findfile hwcaps/beyond; then
-		abinfo 'Running after-build (beyond) script ...'
+		abinfo "[HWCAPS] Running after-build (beyond) script ..."
 		arch_loadfile_strict hwcaps/beyond
 	fi
-	if arch_findfile hwcaps/install ; then
-		abinfo "[$cap] Running custom installation script ..."
+	if arch_findfile hwcaps/install-"$ARCH"	; then
+		abinfo "[HWCAPS] Running custom installation script for $ARCH ..."
+		arch_loadfile_strict hwcaps/install-$ARCH
+	elif arch_findfile hwcaps/install ; then
+		abinfo "[HWCAPS] Running custom installation script ..."
 		arch_loadfile_strict hwcaps/install
 	else
 		abwarn "It is advised to use hwcaps/install script to install libraries built for HWCAPS subtargets."
