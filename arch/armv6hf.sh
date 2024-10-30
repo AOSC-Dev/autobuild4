@@ -8,4 +8,5 @@ LDFLAGS_COMMON_OPTI=('-Wl,--gc-sections')
 # Retro: Also disabling -ftree-vectorization which could potentially enlarge code size.
 CFLAGS_GCC_OPTI=('-fira-loop-pressure' '-fira-hoist-pressure')
 
-CFLAGS_COMMON_ARCH=('-march=armv6' '-mtune=arm1176jz-s' '-mfloat-abi=hard')
+CFLAGS_COMMON_ARCH=('-march=armv6' '-mfloat-abi=hard')
+CFLAGS_GCC_ARCH=('-mtune=arm1176jz-s')

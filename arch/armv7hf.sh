@@ -7,4 +7,5 @@ CFLAGS_COMMON_OPTI=('-Os' '-ffunction-sections' '-fdata-sections')
 LDFLAGS_COMMON_OPTI=('-Wl,--gc-sections')
 # Retro: Keeping -ftree-vectorization for NEON.
 
-CFLAGS_COMMON_ARCH=('-march=armv7-a' '-mtune=cortex-a7' '-mfloat-abi=hard' '-mfpu=neon' '-mthumb')
+CFLAGS_COMMON_ARCH=('-march=armv7-a' '-mfloat-abi=hard' '-mfpu=neon' '-mthumb')
+CFLAGS_GCC_ARCH=('-mtune=cortex-a7')
