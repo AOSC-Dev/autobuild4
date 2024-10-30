@@ -2,7 +2,7 @@
 ##arch/loongson3.sh: Build definitions for Loongson 3A/B 1000-4000+.
 ##@copyright GPL-2.0+
 CFLAGS_GCC_ARCH=('-mabi=64' '-march=gs464' '-mtune=gs464e' '-mfix-loongson3-llsc' '-mxgot')
-CFLAGS_CLANG_ARCH=('-mabi=64' '-march=mips64r2' '-mtune=mips64r2')
+CFLAGS_CLANG_ARCH=('-mabi=64' '-march=mips64r2')
 RUSTFLAGS_COMMON_ARCH=('-Clink-arg=-Wl,-build-id=sha1')
 RUSTFLAGS_COMMON_OPTI_NOLTO=('-Clink-arg=-fuse-ld=bfd' '-Clink-arg=-Wl,-build-id=sha1')
 CFLAGS_GCC_OPTI_LTO=("${CFLAGS_COMMON_OPTI_LTO[@]}" '-flto-partition=none')
