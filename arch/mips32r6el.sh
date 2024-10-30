@@ -1,7 +1,8 @@
 #!/bin/bash
 ##arch/mips32r6el.sh: Build definitions for mips32r6el.
 ##@copyright GPL-2.0+
-CFLAGS_COMMON_ARCH=('-march=mips32r6' '-mtune=mips32r6' '-mcompact-branches=always')
+CFLAGS_COMMON_ARCH=('-march=mips32r6' '-mcompact-branches=always')
+CFLAGS_GCC_ARCH=('-mtune=mips32r6')
 
 # FIXME: -Cdebuginfo=0 enables rustc to build programs on mips32r6el,
 # overriding all project configuration and build profile settings.
