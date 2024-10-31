@@ -17,8 +17,13 @@ HWCAPS=('power9' 'power10')
 CFLAGS_HWCAPS_power9=("${CFLAGS_COMMON_ARCH_BASE[@]}" '-mcpu=power9' '-mtune=power9' '-mvsx')
 CFLAGS_HWCAPS_power10=("${CFLAGS_COMMON_ARCH_BASE[@]}" '-mcpu=power10' '-mtune=power10' '-mvsx' '-mmma')
 
-CPPFLAGS_HWCAPS_power9=("${CFLAGS_COMMON_ARCH_BASE[@]}" '-mcpu=power9' '-mtune=power9' '-mvsx')
-CPPFLAGS_HWCAPS_power10=("${CFLAGS_COMMON_ARCH_BASE[@]}" '-mcpu=power10' '-mtune=power10' '-mvsx' '-mmma')
+# ABI flags in CPPFLAGS confuses autoconf's compile test routines.
+# AC_LANG_PROGRAM calls $CC with the following arguments:
+#    $CC $CFLAGS $CPPFLAGS
+# When configure.ac tries to add someting to CFLAGS, the resulting
+# combination will still be overriden by CPPFLAGS.
+CPPFLAGS_HWCAPS_power9=('-mcpu=power9' '-mtune=power9' '-mvsx')
+CPPFLAGS_HWCAPS_power10=('-mcpu=power10' '-mtune=power10' '-mvsx' '-mmma')
 
 RUSTFLAGS_HWCAPS_power9=('-Ctarget-cpu=pwr9' '-Ctarget-feature=+vsx,+altivec,+secure-plt' '-Clink-arg=-mabi=ieeelongdouble')
 RUSTFLAGS_HWCAPS_power10=('-Ctarget-cpu=pwr10' '-Ctarget-feature=+mma,+vsx,+altivec,+secure-plt' '-Clink-arg=-mabi=ieeelongdouble')
