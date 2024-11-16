@@ -32,5 +32,5 @@ ABSPIRAL=0
 
 CFLAGS_COMMON_ARCH=('-fomit-frame-pointer' '-march=x86-64' '-mtune=sandybridge' '-msse2' '-m32')
 
-export PKG_CONFIG_DIR=/opt/32/lib/pkgconfig
+export PKG_CONFIG_PATH=/opt/32/lib/pkgconfig
 unset LDFLAGS_COMMON_CROSS_BASE
