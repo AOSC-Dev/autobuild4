@@ -9,10 +9,17 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v4
-    - run: sudo apt-get update && sudo apt-get install cmake ninja-build nlohmann-json3-dev libfmt-dev libboost-filesystem-dev libelf-dev bash-builtins
+    - run: sudo apt-get update && sudo apt-get install -y cmake ninja-build nlohmann-json3-dev libfmt-dev libboost-filesystem-dev libelf-dev bash-builtins
       name: Install dependencies
     - name: Build
       run: |
         mkdir -pv build
         cmake -S . -B build -GNinja
         ninja -C build -v
+    - name: Test
+      run: |
+        sudo apt-get install -y meson
+        sed -i 's|python2|python3|g' templates/15-python.sh proc/00-python-defines.sh
+        sudo mkdir -p /etc/autobuild
+        echo -ne "ABMPM=dpkg\nMTER=\"CI <i@aosc.io>\"\n" | sudo tee /etc/autobuild/ab4cfg.sh
+        cd build && sudo ctest -V
