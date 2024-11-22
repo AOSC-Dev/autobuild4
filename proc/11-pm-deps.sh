@@ -3,9 +3,6 @@
 ##@copyright GPL-2.0+
 
 pm_install_deps() {
-    local _tmpdir
-    _tmpdir="$(mktemp -d)"
-    mkdir -p "${_tmpdir}"/debian/
     local _filtered=()
     for p in "$@"; do
         if [[ "$p" = "@"* ]]; then
@@ -13,9 +10,11 @@ pm_install_deps() {
         fi
         _filtered+=("$p")
     done
-    abpm_dump_builddep_req "${_filtered[@]}" > "${_tmpdir}"/debian/control
-    apt-get build-dep -y "${_tmpdir}"
-    rm -rf "${_tmpdir}"
+    local _tmpfile
+    _tmpfile="$(mktemp --suffix=.dsc)"
+    abpm_dump_builddep_req "${_filtered[@]}" > "${_tmpfile}"
+    apt-get build-dep -y "${_tmpfile}"
+    rm -f "${_tmpfile}"
 }
 
 if bool "$ABBUILDDEPONLY"; then
