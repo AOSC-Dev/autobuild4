@@ -463,7 +463,7 @@ static ELFParseResult identify_binary_data(const char *data,
   const auto soname = get_elf_soname(elf_file, section_headers, dynstrtab);
   if (type == BinaryType::Relocatable &&
       maybe_kernel_object(section_headers, elf_file, shstrndx)) {
-    type = BinaryType::KernelObject;
+    result.bin_type = BinaryType::KernelObject;
   } else {
     auto needed = get_elf_needed(elf_file, section_headers, dynstrtab);
     result.needed_libs = std::move(needed);
