@@ -6,4 +6,4 @@ export ABPY2SHORTVER="$(python2 -c 'import sys; print("%s%s" %sys.version_info[0
 export ABPY3VER="$(python3 -c 'import sys; print("%s.%s" %sys.version_info[0:2])')"
 export ABPY3SHORTVER="$(python3 -c 'import sys; print("%s%s" %sys.version_info[0:2])')"
 
-export PYTHON=/usr/bin/python2
+export PYTHON=/usr/bin/python3
