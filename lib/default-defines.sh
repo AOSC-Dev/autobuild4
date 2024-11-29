@@ -19,6 +19,11 @@ ABBUILDDEPONLY=no		# Avoid installing runtime dependencies when building?
 ABPATCHLAX=no			# Disallow fuzzy patching
 ABSPIRAL=yes			# Enable spiral provides generation
 
+AB_SKIP_MAINTSCRIPTS=()		# Names of the scriptlets to skip generating or installing
+				# Each element is one of prerm, postrm, preinst, postinst
+				# The corresponding script will not installed to DEBIAN/ of the final package
+AB_SKIP_ALLMAINTSCRIPTS=no	# Set to yes to skip all four maintscripts
+
 # Strict Autotools option checking?
 AUTOTOOLS_STRICT=yes
 

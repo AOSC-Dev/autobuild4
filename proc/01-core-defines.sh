@@ -41,6 +41,18 @@ if abisdefined FAIL_ARCH && abisdefined ALLOW_ARCH; then
 	abdie "Can not define FAIL_ARCH and ALLOW_ARCH at the same time."
 fi
 
+if bool "$AB_SKIP_ALLMAINTSCRIPTS" ; then
+	abinfo "Will not install maintscripts in this build."
+	AB_SKIP_MAINTSCRIPTS=('prerm' 'postrm' 'preinst' 'postinst')
+fi
+
+# Avoid using for loops to test if a string is in an array.
+# Convert the (indexed) array to an (assodiative) array.
+declare -A _AB_SKIP_MAINTSCRIPTS_
+for ele in "${AB_SKIP_MAINTSCRIPTS[@]}" ; do
+	_AB_SKIP_MAINTSCRIPTS_["$ele"]="$ele"
+done
+
 # shellcheck disable=SC2053
 if [ -n "$ALLOW_ARCH" ] && [ "${ABBUILD%%\/*}" != $ALLOW_ARCH ]; then
 	abdie "This package can only be built on $ALLOW_ARCH, not including $ABHOST."

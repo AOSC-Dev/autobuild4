@@ -4,6 +4,15 @@
 mkdir -p abscripts
 
 for i in postinst prerm postrm preinst; do
+	# liushuyu: using an associative array can avoid using for loops to
+	# test if a string exists in an array.
+	if [ "x${_AB_SKIP_MAINTSCRIPTS_[$i]}" != "x" ] ; then
+		if [ -f "autobuild/$i" ] ; then
+			abdie "Conflict detected: $i should be skipped but autobuild/$i exists. Please remove $i from skip list or remove the file."
+		fi
+		abinfo "Skipping generating maintscript $i."
+		continue
+	fi
 	echo "#!/bin/bash" > abscripts/$i
 	cat autobuild/$i >> abscripts/$i 2>/dev/null || abinfo "Creating empty $i."
 	chmod 755 abscripts/$i
