@@ -178,11 +178,20 @@ void ColorfulLogger::logDiagnostic(Diagnostic diagnostic) {
     }
     if ((it + 1) == diagnostic.frames.rend()) {
       // last call
-      buffer +=
-          fmt::format("{0}:{1}: \e[0mIn function `\e[1m{2}':\n"
-                      "{0}:{1}: \e[91merror: \e[39mcommand exited with "
-                      "\e[93m{3}\e[39m\e[0m\n",
-                      frame.file, frame.line, frame.function, diagnostic.code);
+      if (diagnostic.code == 0) {
+        buffer += fmt::format(
+            "{0}:{1}: \e[0mIn function `\e[1m{2}':\n"
+            "{0}:{1}: \e[91merror: \e[39mcommand raised an error here"
+            "\e[0m\n",
+            frame.file, frame.line, frame.function);
+
+      } else {
+        buffer += fmt::format("{0}:{1}: \e[0mIn function `\e[1m{2}':\n"
+                              "{0}:{1}: \e[91merror: \e[39mcommand exited with "
+                              "\e[93m{3}\e[39m\e[0m\n",
+                              frame.file, frame.line, frame.function,
+                              diagnostic.code);
+      }
       buffer += get_snippet(frame.file, frame.line);
       continue;
     }
