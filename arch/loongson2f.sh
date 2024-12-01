@@ -5,7 +5,6 @@
 # Retro: Overriding mainline definitions, and take more interest in reducing code size.
 CFLAGS_COMMON_OPTI=('-Os' '-ffunction-sections' '-fdata-sections')
 LDFLAGS_COMMON_OPTI=('-Wl,--gc-sections')
-# Retro: Keeping -ftree-vectorization for MMI (effective?).
 
 CFLAGS_COMMON_ARCH=('-mabi=64' '-march=mips3')
 CFLAGS_GCC_ARCH=('-mtune=loongson2f' '-mloongson-mmi' '-Wa,-mfix-loongson2f-nop')
