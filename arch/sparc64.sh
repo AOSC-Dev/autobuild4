@@ -5,8 +5,6 @@
 # Retro: Overriding mainline definitions, and take more interest in reducing code size.
 CFLAGS_COMMON_OPTI=('-Os' '-ffunction-sections' '-fdata-sections')
 LDFLAGS_COMMON_OPTI=('-Wl,--gc-sections')
-# Retro: Also disabling -ftree-vectorization which could potentially enlarge code size.
-CFLAGS_GCC_OPTI=('-fira-loop-pressure' '-fira-hoist-pressure')
 
 CFLAGS_COMMON_ARCH=('-march=v9' '-mv8plus' '-mvis' '-m64' '-mcmodel=medany')
 

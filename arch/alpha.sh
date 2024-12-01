@@ -4,7 +4,5 @@
 CFLAGS_COMMON_ARCH=('-mieee' '-mcpu=ev4')
 # Retro: Overriding mainline definitions, and take more interest in reducing code size.
 CFLAGS_COMMON_OPTI=('-Os')
-# Retro: Also disabling -ftree-vectorization which could potentially enlarge code size.
-CFLAGS_GCC_OPTI=('-fira-loop-pressure' '-fira-hoist-pressure')
 # Retro: Clang: even smaller code size than -Os
 CFLAGS_CLANG_OPTI=('-Oz')

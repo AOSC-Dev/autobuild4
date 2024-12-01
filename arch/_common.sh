@@ -10,7 +10,7 @@ CFLAGS_COMMON=('-pipe' '-Wno-error')
 CFLAGS_COMMON_OPTI=('-O2' '-fno-omit-frame-pointer' '-mno-omit-leaf-frame-pointer')
 CFLAGS_COMMON_DEBUG=('-O0')	# not that frequently used since autotools know it.
 CFLAGS_GCC=()
-CFLAGS_GCC_OPTI=('-fira-loop-pressure' '-fira-hoist-pressure' '-ftree-vectorize')
+CFLAGS_GCC_OPTI=('-fira-loop-pressure' '-fira-hoist-pressure')
 CFLAGS_GCC_OPTI_LTO=('-flto=auto')
 CFLAGS_GCC_DEBUG=('-Og')		# note: not enabled for clang
 # CFLAGS_CLANG='-fno-integrated-as ' # GNU as has compatibility issue with clang on ARMv8.[01]
@@ -19,7 +19,7 @@ CFLAGS_DBG_SYM=('-ggdb')  # Appended when ABSPLITDBG is turned on
 # C Specific Flags.
 CFLAGS_COMMON_WEIRD=()
 # What to add for C++ Compiler Flags.
-CXXFLAGS_GCC_OPTI=("-fdeclone-ctor-dtor" "-ftree-vectorize")
+CXXFLAGS_GCC_OPTI=("-fdeclone-ctor-dtor")
 CXXFLAGS_COMMON_WEIRD=()
 CXXFLAGS_COMMON_PERMISSIVE=("-fpermissive")
 # Preprocesser Flags.
