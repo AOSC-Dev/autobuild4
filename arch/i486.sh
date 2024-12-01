@@ -8,6 +8,7 @@ LDFLAGS_COMMON_OPTI=('-Wl,--gc-sections')
 # Retro: Also disabling -ftree-vectorization which could potentially enlarge code size.
 CFLAGS_GCC_OPTI=('-fira-loop-pressure' '-fira-hoist-pressure')
 
+CPPFLAGS_COMMON_ARCH=('-D_TIME_BITS=64' '-D_FILE_OFFSET_BITS=64')
 CFLAGS_COMMON_ARCH=('-march=i486' '-mtune=generic')
 
 RUSTFLAGS_COMMON_ARCH=('-Ctarget-cpu=i486' '-Clink-args=-latomic')
