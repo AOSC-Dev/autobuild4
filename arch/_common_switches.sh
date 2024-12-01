@@ -1,4 +1,4 @@
-\#!/bin/bash
+#!/bin/bash
 ##arch/_common_switches.sh: Switches sourced after defines.
 ##@copyright GPL-2.0+
 if ((AB_FLAGS_SSP)); then CFLAGS_COMMON+=('-fstack-protector-strong' '--param=ssp-buffer-size=4'); fi
@@ -36,7 +36,6 @@ else
 		CFLAGS_CLANG_OPTI+=('-fPIC')
 		LDFLAGS_CLANG_OPTI+=('-fPIE')
 	fi
-fi
 fi
 if ((AB_FLAGS_O3)); then CFLAGS_COMMON_OPTI="${CFLAGS_COMMON_OPTI/O2/O3}"; fi
 if ((AB_FLAGS_OS)); then CFLAGS_COMMON_OPTI="${CFLAGS_COMMON_OPTI/O2/Os}"; fi
