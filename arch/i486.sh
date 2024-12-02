@@ -3,7 +3,7 @@
 ##@copyright GPL-2.0+
 
 # Retro: Overriding mainline definitions, and take more interest in reducing code size.
-CFLAGS_COMMON_OPTI=('-O2' '-fno-tree-ch' '-ffunction-sections' '-fdata-sections')
+CFLAGS_COMMON_OPTI=('-O2' '-fno-tree-ch' '-ffunction-sections' '-fdata-sections' '-mno-omit-leaf-frame-pointer')
 LDFLAGS_COMMON_OPTI=('-Wl,--gc-sections')
 
 CPPFLAGS_COMMON_ARCH=('-D_TIME_BITS=64' '-D_FILE_OFFSET_BITS=64')

@@ -7,7 +7,7 @@ HAS_HWCAPS=0
 
 # C Compiler Flags.
 CFLAGS_COMMON=('-pipe' '-Wno-error')
-CFLAGS_COMMON_OPTI=('-O2' '-fno-omit-frame-pointer' '-mno-omit-leaf-frame-pointer')
+CFLAGS_COMMON_OPTI=('-O2' '-fno-omit-frame-pointer')
 CFLAGS_COMMON_DEBUG=('-O0')	# not that frequently used since autotools know it.
 CFLAGS_GCC=()
 CFLAGS_GCC_OPTI=('-fira-loop-pressure' '-fira-hoist-pressure')
