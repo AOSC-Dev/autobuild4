@@ -3,8 +3,8 @@
 ##@copyright GPL-2.0+
 
 # Retro: Overriding mainline definitions, and take more interest in reducing code size.
-CFLAGS_COMMON_OPTI=('-O2' '-fno-tree-ch' '-ffunction-sections' '-fdata-sections')
-LDFLAGS_COMMON_OPTI=('-Wl,--gc-sections')
+CFLAGS_COMMON_ARCH=('-O2' '-fno-tree-ch' '-ffunction-sections' '-fdata-sections')
+LDFLAGS_COMMON_ARCH=('-Wl,--gc-sections')
 
 CFLAGS_COMMON_ARCH=('-m32' '-mcpu=603' '-mtune=G4' '-mno-altivec' '-msecure-plt' '-mhard-float')
 

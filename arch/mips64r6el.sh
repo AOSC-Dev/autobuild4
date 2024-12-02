@@ -16,4 +16,6 @@ CFLAGS_GCC_ARCH=('-mtune=mips64r6')
 # FIXME: As of Rust 1.71.1, enabling MSA results in broken sha2 checksum
 # calculation (breaks all Cargo operations). Disable this feature for now.
 RUSTFLAGS_COMMON_ARCH=('-Ctarget-cpu=mips64r6' '-Cdebuginfo=0' '-Ctarget-feature=-msa' '-Cllvm-args=--mips-compact-branches=always' '--cfg=rustix_use_libc' '-Clink-arg=-Wl,--relax')
-RUSTFLAGS_COMMON_OPTI_NOLTO=('-Clink-arg=-fuse-ld=bfd' '-Clink-arg=-Wl,-build-id=sha1')
+
+# Override some RUSTFLAGS sure that the correct linker is used with NOLTO=1.
+RUSTFLAGS_COMMON_ARCH_NOLTO=('-Clink-arg=-fuse-ld=bfd' '-Clink-arg=-Wl,-build-id=sha1')

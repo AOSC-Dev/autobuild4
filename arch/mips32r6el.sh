@@ -13,4 +13,6 @@ CFLAGS_GCC_ARCH=('-mtune=mips32r6')
 # R2 and R6 assemblies. Enabling this options instructs rustix to use the libc
 # backend instead.
 RUSTFLAGS_COMMON_ARCH=('-Ctarget-cpu=mips32r6' '-Cdebuginfo=0' '-Cllvm-args=--mips-compact-branches=always' '--cfg=rustix_use_libc')
-RUSTFLAGS_COMMON_OPTI_NOLTO=('-Clink-arg=-fuse-ld=gold' '-Clink-arg=-Wl,-build-id=sha1')
+
+# Override some RUSTFLAGS sure that the correct linker is used with NOLTO=1.
+RUSTFLAGS_COMMON_ARCH_NOLTO=('-Clink-arg=-fuse-ld=gold' '-Clink-arg=-Wl,-build-id=sha1')
