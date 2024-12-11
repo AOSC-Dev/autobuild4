@@ -14,8 +14,9 @@ if ! bool "$USECLANG" && \
 	# GCC has an `-fhardened' flag or a spec-driven (pre-14) system to
 	# automatically enable code hardening.
 	#
-	# Test if we are on GCC >= 14.
-	if [ "$(echo __GNUC__ | gcc -E -xc - | tail -n 1)" -ge 14 ]; then
+	# Test if we are on GCC >= 14 (via $CC, as we also set $CC for
+	# specialised targets (such as optenv32).
+	if [ "$(echo __GNUC__ | $CC -E -xc - | tail -n 1)" -ge 14 ]; then
 		CFLAGS_GCC_OPTI+=('-fhardened')
 	else
 		# Use the old behavior if we are not.
