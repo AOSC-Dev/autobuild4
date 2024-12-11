@@ -4,10 +4,10 @@
 
 # la664 is only available on GCC >= 14 and Clang >= 19.
 CFLAGS_COMMON_ARCH=('-mabi=lp64d' '-march=loongarch64' '-mlsx')
-if ! bool "$USECLANG" && [ "$(echo __GNUC__ | gcc -E -xc - | tail -n 1)" -ge 14 ]; then
+if ! bool "$USECLANG" && [ "$(echo __GNUC__ | $CC -E -xc - | tail -n 1)" -ge 14 ]; then
 	# Use `-mtune=la664' if we are on GCC >= 14.
 	CFLAGS_COMMON_ARCH+=('-mtune=la664')
-elif bool "$USECLANG" && [ "$(echo __clang_major__ | clang -E -x c - | tail -n 1)" -ge 19 ]; then
+elif bool "$USECLANG" && [ "$(echo __clang_major__ | $CC -E -x c - | tail -n 1)" -ge 19 ]; then
 	# Use `-mtune=la664' if we are on Clang >= 19.
 	CFLAGS_COMMON_ARCH+=('-mtune=la664')
 else
