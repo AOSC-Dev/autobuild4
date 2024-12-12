@@ -10,6 +10,19 @@ if ((AB_FLAGS_SPECS)); then CFLAGS_GCC_OPTI+=('-specs=/usr/lib/gcc/specs/hardene
 if ((AB_FLAGS_O3)); then CFLAGS_COMMON_OPTI="${CFLAGS_COMMON_OPTI/O2/O3}"; fi
 if ((AB_FLAGS_OS)); then CFLAGS_COMMON_OPTI="${CFLAGS_COMMON_OPTI/O2/Os}"; fi
 if ((AB_FLAGS_EXC)); then CFLAGS_COMMON+=('-fexceptions'); fi
+# Only functions (via compiler and/or kernel, and hardware) on ...
+#
+#   - amd64 (x86-64): Intel CET (compiler: -fcf-protection=full,
+#     kernel: CONFIG_CET).
+#   - arm64 (AArch64): PAC + BTI (compiler: -mbranch-protection=standard,
+#     kernel: CONFIG_ARM64_BTI + ARM64_PTR_AUTH).
+if ((AB_FLAGS_CFP)); then
+	if ab_match_arch amd64; then
+		CFLAGS_COMMON+=('-fcf-protection=full')
+	elif ab_match_arch arm64; then
+		CFLAGS_COMMON+=('-mbranch-protection=standard')
+	fi
+fi
 
 # Clang can handle PIE and PIC properly, let it do the old job.
 if bool "$USECLANG"; then
