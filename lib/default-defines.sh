@@ -58,6 +58,9 @@ AB_FLAGS_SPECS=1
 # Enable table-based thread cancellation.
 AB_FLAGS_EXC=1
 
+# Enable control flow integrity protection.
+AB_FLAGS_CFP=1
+
 AB_SAN_ADD=0
 AB_SAN_THR=0
 AB_SAN_LEK=0
