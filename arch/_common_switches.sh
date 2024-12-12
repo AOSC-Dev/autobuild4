@@ -21,8 +21,8 @@ if ! bool "$USECLANG" && \
 	else
 		# Use the old behavior if we are not.
 		CFLAGS_GCC_OPTI+=('-specs=/usr/lib/gcc/specs/hardened-cc1')
-		LDFLAGS_GCC_OPTI+=("-specs=/usr/lib/gcc/specs/hardened-ld")
 	fi
+	LDFLAGS_GCC_OPTI+=("-specs=/usr/lib/gcc/specs/hardened-ld")
 else
 	# Clang can handle PIE and PIC properly, let it do the old job.
 	if ((AB_FLAGS_PIC)); then LDFLAGS_COMMON+=('-fPIC') CFLAGS_COMMON+=('-fPIC'); fi
