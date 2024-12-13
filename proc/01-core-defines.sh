@@ -75,5 +75,6 @@ fi
 abisdefined PKGREL || PKGREL=0
 abisdefined PKGEPOCH || PKGEPOCH=0
 
-load_strict "$AB/arch/_common_switches.sh"
+# load builtins early: _common_switches may require some builtins
 load_strict "$AB"/lib/builtin.sh
+load_strict "$AB/arch/_common_switches.sh"
