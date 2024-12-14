@@ -33,6 +33,15 @@ private:
   LogLevel m_level;
 };
 
+class NullLogger final : public BaseLogger {
+public:
+  NullLogger() {}
+  void log(LogLevel lvl, std::string message) override;
+  void logDiagnostic(Diagnostic diagnostic) override;
+  void logException(std::string message) override;
+  const char *loggerName() override { return "NullLogger"; }
+};
+
 class PlainLogger final : public BaseLogger {
 public:
   PlainLogger() {}

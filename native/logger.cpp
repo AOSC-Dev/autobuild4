@@ -25,6 +25,11 @@ inline const char *level_to_string(const LogLevel level) {
   return "UNK";
 }
 
+void NullLogger::log([[maybe_unused]] const LogLevel lvl,
+                     [[maybe_unused]] const std::string message) {}
+void NullLogger::logDiagnostic([[maybe_unused]] Diagnostic diagnostic) {}
+void NullLogger::logException([[maybe_unused]] std::string message) {}
+
 void PlainLogger::log(const LogLevel lvl, const std::string message) {
   io_lock_guard guard(this->m_io_mutex);
   switch (lvl) {

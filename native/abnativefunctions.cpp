@@ -1461,4 +1461,9 @@ int dump_defines() {
 
   return ab_dump_variables(names, write_file);
 }
+
+void disable_logger() {
+  delete get_logger();
+  logger = reinterpret_cast<Logger *>(new NullLogger());
+}
 } // extern "C"

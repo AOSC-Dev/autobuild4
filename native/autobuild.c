@@ -18,19 +18,30 @@ int autobuild_builtin(WORD_LIST *list) {
   int rval = EXECUTION_SUCCESS;
   prctl(PR_SET_NAME, "autobuild");
 
+  char action = 0;
   reset_internal_getopt();
-  while ((opt = internal_getopt(list, "E:p")) != -1) {
+  while ((opt = internal_getopt(list, "E:pq")) != -1) {
     switch (opt) {
       CASE_HELPOPT;
     case 'E':
       // TODO: tools
       return 0;
     case 'p':
-      return dump_defines();
+      action = opt;
+      break;
+    case 'q':
+      disable_logger();
+      break;
     default:
       builtin_usage();
       return (EX_USAGE);
     }
+  }
+  switch (action) {
+  case 0:
+    break;
+  case 'p':
+    return dump_defines();
   }
   list = loptend;
   if (!list) {
