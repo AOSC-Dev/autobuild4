@@ -413,16 +413,16 @@ static int set_arch_variables(const char *arch = nullptr) {
   }
 
   // set ARCH variables
-  auto this_arch = ab_get_current_architecture();
-  if (arch != nullptr) {
-    this_arch = (new std::string(arch))->c_str();
-  }
+  auto this_arch = arch == nullptr ? std::string(ab_get_current_architecture())
+                                   : std::string(arch);
   // ARCH=$(abdetectarch)
-  bind_global_variable("ARCH", const_cast<char *>(this_arch), ASS_NOEVAL);
+  bind_global_variable("ARCH", const_cast<char *>(this_arch.c_str()), ASS_NOEVAL);
   // ABHOST=ARCH
-  bind_global_variable("ABHOST", const_cast<char *>(this_arch), ASS_NOEVAL);
+  bind_global_variable("ABHOST", const_cast<char *>(this_arch.c_str()),
+                       ASS_NOEVAL);
   // ABBUILD=ARCH
-  bind_global_variable("ABBUILD", const_cast<char *>(this_arch), ASS_NOEVAL);
+  bind_global_variable("ABBUILD", const_cast<char *>(this_arch.c_str()),
+                       ASS_NOEVAL);
 
   const std::string arch_triple = map_table[this_arch];
   // set HOST
