@@ -28,7 +28,11 @@ inline const char *level_to_string(const LogLevel level) {
 void NullLogger::log([[maybe_unused]] const LogLevel lvl,
                      [[maybe_unused]] const std::string message) {}
 void NullLogger::logDiagnostic([[maybe_unused]] Diagnostic diagnostic) {}
-void NullLogger::logException([[maybe_unused]] std::string message) {}
+void NullLogger::logException([[maybe_unused]] std::string message) {
+  if (!message.empty()) {
+    std::cerr << message << std::endl;
+  }
+}
 
 void PlainLogger::log(const LogLevel lvl, const std::string message) {
   io_lock_guard guard(this->m_io_mutex);
