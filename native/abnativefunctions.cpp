@@ -397,7 +397,7 @@ static void register_logger_from_env() {
   logger = reinterpret_cast<Logger *>(new PlainLogger());
 }
 
-static int set_arch_variables() {
+static int set_arch_variables(const char *arch = nullptr) {
   const std::string ab_path = get_self_path();
   if (ab_path.empty() && (!set_self_path())) {
     return 1;
@@ -413,7 +413,10 @@ static int set_arch_variables() {
   }
 
   // set ARCH variables
-  constexpr const auto this_arch = ab_get_current_architecture();
+  auto this_arch = ab_get_current_architecture();
+  if (arch != nullptr) {
+    this_arch = (new std::string(arch))->c_str();
+  }
   // ARCH=$(abdetectarch)
   bind_global_variable("ARCH", const_cast<char *>(this_arch), ASS_NOEVAL);
   // ABHOST=ARCH
@@ -1465,5 +1468,11 @@ int dump_defines() {
 void disable_logger() {
   delete get_logger();
   logger = reinterpret_cast<Logger *>(new NullLogger());
+}
+
+void set_custom_arch(const char *arch) {
+  get_logger()->info(
+      fmt::format("Overriding target architecture to {0}", arch));
+  set_arch_variables(arch);
 }
 } // extern "C"

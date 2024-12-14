@@ -20,7 +20,7 @@ int autobuild_builtin(WORD_LIST *list) {
 
   char action = 0;
   reset_internal_getopt();
-  while ((opt = internal_getopt(list, "E:pq")) != -1) {
+  while ((opt = internal_getopt(list, "E:pqa:")) != -1) {
     switch (opt) {
       CASE_HELPOPT;
     case 'E':
@@ -31,6 +31,9 @@ int autobuild_builtin(WORD_LIST *list) {
       break;
     case 'q':
       disable_logger();
+      break;
+    case 'a':
+      set_custom_arch(list_optarg);
       break;
     default:
       builtin_usage();

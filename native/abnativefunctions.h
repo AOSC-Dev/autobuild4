@@ -12,6 +12,7 @@ int register_builtin_variables();
 int start_proc_00();
 int dump_defines();
 void disable_logger();
+void set_custom_arch(const char *arch);
 
 #ifdef __cplusplus
 } // extern "C"
