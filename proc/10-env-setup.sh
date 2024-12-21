@@ -16,3 +16,6 @@ if [ -e /usr/lib/hook_uname.so ]; then
     abinfo 'hook_uname.so detected, preloading ...'
     export LD_PRELOAD="/usr/lib/hook_uname.so:$LD_PRELOAD"
 fi
+
+# Note: Set up non-interactive mode for Node.js Corepack.
+export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
