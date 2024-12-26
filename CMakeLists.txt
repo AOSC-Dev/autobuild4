@@ -89,10 +89,11 @@ add_custom_command(
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/GenerateConfig.cmake
 )
 
+set(SPRIAL_DATA_FILE "${CMAKE_CURRENT_SOURCE_DIR}/data/lut_sonames.cpp.inc")
 if (AB4_REGENERATE_SPRIAL_DATA)
   find_package(Python3 COMPONENTS Interpreter REQUIRED)
   add_custom_command(
-    OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/data/lut_sonames.cpp.inc"
+    OUTPUT "${SPRIAL_DATA_FILE}"
     COMMAND "${Python3_EXECUTABLE}"
       "${CMAKE_CURRENT_SOURCE_DIR}/build_spiral_lut.py"
     DEPENDS
