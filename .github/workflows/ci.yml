@@ -19,7 +19,7 @@ jobs:
     - name: Test
       run: |
         sudo apt-get install -y meson
-        sed -i 's|python2|python3|g' templates/15-python.sh proc/00-python-defines.sh
+        sed -i 's|python2|python3|g' templates/16-python.sh proc/00-python-defines.sh
         sudo mkdir -p /etc/autobuild
         echo -ne "ABMPM=dpkg\nMTER=\"CI <i@aosc.io>\"\n" | sudo tee /etc/autobuild/ab4cfg.sh
         cd build && sudo ctest -V
