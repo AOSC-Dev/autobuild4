@@ -133,8 +133,22 @@ enable_testing()
 add_subdirectory(tests)
 
 if (NOT LIBELF_FOUND)
-  message(STATUS "libelf not found on the system, falling back to vendored version")
-  # TODO
+  message(STATUS "libelf not found on the system, falling back to external version")
+  include(ExternalProject)
+  ExternalProject_Add(
+    elfutils
+    URL "https://sourceware.org/elfutils/ftp/0.192/elfutils-0.192.tar.bz2"
+    URL_HASH SHA512=543188f5f2cfe5bc7955a878416c5f252edff9926754e5de0c6c57b132f21d9285c9b29e41281e93baad11d4ae7efbbf93580c114579c182103565fe99bd3909
+    CONFIGURE_COMMAND "./configure" "CC=${CMAKE_C_COMPILER}" "CFLAGS=${CMAKE_C_FLAGS}"
+    DOWNLOAD_EXTRACT_TIMESTAMP YES
+    BUILD_IN_SOURCE YES
+    BUILD_COMMAND bash -ec "make -C lib && make -C libelf libelf_pic.a libelf.a"
+    INSTALL_COMMAND ""
+  )
+  ExternalProject_Get_property(elfutils SOURCE_DIR)
+  target_include_directories(autobuild PRIVATE "${SOURCE_DIR}/libelf" "${SOURCE_DIR}/lib")
+  target_link_libraries(autobuild PRIVATE "${SOURCE_DIR}/libelf/libelf_pic.a")
+  add_dependencies(autobuild elfutils)
 else()
   target_include_directories(autobuild PRIVATE "${LIBELF_INCLUDE_DIRS}")
   target_link_directories(autobuild PRIVATE "${LIBELF_LIBRARY_DIRS}")
