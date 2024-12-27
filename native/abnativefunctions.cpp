@@ -1348,15 +1348,17 @@ static int abjson_get_item(WORD_LIST *list) {
 }
 
 static int abspiral_from_sonames(WORD_LIST *list) {
-  constexpr const char *varname_spiral_provides_sonames = "__ABSPIRAL_PROVIDES_SONAMES";
-  auto sonames = get_all_args_vector(list->next);
+  constexpr const char *varname_spiral_provides_sonames =
+      "__ABSPIRAL_PROVIDES_SONAMES";
+  auto sonames = get_all_args_vector(list);
   if (sonames.empty())
     return EX_BADUSAGE;
   std::unordered_set<std::string> spiral_provides_sonames{};
   const int ret = spiral_from_sonames(sonames, spiral_provides_sonames);
   if (ret != 0)
     return ret;
-  ab_set_to_bash_array(varname_spiral_provides_sonames, spiral_provides_sonames);
+  ab_set_to_bash_array(varname_spiral_provides_sonames,
+                       spiral_provides_sonames);
   return 0;
 }
 
