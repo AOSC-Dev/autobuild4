@@ -1466,6 +1466,43 @@ void disable_logger() {
   logger = reinterpret_cast<Logger *>(new NullLogger());
 }
 
+void autobuild_crash_handler(int sig, siginfo_t *info, void *ucontext) {
+  auto *log = reinterpret_cast<BaseLogger *>(logger);
+  if (log) {
+    Diagnostic diagnostic{};
+    diagnostic.code = sig;
+    diagnostic.level = LogLevel::Critical;
+    void *addr = nullptr;
+    switch (sig) {
+    case SIGSEGV:
+    case SIGILL:
+    case SIGFPE:
+    case SIGBUS:
+      addr = info ? info->si_addr : nullptr;
+      break;
+    default:
+      break;
+    }
+    diagnostic.frames.push_back(DiagnosticFrame{
+        .file = "<native code>",
+        .function = "<native function>",
+        .line = 0,
+    });
+    log->logDiagnostic(diagnostic);
+    log->error(fmt::format("Got signal {0} at address {1}", sig, addr));
+    log->logException("autobuild received signal: " +
+                      std::string(strsignal(sig)));
+  }
+  exit(1);
+}
+
+void setup_crash_handler() {
+  struct sigaction action{};
+  action.sa_sigaction = autobuild_crash_handler;
+  action.sa_flags = SA_SIGINFO;
+  sigaction(SIGSEGV, &action, nullptr);
+}
+
 void set_custom_arch(const char *arch) {
   get_logger()->info(
       fmt::format("Overriding target architecture to {0}", arch));

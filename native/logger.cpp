@@ -174,7 +174,8 @@ void ColorfulLogger::logDiagnostic(Diagnostic diagnostic) {
       // first call
       buffer += fmt::format("\e[0mIn file included from \e[1m{0}:{1}\n",
                             frame.file, frame.line);
-      continue;
+      if (diagnostic.frames.size() > 1)
+        continue;
     }
     if ((it + 1) == diagnostic.frames.rend()) {
       // last call

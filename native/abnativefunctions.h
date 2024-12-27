@@ -13,6 +13,7 @@ int start_proc_00();
 int dump_defines();
 void disable_logger();
 void set_custom_arch(const char *arch);
+void setup_crash_handler();
 
 #ifdef __cplusplus
 } // extern "C"
