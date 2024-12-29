@@ -43,9 +43,9 @@ if [[ "$ABBUILD" == "$ABHOST" ]]; then
 	fi
 elif [[ "$ABHOST" == "optenv32" ]]; then
 	if bool "$USECLANG"; then
-		# FIXME: LLVM must be patched to recognize libdirs and
-		# includedirs of optenvs in order to get them to compile.
-		abdie "Sorry, optenv targets currently can not handle USECLANG=1."
+		export CC=i686-aosc-linux-gnu-clang CXX=i686-aosc-linux-gnu-clang++ \
+		    OBJC=i686-aosc-linux-gnu-clang OBJCXX=i686-aosc-linux-gnu-clang++ \
+			LD=i686-aosc-linux-gnu-ld
 	else
 		export \
 			CC=i686-aosc-linux-gnu-gcc CXX=i686-aosc-linux-gnu-g++ \
