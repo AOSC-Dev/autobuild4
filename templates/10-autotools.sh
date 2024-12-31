@@ -3,8 +3,7 @@
 ##@copyright GPL-2.0+
 
 build_autotools_probe() {
-	[ -x "${configure=$SRCDIR/configure}" ] || \
-		[ -x "$SRCDIR"/autogen.sh ] || \
+	[ -x "$SRCDIR"/autogen.sh ] || \
 		[ -x "$SRCDIR"/bootstrap ] || \
 		[ -f "$SRCDIR"/configure.ac ]
 }
