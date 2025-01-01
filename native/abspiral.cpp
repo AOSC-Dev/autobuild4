@@ -16,7 +16,7 @@ void insert_from_lut(const std::string &key, const std::string &suffix,
     const std::string package_string{search};
     std::unordered_set<std::string> package_names;
     size_t pos = 0, prev_pos = 0;
-    while ((pos = package_string.find(',', pos) != std::string::npos)) {
+    while ((pos = package_string.find(',', pos)) != std::string::npos) {
       package_names.emplace(package_string.substr(prev_pos, pos - prev_pos));
       prev_pos = ++pos;
     }
