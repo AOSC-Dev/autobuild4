@@ -22,7 +22,7 @@ ab_arch_setflags() {
             abdbg "HWCAPS is disabled for the current package."
         else
             hwcaps+=("${HWCAPS[@]}")
-            abdbg "HWCAPS subtargets: ${hwcaps[@]}"
+            abdbg "HWCAPS subtargets: ${hwcaps[*]}"
             if [ "${#hwcaps[@]}" -lt 1 ] ; then
                 abdie "HWCAPS support is enabled for $ARCH, but no subtargets specified. Please check ${AB}/arch/$ARCH.sh."
             fi
