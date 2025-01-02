@@ -59,7 +59,3 @@ jsondata_get_arch_groups(const std::string &ab_path,
 
   return groups;
 }
-
-std::string jsondata_serialize_map(const std::unordered_map<std::string, const char*> &map) {
-  return json{map}.dump();
-}
