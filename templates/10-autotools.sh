@@ -5,7 +5,8 @@
 build_autotools_probe() {
 	[ -x "$SRCDIR"/autogen.sh ] || \
 		[ -x "$SRCDIR"/bootstrap ] || \
-		[ -f "$SRCDIR"/configure.ac ]
+		[ -f "$SRCDIR"/configure.ac ] || \
+		[ -f "$SRCDIR"/configure.in ]
 }
 
 build_autotools_update_base() {
