@@ -34,5 +34,5 @@ CFLAGS_COMMON_ARCH=('-fomit-frame-pointer' '-march=x86-64' '-mtune=sandybridge' 
 RUSTFLAGS_COMMON_ARCH=('-Clinker=/opt/32/bin/clang' '-Ctarget-cpu=x86-64')
 ab_remove_args RUSTFLAGS_COMMON_OPTI_LTO '-Clinker=clang'
 
-export PKG_CONFIG_PATH=/opt/32/lib/pkgconfig
+export PKG_CONFIG_PATH="/opt/32/lib/pkgconfig:/usr/share/pkgconfig"
 unset LDFLAGS_COMMON_CROSS_BASE
