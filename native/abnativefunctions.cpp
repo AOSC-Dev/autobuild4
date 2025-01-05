@@ -1492,17 +1492,19 @@ void autobuild_crash_handler(int sig, siginfo_t *info, void *ucontext) {
     });
     log->logDiagnostic(diagnostic);
     log->error(fmt::format("Got signal {0} at address {1}", sig, addr));
-    log->logException("autobuild received signal: " +
-                      std::string(strsignal(sig)));
+    log->logException(fmt::format("autobuild (PID {0}) received signal: {1}",
+                                  getpid(), std::string(strsignal(sig))));
   }
   exit(1);
 }
 
 void setup_crash_handler() {
-  struct sigaction action{};
+  struct sigaction action {};
   action.sa_sigaction = autobuild_crash_handler;
   action.sa_flags = SA_SIGINFO;
   sigaction(SIGSEGV, &action, nullptr);
+  sigaction(SIGABRT, &action, nullptr);
+  sigaction(SIGBUS, &action, nullptr);
 }
 
 void set_custom_arch(const char *arch) {
