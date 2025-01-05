@@ -30,7 +30,7 @@ export ABCONFWRAPPER="linux32"
 # Disable Spiral provides generation.
 ABSPIRAL=0
 
-CFLAGS_COMMON_ARCH=('-fomit-frame-pointer' '-march=x86-64' '-mtune=sandybridge' '-msse2' '-m32')
+CFLAGS_COMMON_ARCH=('-fomit-frame-pointer' '-march=x86-64' '-mtune=znver4' '-msse2' '-m32')
 RUSTFLAGS_COMMON_ARCH=('-Clinker=/opt/32/bin/clang' '-Ctarget-cpu=x86-64')
 ab_remove_args RUSTFLAGS_COMMON_OPTI_LTO '-Clinker=clang'
 
