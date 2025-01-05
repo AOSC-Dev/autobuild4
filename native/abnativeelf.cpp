@@ -64,7 +64,7 @@ find_elf_section_header(const std::vector<GElf_Shdr> &section_headers,
       continue;
     const Elf64_Word name_idx = shdr.sh_name;
     const char *section_name = elf_strptr(elf_file, shstrndx, name_idx);
-    if (memcmp(section_name, name, strlen(name)) != 0)
+    if (!section_name || memcmp(section_name, name, strlen(name)) != 0)
       continue;
     return &shdr;
   }
