@@ -92,7 +92,7 @@ build_rust_build() {
 			|| abdie "Compilation failed: $?."
 	else
 		abinfo 'Using fallback build method ...'
-	  cargo build --workspace "${DEFAULT_CARGO_CONFIG[@]}" \
+	  cargo build "${DEFAULT_CARGO_CONFIG[@]}" \
 			--release --locked \
 			"${CARGO_AFTER[@]}" \
 			|| abdie "Compilation failed: $?."
