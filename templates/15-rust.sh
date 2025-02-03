@@ -84,8 +84,6 @@ build_rust_build() {
 	local manifest
 	manifest="$(cargo read-manifest --manifest-path "$SRCDIR"/Cargo.toml || true)"
 	abjson_get_item "${manifest}" "['targets'][0]['kind'][0]" _JSON_OUTPUT || true
-	local workspace_flag
-	workspace_flag='--workspace'
 	if [ "${_JSON_OUTPUT}" = 'bin' ]; then
 		cargo install --locked -f --path "$SRCDIR" \
 			"${DEFAULT_CARGO_CONFIG[@]}" \
@@ -94,12 +92,14 @@ build_rust_build() {
 			|| abdie "Compilation failed: $?."
 	else
 		abinfo 'Using fallback build method ...'
-	  if [[ "${CARGO_AFTER[@]}" =~ '-p' ]]; then
-		workspace_flag=''
+	  parsed_flags="$(getopt -o ':p' -- "${CARGO_AFTER[@]}" || true)"
+	  parsed_flags=(${parsed_flags})
+	  if [[ "${parsed_flags}" = '-p' ]]; then
+		DEFAULT_CARGO_CONFIG+=('--workspace')
 	  fi
 	  cargo build "${DEFAULT_CARGO_CONFIG[@]}" \
 			--release --locked \
-			"${CARGO_AFTER[@]}" "${workspace_flag}" \
+			"${CARGO_AFTER[@]}" \
 			|| abdie "Compilation failed: $?."
 		abinfo "Installing binaries in the workspace ..."
 	  find "$SRCDIR"/target/release \
