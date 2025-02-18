@@ -3,7 +3,7 @@
 ##@copyright GPL-2.0+
 
 # Paths to be removed from PKGDIR.
-OPTENV_SHARED_PATHS=("$PREFIX/etc" "$PREFIX/share" "$PREFIX/var" "/etc" "/share" "/var" "/usr/share")
+OPTENV_SHARED_PATHS=("$PREFIX/etc" "$PREFIX/share" "$PREFIX/var")
 filter_optenv_drop_shared_files() {
 	if [[ "$ABHOST" = optenv* ]] ; then
 		abinfo "optenv target detected, removing shared files from the package directory ..."
@@ -12,20 +12,6 @@ filter_optenv_drop_shared_files() {
 				abinfo "Removing $rmpath from the package directory ..."
 				# Probably way too verbose.
 				rm -r "$PKGDIR"/"$rmpath"
-				case "${rmpath/$PREFIX\//}" in
-					etc)
-						abinfo "Replacing $PREFIX/$rmpath with symlink to /etc ..."
-						ln -sv /etc "$PKGDIR/$PREFIX/etc"
-						;;
-					var)
-						abinfo "Replacing $PREFIX/$rmpath with symlink to /var ..."
-						ln -sv /var "$PKGDIR/$PREFIX/var"
-						;;
-					share)
-						abinfo "Replacing $PREFIX/$rmpath with symlink to /usr/share ..."
-						ln -sv /usr/share "$PKGDIR/$PREFIX/share"
-						;;
-				esac
 			fi
 		done
 	else
