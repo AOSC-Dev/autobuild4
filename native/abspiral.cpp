@@ -5,7 +5,6 @@
 #include <unordered_map>
 #include <vector>
 
-using lut_t = std::unordered_map<std::string, std::unordered_set<std::string>>;
 // defined in abspiral_data.cpp
 extern const char *lut_lookup(const char *soname);
 
