@@ -20,8 +20,8 @@ CFLAGS_HWCAPS_power10=("${CFLAGS_COMMON_ARCH_BASE[@]}" '-mcpu=power10' '-mtune=p
 # ABI flags in CPPFLAGS confuses autoconf's compile test routines.
 # AC_LANG_PROGRAM calls $CC with the following arguments:
 #    $CC $CFLAGS $CPPFLAGS
-# When configure.ac tries to add someting to CFLAGS, the resulting
-# combination will still be overriden by CPPFLAGS.
+# When configure.ac tries to add something to CFLAGS, the resulting
+# combination will still be overridden by CPPFLAGS.
 CPPFLAGS_HWCAPS_power9=('-mcpu=power9' '-mtune=power9' '-mvsx')
 CPPFLAGS_HWCAPS_power10=('-mcpu=power10' '-mtune=power10' '-mvsx' '-mmma')
 
