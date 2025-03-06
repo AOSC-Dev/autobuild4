@@ -6,5 +6,5 @@
 CFLAGS_COMMON_ARCH=('-O2' '-fno-tree-ch' '-ffunction-sections' '-fdata-sections')
 LDFLAGS_COMMON_ARCH=('-Wl,--gc-sections')
 
-CFLAGS_COMMON_ARCH=('-march=armv7-a' '-mfloat-abi=hard' '-mfpu=neon' '-mthumb')
+CFLAGS_COMMON_ARCH+=('-march=armv7-a' '-mfloat-abi=hard' '-mfpu=neon' '-mthumb')
 CFLAGS_GCC_ARCH=('-mtune=cortex-a7')

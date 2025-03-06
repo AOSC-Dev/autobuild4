@@ -5,7 +5,7 @@
 # Retro: Overriding mainline definitions, and take more interest in reducing code size.
 CFLAGS_COMMON_ARCH=('-O2' '-fno-tree-ch' '-ffunction-sections' '-fdata-sections')
 LDFLAGS_COMMON_ARCH=('-Wl,--gc-sections')
-CFLAGS_COMMON_ARCH=('-m64' '-mcpu=G5' '-maltivec' '-mabi=altivec' '-msecure-plt' '-mhard-float')
+CFLAGS_COMMON_ARCH+=('-m64' '-mcpu=G5' '-maltivec' '-mabi=altivec' '-msecure-plt' '-mhard-float')
 
 # Override some RUSTFLAGS sure that the correct linker is used with NOLTO=1.
 CFLAGS_GCC_OPTI_LTO=("${CFLAGS_COMMON_ARCH_LTO[@]}" '-flto-partition=none')

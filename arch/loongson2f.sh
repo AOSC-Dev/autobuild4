@@ -6,7 +6,7 @@
 CFLAGS_COMMON_ARCH=('-O2' '-fno-tree-ch' '-ffunction-sections' '-fdata-sections')
 LDFLAGS_COMMON_ARCH=('-Wl,--gc-sections')
 
-CFLAGS_COMMON_ARCH=('-mabi=64' '-march=mips3')
+CFLAGS_COMMON_ARCH+=('-mabi=64' '-march=mips3')
 CFLAGS_GCC_ARCH=('-mtune=loongson2f' '-mloongson-mmi' '-Wa,-mfix-loongson2f-nop')
 
 # Override some LTO flags to avoid partition size errors during linkage.
