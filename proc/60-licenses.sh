@@ -5,7 +5,7 @@
 # TODO: Multiple exceptions, Unknown exceptions
 
 mkdir -p "$PKGDIR/usr/share/doc/$PKGNAME"
-find "$SRCDIR" -maxdepth 1 '(' -name 'COPYING*' -or -name 'LICENSE*' -or -name 'LICENCE*' ')' \
+find "$SRCDIR" -maxdepth 1 '(' -name 'COPYING*' -or -name 'LICENSE*' -or -name 'LICENCE*' -or -name 'COPYRIGHT*' ')' \
     -exec cp -L -r -v --no-preserve=mode '{}' "$PKGDIR/usr/share/doc/$PKGNAME" ';'
 
 [ -n "$(ls -A "$PKGDIR/usr/share/doc/$PKGNAME")" ] ||
