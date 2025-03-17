@@ -1,0 +1,5 @@
+set(CONTRIB_SCRIPTS
+	abpoutil
+)
+
+install(PROGRAMS ${CONTRIB_SCRIPTS} TYPE BIN)

@@ -1,0 +1,298 @@
+#!/bin/bash
+# shellcheck disable=SC2268,SC1090
+
+usage() {
+	cat >&2 << EOF
+Usage: $0 ACTION [...] DEFINES
+
+Perform operations for PO files in the ABBS tree. You can generate, create,
+update and check the PO template and PO catalog files.
+
+Actions:
+	generate	Generate a PO Template from \${GETTEXT_SRCS[@]}
+			defined in the autobuild/defines file.
+	create LANG	Create an empty PO file for LANG, from the template
+			file \$GETTEXT_DOMAIN.pot.
+	update		Update the PO Template file and all translations.
+	check		Check if there's any fuzzy messages in the translated
+			PO files.
+
+Positional Arguments:
+	- DEFINES:
+		Path to the defines file.
+
+NOTES:
+	- This script only works with one defines file per invocation.
+EOF
+}
+
+action="$1"
+shift
+defines=defines
+ab_dir=.
+po_dir="$ab_dir"/po
+
+# Utility functions.
+
+# Transform the given string to variable names for indirect expansion.
+# For example:
+# "a/b/c/d-123 456" -> "a_b_c_d_123_456"
+# Then it will be used as:
+# 	var="$(transform_varname "a/b/c/d-123 456")"
+# 	x=${!var}
+transform_varname() {
+	local str="$1" ret
+	ret="${str//[^0-9a-zA-Z_]/_}"
+	# Variable names should start with a letter or underscore.
+	# Strip a digit from the string to see if it remains the same.
+	if [ "${ret#[0-9]}" = "${ret}" ] ; then
+		echo "$ret"
+	else
+		echo "_$ret"
+	fi
+}
+
+# Perform QA checks before running the specified action.
+check_defines() {
+	local nodef=() nosrc=()
+	local _var _path
+	# Check required variables.
+	for i in GETTEXT_DOMAIN GETTEXT_LINGUAS GETTEXT_SRCS ; do
+		_var="${i}[*]"
+		if [ "x${!_var}" = "x" ] ; then
+			nodef+=("$i")
+		fi
+	done
+	if [ "${#nodef[@]}" -ge 1 ] ; then
+		echo -e "ERROR: Missing Gettext related definition in defines:\n\t${nodef[*]}" >&2
+		exit 1
+	fi
+	if [ "${GETTEXT_DOMAIN##aosc-}" = "$GETTEXT_DOMAIN" ] ; then
+		echo "ERROR: GETTEXT_DOMAIN must begin with \`aosc-', got \`$GETTEXT_DOMAIN'." >&2
+		exit 1
+	fi
+	for src in "${GETTEXT_SRCS[@]}" ; do
+		# Check if this soruce file actually exists
+		_path="$ab_dir"/"$src"
+		if ! [ -f "$_path" ] ; then
+			nosrc+=("autobuild/$src")
+		fi
+	done
+	if [ "${#nosrc[@]}" -gt 0 ] ; then
+		echo "ERROR: The following source file(s) defined in GETTEXT_SRCS do not exist:" >&2
+		for src in "${nosrc[@]}" ; do
+			echo "- $src" >&2
+		done
+		echo "Please note that all sources defined here must stay within the autobuild directory." >&2
+		exit 1
+	fi
+}
+
+try_read_defines() {
+	defines="$1"
+	if [ x"$defines" = "x" ] ; then
+		if [ -e "$PWD"/defines ] ; then
+			defines="$PWD"/defines
+		elif [ -e "$PWD"/autobuild/defines ] ; then
+			defines="$PWD"/autobuild/defines
+		elif [ -e "$PWD"/../defines ] ; then
+			defines="$(realpath "$PWD"/..)"/defines
+		else
+			echo "ERROR: no defines file is found under the current directory." >&2
+			usage
+			exit 1
+		fi
+	elif [ ! -f "$defines" ] ; then
+		echo "ERROR: Specified file is not found or is not a regular file." >&2
+		usage
+		exit 1
+	elif [ "$(basename "$defines")" != "defines" ] ; then
+		echo "ERROR: defines file required, got $defines". >&2
+		usage
+		exit 1
+	fi
+	ab_dir="$(dirname "$defines")"
+	po_dir="$ab_dir/po"
+	echo "-- Using defines file: $defines"
+	source "$defines"
+	check_defines
+}
+
+preq_check() {
+	if ! [ -d "$ab_dir"/po ] ; then
+		echo "ERROR: autobuild/po directory does not exist." >&2
+		echo "Perhaps you should run \`$0 gen $defines' to create one." >&2
+		exit 1
+	fi
+	# Check if the POT file actually exists.
+	if [ ! -e "$ab_dir"/po/"$GETTEXT_DOMAIN".pot ] ; then
+		echo "ERROR: PO Template $GETTEXT_DOMAIN.pot does not exist!" >&2
+	fi
+	# Skip the check if we're going to update the POT and PO files.
+	if [ "x$action" = "xupdate" ] ; then
+		return 0
+	fi
+	# Check if the POT is older than sources.
+	gettext_mtime_pot=$(stat --printf "%Y" "$po_dir"/"$GETTEXT_DOMAIN".pot)
+	gettext_mtime_src=0
+	for src in "${GETTEXT_SRCS[@]}" ; do
+		_mtime=$(stat --printf "%Y" "$ab_dir"/"$src")
+		if [ "$_mtime" -gt "$gettext_mtime_src" ] ; then
+			gettext_mtime_src="$_mtime"
+		fi
+	done
+	if [ "$gettext_mtime_src" -gt "$gettext_mtime_pot" ] ; then
+		# Sources used to generate the POT is newer than the template file.
+		echo "ERROR: Source files are newer than the PO Template $GETTEXT_DOMAIN.pot!" >&2
+		echo "You can run \`$0 update $defines' to update the template file." >&2
+	fi
+}
+
+create_lang() {
+	local newlang="$1" langcodes=() has_lang=0
+	if [ "x$1" = "x" ] ; then
+		echo "ERROR: Invalid usage: Language code required." >&2
+		return 1
+	fi
+	langcodes=("$(locale -a | sed 's|\..*||g' | sort | uniq)")
+	for l in "${langcodes[@]}" ; do
+		if [ "x$l" = "x$lang" ] ; then
+			has_lang=1
+		fi
+	done
+	if [ ! "x$has_lang" = "x1" ] ; then
+		echo "ERROR: Provided language code \`$newlang' is not in the list of glibc's language codes." >&2
+		echo "You can run \`locale -a | sed 's|\\..*||g' | sort | uniq\` to get the language code list." >&2
+		exit 1
+	fi
+	echo "-- Creating untranslated PO file for $newlang ..."
+	msginit -i "$po_dir"/"$GETTEXT_DOMAIN.pot" -o "$po_dir"/"$newlang".po \
+		--language "${newlang%%.*}.UTF-8"
+	msgfmt --statistics -o /dev/null "$po_dir"/"$newlang".po
+	echo "-- Succeffully initialized PO file at $po_dir/$newlang.po."
+}
+
+generate_pot() {
+	local _cursrc_lang _var _srcname
+	if [ -f "$po_dir"/"$GETTEXT_DOMAIN".pot ] ; then
+		echo "ERROR: POT file $po_dir/$GETTEXT_DOMAIN.pot already exists." >&2
+		echo "You may want to update that POT file instead of creating a new one." >&2
+		exit 1
+	fi
+	echo "-- Creating PO template for maintscripts of $PKGNAME ..."
+	pushd "$ab_dir"
+	# If it contains several sources, generate them one by one,
+	# then concatenate them together using msgcat.
+	for src in "${GETTEXT_SRCS[@]}" ; do
+		_var="$(transform_varname "${src##*/}")"
+		_var="GETTEXT_SRCLANG_$src"
+		# Using namerefs to avoid invalid indirection.
+		declare -n _cursrc_lang="$_var"
+		if [ "x$_cursrc_lang" = "x" ] ; then
+			_cursrc_lang="Shell"
+		fi
+		touch "$po_dir"/"$GETTEXT_DOMAIN".pot
+		xgettext -o "$po_dir"/"$GETTEXT_DOMAIN".pot \
+			"$src" \
+			--language="$_cursrc_lang" \
+			--copyright-holder="AOSC OS Maintainers <maintainers@aosc.io>" \
+			--package-name="$GETTEXT_DOMAIN" \
+			--package-version="0.1.0" \
+			--join-existing
+	done
+	popd
+	echo "-- Successfully created PO template file at $po_dir/$GETTEXT_DOMAIN.pot."
+}
+
+update_po() {
+	echo "-- Updating PO template ..."
+	pushd "$ab_dir"
+	for src in "${GETTEXT_SRCS[@]}" ; do
+		_var="$(transform_varname "${src##*/}")"
+		_var="GETTEXT_SRCLANG_$src"
+		# Using namerefs to avoid invalid indirection.
+		declare -n _cursrc_lang="$_var"
+		if [ "x$_cursrc_lang" = "x" ] ; then
+			_cursrc_lang="Shell"
+		fi
+		xgettext -o "$po_dir"/"$GETTEXT_DOMAIN".pot \
+			"$src" \
+			--language="$_cursrc_lang" \
+			--copyright-holder="AOSC OS Maintainers <maintainers@aosc.io>" \
+			--package-name="$GETTEXT_DOMAIN" \
+			--package-version="0.1.0" \
+			--join-existing
+	done
+	popd
+	echo "-- Updating PO catalogs ..."
+	for lang in "${GETTEXT_LINUGAS[@]}" ; do
+		# NOTE: msgupdate -U def.po ref.pot
+		# NOTE: make sure po files are newer than the POT file
+		msgupdate -U "$po_dir"/"$lang".po \
+			"$po_dir"/"$GETTEXT_DOMAIN".pot
+		touch "$po_dir"/"$lang".po
+	done
+	if ! check_po ; then
+		echo "ERROR: Error(s) detected in the updated translations." >&2
+		echo "You must fix them before committing." >&2
+		return 1
+	fi
+	echo "-- Hooray! Successfully updated the PO files, no new strings to translate for now."
+	return 0
+}
+
+check_po() {
+	local bad_langs=()
+	echo "-- Checking translated catalogs ..."
+	for lang in "${GETTEXT_LINGUAS[@]}" ; do
+		echo "-- Checking $lang ..."
+		# Output the stats of the updated PO file.
+		# NOTE: This program does not fail if fuzzy messages are present in
+		# the source file.
+		msgfmt --statistics -o /dev/null "$po_dir"/"$lang".po
+		if ! msgcmp -N "$po_dir"/"$lang".po "$po_dir"/"$GETTEXT_DOMAIN".pot ; then
+			echo "ERROR: Fuzzy strings detected. Please translate them before committing." >&2
+			bad_langs+=("$lang")
+		else
+			echo "-- No errors found in $lang.po"
+		fi
+	done
+	if [ "${#bad_langs[@]}" -gt 0 ] ; then
+		echo "ERROR: Error(s) detected. Please check the output for details." >&2
+		return 1
+	fi
+	echo "-- Check complete, ${#GETTEXT_LINGUAS[@]} languages checked, no errors found."
+	return 0
+}
+
+case "${action,,}" in
+	g|ge|gen|generate)
+		action="generate"
+		try_read_defines "$1"
+		generate_pot
+		;;
+	cr|cre|crea|create)
+		action="create"
+		new_lang="$1"
+		shift
+		try_read_defines "$1"
+		preq_check
+		create_lang "$new_lang"
+		;;
+	u|upd|update)
+		action="update"
+		try_read_defines "$1"
+		preq_check
+		update_po
+		;;
+	c|ch|chk|check)
+		action="check"
+		try_read_defines "$1"
+		preq_check
+		check_po
+		;;
+	*)
+		echo "ERROR: Invalid action $action." >&2
+		usage
+		exit 1
+esac

@@ -168,3 +168,5 @@ install(PROGRAMS "${CMAKE_CURRENT_BINARY_DIR}/ab4.sh" DESTINATION "${CMAKE_INSTA
 install(TARGETS autobuild LIBRARY DESTINATION "${AB_INSTALL_PREFIX}")
 install(DIRECTORY arch filters helpers lib pm proc qa sets templates DESTINATION "${AB_INSTALL_PREFIX}")
 install(DIRECTORY etc/autobuild DESTINATION "${CMAKE_INSTALL_FULL_SYSCONFDIR}")
+
+add_subdirectory(contrib)
