@@ -66,7 +66,11 @@ static inline std::string get_all_args(WORD_LIST *list,
     if (!word)
       continue;
     int i = 0;
+#if DEFAULT_COMPAT_LEVEL >= 53
+    size_t len = 0;
+#else
     int len = 0;
+#endif
     args += escape ? ansicstr(word, STRLEN(word), 1, &i, &len) : word;
     if (list->next)
       args += " ";
