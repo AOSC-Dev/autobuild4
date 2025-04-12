@@ -127,6 +127,11 @@ message(STATUS "Using std::format")
   target_compile_definitions(autobuild PRIVATE HAS_STD_FMT)
 endif()
 
+check_include_file("spawn.h" HAS_SPAWN_H)
+if (HAS_SPAWN_H)
+  target_compile_definitions(autobuild PRIVATE HAS_SPAWN_H)
+endif()
+
 add_subdirectory(externals/eternal)
 target_link_libraries(autobuild PRIVATE eternal)
 

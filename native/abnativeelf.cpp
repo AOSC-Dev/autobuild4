@@ -22,6 +22,10 @@
 #include <gelf.h>
 #include <libelf.h>
 
+#ifdef HAS_SPAWN_H
+#include <spawn.h>
+#endif
+
 // Workaround for older versions of glibc
 #ifndef EM_LOONGARCH
 #define EM_LOONGARCH 258
@@ -518,6 +522,26 @@ private:
   size_t m_size;
 };
 
+#ifdef HAS_SPAWN_H
+static inline int forked_execvp(const char *path, char *const argv[]) {
+  pid_t pid = 0;
+  __attribute((cleanup(posix_spawn_file_actions_destroy)))
+  posix_spawn_file_actions_t file_actions{};
+  __attribute((cleanup(posix_spawnattr_destroy))) posix_spawnattr_t attr{};
+
+  if (posix_spawnattr_init(&attr) != 0)
+    return -1;
+
+  if (posix_spawn_file_actions_init(&file_actions) != 0)
+    return -1;
+
+  if (posix_spawnp(&pid, path, &file_actions, &attr, argv, environ) != 0)
+    return -1;
+  int status = 0;
+  waitpid(pid, &status, 0);
+  return status;
+}
+#else
 static inline int forked_execvp(const char *path, char *const argv[]) {
   const pid_t pid = fork();
   if (pid == 0) {
@@ -528,6 +552,7 @@ static inline int forked_execvp(const char *path, char *const argv[]) {
   waitpid(pid, &status, 0);
   return status;
 }
+#endif
 
 static const std::unordered_set<std::string>
 aosc_arch_to_debian_arch_suffix(const AOSCArch arch) {
