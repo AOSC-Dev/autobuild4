@@ -39,6 +39,10 @@ if bool "$ABSPLITDBG"; then
 	CXXFLAGS_COMMON+=("${CFLAGS_DBG_SYM[@]}")
 fi
 
+if ! bool "$NOSTATIC"; then
+	LDFLAGS_COMMON_OPTI_LTO=("${LDFLAGS_COMMON_OPTI_LTO[@]/-flto/-ffat-lto-objects}")
+fi
+
 if ((AB_SAN_ADD)); then CFLAGS_COMMON+=('-fsanitize=address'); fi
 if ((AB_SAN_THR)); then CFLAGS_COMMON+=('-fsanitize=thread'); fi
 if ((AB_SAN_LEK)); then CFLAGS_COMMON+=('-fsanitize=leak'); fi
