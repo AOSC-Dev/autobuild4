@@ -40,7 +40,7 @@ if bool "$ABSPLITDBG"; then
 fi
 
 if ! bool "$NOSTATIC"; then
-	LDFLAGS_COMMON_OPTI_LTO=("${LDFLAGS_COMMON_OPTI_LTO[@]/-flto/-ffat-lto-objects}")
+	LDFLAGS_COMMON_OPTI_LTO=("${LDFLAGS_COMMON_OPTI_LTO[@]}" '-ffat-lto-objects')
 fi
 
 if ((AB_SAN_ADD)); then CFLAGS_COMMON+=('-fsanitize=address'); fi
