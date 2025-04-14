@@ -39,8 +39,9 @@ if bool "$ABSPLITDBG"; then
 	CXXFLAGS_COMMON+=("${CFLAGS_DBG_SYM[@]}")
 fi
 
-if ! bool "$NOSTATIC"; then
-	LDFLAGS_COMMON_OPTI_LTO=("${LDFLAGS_COMMON_OPTI_LTO[@]}" '-ffat-lto-objects')
+if ! bool "$NOSTATIC" || bool "$FATLTO"; then
+	CFLAGS_CLANG_OPTI_LTO=("${CFLAGS_CLANG_OPTI_LTO[@]}" '-ffat-lto-objects')
+	CFLAGS_GCC_OPTI_LTO=("${CFLAGS_GCC_OPTI_LTO[@]}" '-ffat-lto-objects')
 fi
 
 if ((AB_SAN_ADD)); then CFLAGS_COMMON+=('-fsanitize=address'); fi

@@ -5,6 +5,7 @@
 # Misc building flags
 ABARCHIVE=abpm_aosc_archive	# Archive program
 ABSHADOW=yes			# Shall shadow builds be performed by default?
+FATLTO=no           # Disable Fat LTO by default
 NOLTO=no			# Enable LTO by default.
 USECLANG=no			# Are we using clang?
 NOSTATIC=yes			# Want those big fat static libraries?
