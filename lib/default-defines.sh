@@ -106,6 +106,7 @@ __GOFLAGS=(
 GOFLAGS="${__GOFLAGS[*]}"
 GO_LDFLAGS=()
 unset -f __GOFLAGS
+GO_PACKAGES=('.')
 
 if [ -f /etc/autobuild/ab3cfg.sh ]; then
     abwarn "Using configurations from Autobuild3"
