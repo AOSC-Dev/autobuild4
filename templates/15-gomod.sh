@@ -40,12 +40,16 @@ build_gomod_configure() {
 build_gomod_build() {
 	BUILD_READY
 	mkdir -pv "$PKGDIR/usr/bin/"
-	abinfo "Compiling Go module ..."
 	ab_tostringarray GO_BUILD_AFTER
-	GOPATH="$SRCDIR/abgopath" \
-		GOBIN="$PKGDIR/usr/bin/" \
-		ab_go_build "${GO_BUILD_AFTER[@]}" .. \
-		|| abdie "Failed to build Go module: $?."
+
+	for package in "${GO_PACKAGES[@]}"; do
+		abinfo "Compiling Go module ($package) ..."
+		GOPATH="$SRCDIR/abgopath" \
+			GOBIN="$PKGDIR/usr/bin/" \
+			ab_go_build "${GO_BUILD_AFTER[@]}" "$SRCDIR/$package" \
+			|| abdie "Failed to build Go module ($package): $?."
+	done
+
 	BUILD_FINAL
 }
 
