@@ -32,9 +32,11 @@ build_gomod_configure() {
 	cd "$BLDDIR" \
 		|| abdie "Failed to cd $SRCDIR/abbuild: $?."
 
-	abinfo "Fetching Go modules dependencies ..."
-	GOPATH="$SRCDIR/abgopath" go get .. \
-		|| abdie "Failed to fetch Go module dependencies: $?."
+	for package in "${GO_PACKAGES[@]}"; do
+		abinfo "Fetching Go modules ($package) dependencies ..."
+		GOPATH="$SRCDIR/abgopath" go get "$SRCDIR/$package" \
+			|| abdie "Failed to fetch Go module dependencies: $?."
+	done
 }
 
 build_gomod_build() {
