@@ -3,6 +3,7 @@
     "amd64",
     "arm64",
     "loongarch64",
+    "loongarch64/nosimd",
     "loongson3",
     "ppc64el",
     "riscv64"
@@ -26,6 +27,7 @@
     "amd64",
     "arm64",
     "loongarch64",
+    "loongarch64/nosimd",
     "loongson3",
     "mips64r6el",
     "ppc64el",
@@ -48,6 +50,7 @@
   ],
   "without_dotnet": [
     "loongarch64",
+    "loongarch64/nosimd",
     "loongson3",
     "ppc64el",
     "riscv64",

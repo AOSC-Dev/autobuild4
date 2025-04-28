@@ -10,6 +10,7 @@
   "loongson2f": "mips64el-aosc-linux-gnuabi64",
   "loongson3": "mips64el-aosc-linux-gnuabi64",
   "loongarch64": "loongarch64-aosc-linux-gnu",
+  "loongarch64/nosimd": "loongarch64-aosc-linux-gnu",
   "m68k": "m68k-aosc-linux-gnu",
   "mips32r6el": "mipsisa32r6el-aosc-linux-gnu",
   "mips64r6el": "mipsisa64r6el-aosc-linux-gnuabi64",
