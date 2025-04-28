@@ -57,7 +57,7 @@ elif [[ "$ABHOST" != 'noarch' ]]; then
 	abdie "Cross-compilation is no longer supported."
 fi
 
-load_strict "$AB/arch/${ABHOST//\//_}.sh"
+load_strict "$AB/arch/${ABHOST}.sh"
 load_strict "$AB"/lib/default-flags.sh
 
 if ! abisdefined DPKG_ARCH ; then
@@ -84,7 +84,7 @@ if [ -n "$ALLOW_ARCH" ] && [ "${ABBUILD%%\/*}" != $ALLOW_ARCH ]; then
 	abdie "This package can only be built on $ALLOW_ARCH, not including $ABHOST."
 fi
 # shellcheck disable=SC2053
-[[ ${ABHOST%%\/*} != $FAIL_ARCH ]] ||
+[[ ${ABHOST} != $FAIL_ARCH ]] ||
 	abdie "This package cannot be built for $FAIL_ARCH, e.g. $ABHOST."
 
 if ! bool "$ABSTRIP" && bool "$ABSPLITDBG"; then
