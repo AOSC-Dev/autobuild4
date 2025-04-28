@@ -42,7 +42,7 @@ ab_match_arch() {
 		abinfo "Usage: ab_match_arch \"match_pattern\""
 		abdie "Misuse of ab_match_arch()! Refuse to proceed."
 	fi
-	if [[ ${ABHOST%%\/*} = $1 ]]; then
+	if [[ ${ABHOST%%_*} = $1 ]]; then
 		abinfo "Architecture $ABHOST matches $1: taking true branch."
 		return 0
 	else
@@ -72,7 +72,7 @@ ab_match_archgroup() {
 		if [[ ${_grp%%\/*} = $1 ]]; then
 			abinfo "Member '${_grp}' in Architecture group '${ABHOST_GROUP[*]}' matches $1: taking true branch."
 			return 0
-		else 
+		else
 			abdbg "Member '${_grp}' in Architecture group '${ABHOST_GROUP[*]}' mismatches $1."
 		fi
 	done
