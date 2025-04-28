@@ -417,8 +417,14 @@ static int set_arch_variables(const char *arch = nullptr) {
   }
 
   // set ARCH variables
-  auto this_arch = arch == nullptr ? std::string(ab_get_current_architecture())
-                                   : std::string(arch);
+  std::string this_arch{};
+  if (find_variable("ARCH")) {
+    this_arch = find_variable("ARCH")->value;
+  } else if (arch) {
+    this_arch = arch;
+  } else {
+    this_arch = ab_get_current_architecture();
+  }
   // ARCH=$(abdetectarch)
   bind_global_variable("ARCH", const_cast<char *>(this_arch.c_str()), ASS_NOEVAL);
   // ABHOST=ARCH
