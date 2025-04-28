@@ -14,6 +14,7 @@
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
+#include <fcntl.h>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -426,7 +427,8 @@ static int set_arch_variables(const char *arch = nullptr) {
     this_arch = ab_get_current_architecture();
   }
   // ARCH=$(abdetectarch)
-  bind_global_variable("ARCH", const_cast<char *>(this_arch.c_str()), ASS_NOEVAL);
+  bind_global_variable("ARCH", const_cast<char *>(this_arch.c_str()),
+                       ASS_NOEVAL);
   // ABHOST=ARCH
   bind_global_variable("ABHOST", const_cast<char *>(this_arch.c_str()),
                        ASS_NOEVAL);
@@ -795,20 +797,20 @@ static int abelf_copy_dbg(WORD_LIST *list) {
   int opt = 0;
   while ((opt = internal_getopt(list, const_cast<char *>("exrp"))) != -1) {
     switch (opt) {
-      case 'x':
-        flags |= AB_ELF_STRIP_ONLY;
-        break;
-      case 'r':
-        flags |= AB_ELF_CHECK_ONLY;
-        break;
-      case 'e':
-        flags |= AB_ELF_USE_EU_STRIP;
-        break;
-      case 'p':
-        flags |= AB_ELF_SAVE_WITH_PATH;
-        break;
-      default:
-        return 1;
+    case 'x':
+      flags |= AB_ELF_STRIP_ONLY;
+      break;
+    case 'r':
+      flags |= AB_ELF_CHECK_ONLY;
+      break;
+    case 'e':
+      flags |= AB_ELF_USE_EU_STRIP;
+      break;
+    case 'p':
+      flags |= AB_ELF_SAVE_WITH_PATH;
+      break;
+    default:
+      return 1;
     }
   }
 
@@ -822,14 +824,14 @@ static int abelf_copy_dbg(WORD_LIST *list) {
     return EX_BADUSAGE;
   GuardedSet<std::string> symbols{};
   GuardedSet<std::string> sonames;
-  const int ret =
-      elf_copy_debug_symbols(src, dst, flags, symbols, sonames);
+  const int ret = elf_copy_debug_symbols(src, dst, flags, symbols, sonames);
   if (ret < 0)
     return 10;
   return 0;
 }
 
-static void ab_set_to_bash_array(const char *varname, const std::unordered_set<std::string> &set) {
+static void ab_set_to_bash_array(const char *varname,
+                                 const std::unordered_set<std::string> &set) {
   auto *var = make_new_array_variable(const_cast<char *>(varname));
   var->attributes |= att_readonly;
   auto *var_a = array_cell(var);
@@ -881,8 +883,8 @@ static int abelf_copy_dbg_parallel(WORD_LIST *list) {
   args.pop_back();
   std::unordered_set<std::string> so_deps{};
   std::unordered_set<std::string> sonames;
-  const int ret =
-      elf_copy_debug_symbols_parallel(args, dst.c_str(), so_deps, sonames, flags);
+  const int ret = elf_copy_debug_symbols_parallel(args, dst.c_str(), so_deps,
+                                                  sonames, flags);
   if (ret < 0)
     return 10;
   // copy the data to the bash variable
@@ -1285,7 +1287,8 @@ static int ab_parse_set_modifiers(WORD_LIST *list) {
   return 0;
 }
 
-static int ab_dump_variables(const std::vector<std::string> &names, bool write_to_file) {
+static int ab_dump_variables(const std::vector<std::string> &names,
+                             bool write_to_file) {
   const std::string res = autobuild_serialized_variables(names);
   if (write_to_file) {
     std::ofstream file(".srcinfo.json");
@@ -1429,6 +1432,10 @@ void register_all_native_functions() {
   autobuild_register_builtins(functions);
 }
 
+static int load_config_file() {
+  return autobuild_load_file("/etc/autobuild/ab4cfg.sh", false) == true;
+}
+
 int register_builtin_variables() {
   int ret = 0;
   // Initialize logger
@@ -1439,6 +1446,7 @@ int register_builtin_variables() {
         fmt::format("Failed to setup default env variables: {0}", ret));
     return ret;
   }
+  (void)load_config_file();
   if ((ret = set_arch_variables())) {
     get_logger()->error(fmt::format(
         "Failed to setup default architecture variables: {0}", ret));
@@ -1509,7 +1517,7 @@ void autobuild_crash_handler(int sig, siginfo_t *info, void *ucontext) {
 }
 
 void setup_crash_handler() {
-  struct sigaction action {};
+  struct sigaction action{};
   action.sa_sigaction = autobuild_crash_handler;
   action.sa_flags = SA_SIGINFO;
   sigaction(SIGSEGV, &action, nullptr);

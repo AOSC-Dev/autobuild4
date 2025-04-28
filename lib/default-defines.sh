@@ -108,13 +108,6 @@ GO_LDFLAGS=()
 unset -f __GOFLAGS
 GO_PACKAGES=('.')
 
-if [ -f /etc/autobuild/ab3cfg.sh ]; then
-    abwarn "Using configurations from Autobuild3"
-	. /etc/autobuild/ab3cfg.sh
-else
-	. /etc/autobuild/ab4cfg.sh
-fi
-
 if bool "$ABSTAGE2"; then
 	abwarn "Autobuild4 running in stage2 mode ..."
 	NOCARGOAUDIT=yes
