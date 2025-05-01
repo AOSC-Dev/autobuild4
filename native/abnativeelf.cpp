@@ -707,8 +707,9 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
   }
   if (!(flags & AB_ELF_STRIP_ONLY)) {
     const auto path = final_path.string();
-    const char *args[] = {"objcopy", "--only-keep-debug", src_path,
-                          path.c_str(), nullptr};
+    const char *args[] = {
+        "objcopy", "--only-keep-debug", "--compress-debug-sections=zstd",
+        src_path,  path.c_str(),        nullptr};
     int ret = forked_execvp("objcopy", const_cast<char *const *>(args));
     if (ret != 0) {
       return ret;
