@@ -643,6 +643,8 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
   case BinaryType::Static:
     // skip static library
     flags |= AB_ELF_STRIP_ONLY;
+    // eu-strip can not handle static libraries
+    flags &= ~AB_ELF_USE_EU_STRIP;
     args.emplace_back("-R");
     args.emplace_back(".gnu.lto*");
     break;
