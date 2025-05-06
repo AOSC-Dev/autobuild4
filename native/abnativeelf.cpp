@@ -390,12 +390,15 @@ const AOSCArch detect_architecture(Elf *elf_file, GElf_Ehdr &elf_ehdr,
 static ELFParseResult identify_binary_data(const char *data,
                                            const size_t size) {
   ELFParseResult result{};
-  if (size >= 8 && memcmp(data, ar_magic.data(), ar_magic.size()) == 0) {
+  const bool is_static_library =
+      (size >= 8 && memcmp(data, ar_magic.data(), ar_magic.size()) == 0) ||
+      (size >= 8 &&
+       memcmp(data, ar_thin_magic.data(), ar_thin_magic.size()) == 0);
+  if (is_static_library) {
     result.bin_type = BinaryType::Static;
-    return result;
-  } else if (size >= 8 &&
-             memcmp(data, ar_thin_magic.data(), ar_thin_magic.size()) == 0) {
-    result.bin_type = BinaryType::Static;
+    // Let's assume static libraries have debug info
+    // as we can't easily check them
+    result.has_debug_info = true;
     return result;
   } else if (size >= 4 &&
              memcmp(data, llvm_bc_magic.data(), llvm_bc_magic.size()) == 0) {
@@ -666,31 +669,32 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     break;
   }
 
-  get_logger()->info(
-      fmt::format("Saving and stripping debug symbols from {0}", src_path));
-
-  if (!result.has_debug_info) {
-    get_logger()->warning(
-        fmt::format("No debug symbols found in {0}", src_path));
-    return -3;
-  }
-
-  if (result.build_id.empty() && !(flags & AB_ELF_SAVE_WITH_PATH)) {
-    // For binaries without build-id, save with path
-    flags |= AB_ELF_SAVE_WITH_PATH;
-    get_logger()->warning(fmt::format(
-        "No build id found in {0}. Saving with relative path", src_path));
-  }
-
   fs::path final_path;
-  if (flags & AB_ELF_SAVE_WITH_PATH) {
-    final_path = fs::path{dst_path} / fs::path{src_path}.filename();
-    get_logger()->debug(fmt::format("Saving to {0}", final_path.string()));
+  if (flags & AB_ELF_STRIP_ONLY) {
+    get_logger()->info(
+        fmt::format("Stripping debug symbols from {0}", src_path));
   } else {
-    final_path = get_filename_from_build_id(result.build_id, dst_path);
-  }
+    get_logger()->info(
+        fmt::format("Saving and stripping debug symbols from {0}", src_path));
+    if (!result.has_debug_info) {
+      get_logger()->warning(
+          fmt::format("No debug symbols found in {0}", src_path));
+      return -3;
+    }
 
-  if (!(flags & AB_ELF_STRIP_ONLY)) {
+    if (result.build_id.empty() && !(flags & AB_ELF_SAVE_WITH_PATH)) {
+      // For binaries without build-id, save with path
+      flags |= AB_ELF_SAVE_WITH_PATH;
+      get_logger()->warning(fmt::format(
+          "No build id found in {0}. Saving with relative path", src_path));
+    }
+
+    if (flags & AB_ELF_SAVE_WITH_PATH) {
+      final_path = fs::path{dst_path} / fs::path{src_path}.filename();
+      get_logger()->debug(fmt::format("Saving to {0}", final_path.string()));
+    } else {
+      final_path = get_filename_from_build_id(result.build_id, dst_path);
+    }
     // No need to create directories if we aren't going to save symbol files
     const fs::path final_prefix = final_path.parent_path();
     fs::create_directories(final_prefix);
