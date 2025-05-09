@@ -650,6 +650,8 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     flags &= ~AB_ELF_USE_EU_STRIP;
     args.emplace_back("-R");
     args.emplace_back(".gnu.lto*");
+    args.emplace_back("--strip-debug");
+    extra_args.emplace_back("--enable-deterministic-archives");
     break;
   case BinaryType::Executable:
     // strip all symbols
