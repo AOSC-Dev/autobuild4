@@ -154,9 +154,9 @@ create_lang() {
 		echo "ERROR: Invalid usage: Language code required." >&2
 		return 1
 	fi
-	langcodes=("$(locale -a | sed 's|\..*||g' | sort | uniq)")
+	langcodes=($(locale -a | sed 's|\..*||g' | sort | uniq))
 	for l in "${langcodes[@]}" ; do
-		if [ "x$l" = "x$lang" ] ; then
+		if [ "x$l" = "x$newlang" ] ; then
 			has_lang=1
 		fi
 	done
@@ -167,7 +167,7 @@ create_lang() {
 	fi
 	echo "-- Creating untranslated PO file for $newlang ..."
 	msginit -i "$po_dir"/"$GETTEXT_DOMAIN.pot" -o "$po_dir"/"$newlang".po \
-		--language "${newlang%%.*}.UTF-8"
+		--locale "${newlang%%.*}.UTF-8"
 	msgfmt --statistics -o /dev/null "$po_dir"/"$newlang".po
 	echo "-- Succeffully initialized PO file at $po_dir/$newlang.po."
 }
@@ -180,6 +180,7 @@ generate_pot() {
 		exit 1
 	fi
 	echo "-- Creating PO template for maintscripts of $PKGNAME ..."
+	mkdir "$po_dir"
 	pushd "$ab_dir"
 	# If it contains several sources, generate them one by one,
 	# then concatenate them together using msgcat.
@@ -207,6 +208,10 @@ generate_pot() {
 update_po() {
 	echo "-- Updating PO template ..."
 	pushd "$ab_dir"
+	if [ -e "$po_dir"/"$GETTEXT_DOMAIN.pot" ]; then
+		rm "$po_dir"/"$GETTEXT_DOMAIN.pot"
+	fi
+	touch "$po_dir"/"$GETTEXT_DOMAIN.pot"
 	for src in "${GETTEXT_SRCS[@]}" ; do
 		_var="$(transform_varname "${src##*/}")"
 		_var="GETTEXT_SRCLANG_$src"
@@ -225,10 +230,10 @@ update_po() {
 	done
 	popd
 	echo "-- Updating PO catalogs ..."
-	for lang in "${GETTEXT_LINUGAS[@]}" ; do
-		# NOTE: msgupdate -U def.po ref.pot
+	for lang in "${GETTEXT_LINGUAS[@]}" ; do
+		# NOTE: msgmerge -U def.po ref.pot
 		# NOTE: make sure po files are newer than the POT file
-		msgupdate -U "$po_dir"/"$lang".po \
+		msgmerge -U "$po_dir"/"$lang".po \
 			"$po_dir"/"$GETTEXT_DOMAIN".pot
 		touch "$po_dir"/"$lang".po
 	done
