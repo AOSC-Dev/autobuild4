@@ -16,7 +16,7 @@ elif [ -f "$SRCDIR"/autobuild/patches/series ]; then
     ab_read_list "${series_file}" patches
     # patches variable is set inside the native function
     # shellcheck disable=SC2154
-    ab_apply_patches "${patches[@]}"
+    ab_apply_patches "${patches[@]/#/autobuild/patches/}"
     touch "$SRCDIR"/.patch
 elif [ -d "$SRCDIR"/autobuild/patches ]; then
     ab_apply_patches \
