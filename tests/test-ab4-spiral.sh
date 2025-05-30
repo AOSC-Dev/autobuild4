@@ -10,7 +10,7 @@ else
 fi
 
 abspiral_from_sonames libQt5QuickParticles.so.5
-if [[ "${__ABSPIRAL_PROVIDES_SONAMES[*]}" = 'libqt5quickparticles5-gles libqt5quickparticles5 qtdeclarative5-dev' ]]; then
+if [[ "${__ABSPIRAL_PROVIDES_SONAMES[*]}" = 'libqt5quickparticles5 libqt5quickparticles5-gles qtdeclarative5-dev' ]]; then
     echo "Spiral test passed."
 else
     echo "Inferred names: ${__ABSPIRAL_PROVIDES_SONAMES[*]}"
