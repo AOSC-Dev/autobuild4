@@ -23,7 +23,8 @@ build_autotools_regenerate() {
 	abinfo "Re-generating Autotools scripts ..."
 	[ -x "$SRCDIR"/bootstrap ] && ! [ -e "$SRCDIR"/autogen.sh ] \
 		&& ln -sv "$SRCDIR"/bootstrap "$SRCDIR"/autogen.sh
-	if [[ -x "$SRCDIR"/bootstrap && ! -d "$SRCDIR"/bootstrap ]]; then
+	if ! bool "$ABNOBOOTSTRAP" && \
+		[[ -x "$SRCDIR"/bootstrap && ! -d "$SRCDIR"/bootstrap ]]; then
 		"$SRCDIR/bootstrap" \
 			|| abdie "Reconfiguration failed: $?."
 	elif ! bool "$ABNOAUTOGEN" && \
