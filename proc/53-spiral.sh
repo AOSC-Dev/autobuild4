@@ -33,7 +33,7 @@ if bool "$ABSPIRAL"; then
 	if [ -d "$PKGDIR"/usr/lib/python"$ABPY3VER"/site-packages ]; then
                 while read -r LINE; do
                     __ABSPIRAL_PROVIDES+=("$LINE")
-                done < <( find "$PKGDIR"/usr/lib/python"$ABPY3VER"/site-packages -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | \
+                done < <( find "$PKGDIR"/usr/lib/python"$ABPY3VER"/site-packages -mindepth 1 -maxdepth 1 -type d -not -name '__pycache__' -printf '%f\n' | \
                    awk '{ split($1, x, "-"); gsub("_", "-", x[1]); print "python3-" tolower(x[1]); }' | sort -u )
                 while read -r LINE; do
                     __ABSPIRAL_PROVIDES+=("$LINE")
