@@ -27,7 +27,7 @@ build_gomod_configure() {
 		abdie "ABSHADOW must be set to true for this build type: $?."
 	fi
 
-	mkdir "$BLDDIR" \
+	mkdir -pv "$BLDDIR" \
 		|| abdie "Failed to create $SRCDIR/abbuild: $?."
 	cd "$BLDDIR" \
 		|| abdie "Failed to cd $SRCDIR/abbuild: $?."
