@@ -24,7 +24,8 @@ build_pep517_configure() {
 	if [[ "${_backend}" == 'setuptools.build_meta' ]]; then
 		abinfo "Workaround needed for the ${_backend} backend. Applying workaround ..."
 		mkdir -pv "${SRCDIR}/.tempsrc"
-		mv -- * "${SRCDIR}/.tempsrc"
+		# https://askubuntu.com/a/259386
+		mv -v -- {,.[!.]}* "${SRCDIR}/.tempsrc"
 		mv -v -- "${SRCDIR}/.tempsrc" "${SRCDIR}/${PKGNAME}_src"
 		mv -v -- "${SRCDIR}/${PKGNAME}_src/"abqaerr.log "${SRCDIR}"
 		mv -v -- "${SRCDIR}/${PKGNAME}_src/"acbs-build*.log "${SRCDIR}"
