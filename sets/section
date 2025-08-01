@@ -98,6 +98,7 @@ non-free/LxQt
 non-free/MATE
 non-free/mail
 non-free/math
+non-free/metrics
 non-free/misc
 non-free/net
 non-free/news
@@ -159,6 +160,7 @@ contrib/LxQt
 contrib/MATE
 contrib/mail
 contrib/math
+contrib/metrics
 contrib/misc
 contrib/net
 contrib/news
