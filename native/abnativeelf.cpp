@@ -352,12 +352,15 @@ const AOSCArch detect_architecture(Elf *elf_file, GElf_Ehdr &elf_ehdr,
       return AOSCArch::NONE;
     }
     // e_flags-based detection
-    if (elf_ehdr.e_flags & elf_flags_loongson2f) {
-      return AOSCArch::LOONGSON2F;
-    } else if (elf_ehdr.e_flags & elf_flags_loongson3) {
-      return AOSCArch::LOONGSON3;
-    } else if (elf_ehdr.e_flags & elf_flags_mips64r6el) {
+    // WARN: Never test the result with non-zero! For MIPS R2 and MIPS R6,
+    //       this causes ambiguity, since it will be true in both tests if
+    //       they are testing with non-zeroes after the AND operation.
+    if ((elf_ehdr.e_flags & elf_flags_mips64r6el) == elf_flags_mips64r6el) {
       return AOSCArch::MIPS64R6EL;
+    } else if ((elf_ehdr.e_flags & elf_flags_loongson3) == elf_flags_loongson3) {
+      return AOSCArch::LOONGSON3;
+    } else if ((elf_ehdr.e_flags & elf_flags_loongson2f) == elf_flags_loongson2f) {
+      return AOSCArch::LOONGSON2F;
     } else {
       return AOSCArch::NONE;
     }
