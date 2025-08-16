@@ -9,6 +9,7 @@ HWCAPS=('x86-64-v2' 'x86-64-v3' 'x86-64-v4')
 # Default -march and μarch specific tuning.
 # No need to reference CFLAGS_COMMON_ARCH_BASE, it will be concatenated.
 CFLAGS_COMMON_ARCH=('-march=x86-64' '-mtune=znver4' '-msse2' '-mno-omit-leaf-frame-pointer')
+LDFLAGS_COMMON_ARCH=('-Wl,-z,pack-relative-relocs')
 RUSTFLAGS_COMMON_ARCH=('-Ctarget-cpu=x86-64')
 
 # HWCAPS subtargets in x86-64 are based on the microarchitecture levels
