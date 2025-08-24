@@ -94,7 +94,7 @@ build_rust_build() {
 		abinfo 'Using fallback build method ...'
 	  parsed_flags="$(getopt -o ':p' -- "${CARGO_AFTER[@]}" || true)"
 	  parsed_flags=(${parsed_flags})
-	  if [[ "${parsed_flags}" = '-p' ]]; then
+	  if [[ "${parsed_flags}" != '-p' ]]; then
 		DEFAULT_CARGO_CONFIG+=('--workspace')
 	  fi
 	  cargo build "${DEFAULT_CARGO_CONFIG[@]}" \
