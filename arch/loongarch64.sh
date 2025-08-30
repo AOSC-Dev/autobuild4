@@ -33,4 +33,5 @@ else
 	CFLAGS_COMMON_ARCH+=('-march=loongarch64' '-mtune=la464')
 fi
 
+LDFLAGS_COMMON_ARCH=('-Wl,-z,pack-relative-relocs')
 RUSTFLAGS_COMMON_ARCH=('-Ctarget-cpu=generic-la64' '-Ctarget-feature=+lsx,+d' '-Clink-arg=-mabi=lp64d')
