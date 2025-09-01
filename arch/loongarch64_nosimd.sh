@@ -24,3 +24,10 @@ fi
 #   - https://github.com/rust-lang/rust/blob/a932eb36f8adf6c8cdfc450f063943da3112d621/compiler/rustc_target/src/spec/targets/loongarch64_unknown_linux_gnu.rs#L18
 #   - https://github.com/llvm/llvm-project/blob/98b895da30c03b7061b8740d91c0e7998e69d091/clang/lib/Driver/ToolChains/Arch/LoongArch.cpp#L133
 RUSTFLAGS_COMMON_ARCH=('-Ctarget-cpu=generic-la64' '-Ctarget-feature=-lsx,+d' '-Clink-arg=-mabi=lp64d')
+
+# Rustc does not apply -Ctarget-feature as an attribute to the main function
+# (the function that __libc_start_call_main calls, not crate::main).  So
+# during LTO, the linker plugin may inline some code into main and vectorize
+# them.  Tell lld to disable LSX unless it's explicitly enabled in the
+# function attribute, so main won't be vectorized.
+RUSTFLAGS_COMMON_ARCH_LTO=('-Clink-arg=-Wl,-plugin-opt,-mattr=-lsx')
