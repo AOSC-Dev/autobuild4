@@ -42,7 +42,7 @@ ab_match_arch() {
 		abinfo "Usage: ab_match_arch \"match_pattern\""
 		abdie "Misuse of ab_match_arch()! Refuse to proceed."
 	fi
-	if [[ ${ABHOST%%_*} = $1 ]]; then
+	if [[ ${ABHOST} = $1 ]]; then
 		abinfo "Architecture $ABHOST matches $1: taking true branch."
 		return 0
 	else
