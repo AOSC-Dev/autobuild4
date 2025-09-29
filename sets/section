@@ -47,6 +47,7 @@ otherosfs
 perl
 php
 python
+ros
 ruby
 science
 shells
@@ -110,6 +111,7 @@ non-free/otherosfs
 non-free/perl
 non-free/php
 non-free/python
+non-free/ros
 non-free/ruby
 non-free/science
 non-free/shells
@@ -173,6 +175,7 @@ contrib/otherosfs
 contrib/perl
 contrib/php
 contrib/python
+contrib/ros
 contrib/ruby
 contrib/science
 contrib/shells
