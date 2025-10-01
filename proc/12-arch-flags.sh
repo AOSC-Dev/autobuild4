@@ -88,6 +88,15 @@ ab_arch_setflags() {
         export "${flagtype}"="${_tmp[*]}"
         abdbg "${flagtype}=${_tmp[*]}"
 
+        # export CGO counterparts for CFLAGS, CPPFLAGS, CXXFLAGS, and LDFLAGS.
+        # see <https://go.dev/src/cmd/cgo/doc.go>.
+        case "${flagtype}" in
+            CFLAGS|CPPFLAGS|CXXFLAGS|LDFLAGS)
+            export "CGO_${flagtype}"="${_tmp[*]}"
+            abdbg "CGO_${flagtype}=${_tmp[*]}"
+            ;;
+        esac
+
     # Do the same thing if HWCAPS is enabled
     if bool "$hwcaps_active" ; then
         for cap in "${hwcaps[@]}" ; do
