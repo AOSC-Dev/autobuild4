@@ -22,6 +22,7 @@ CFLAGS_COMMON_WEIRD=()
 CXXFLAGS_GCC_OPTI=("-fdeclone-ctor-dtor")
 CXXFLAGS_COMMON_WEIRD=()
 CXXFLAGS_COMMON_PERMISSIVE=("-fpermissive")
+CXXFLAGS_COMMON_NOPERMISSIVE=("-fno-permissive")
 # Preprocesser Flags.
 CPPFLAGS_COMMON=("-D_GLIBCXX_ASSERTIONS")
 # OBJC Flags.
@@ -29,6 +30,7 @@ OBJCFLAGS_COMMON_WEIRD=()
 # OBJCXX Flags.
 OBJCXXFLAGS_COMMON_WEIRD=()
 OBJCXXFLAGS_COMMON_PERMISSIVE=('-fpermissive')
+OBJCXXFLAGS_COMMON_NOPERMISSIVE=('-fno-permissive')
 # RUST Flags.
 RUSTFLAGS_COMMON=()
 RUSTFLAGS_COMMON_OPTI=('-Ccodegen-units=1' '-Copt-level=3' '-Cdebuginfo=line-tables-only' '-Cforce-frame-pointers=yes')
