@@ -4,7 +4,7 @@
 
 
 ab_arch_setflags() {
-    local AB_FLAGS_FEATURES=(LTO PERMISSIVE)
+    local AB_FLAGS_FEATURES=(LTO NOPERMISSIVE)
     local AB_FLAGS_TYPES=('' _OPTI _ARCH_BASE _ARCH)
     local flagtypes=(LDFLAGS CFLAGS CPPFLAGS CXXFLAGS OBJCFLAGS OBJCXXFLAGS RUSTFLAGS)
     local features=('')
