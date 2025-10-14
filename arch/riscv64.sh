@@ -6,6 +6,7 @@
 if ! bool "$USECLANG" && [ "$(echo __GNUC__ | $CC -E -xc - | tail -n 1)" -ge 14 ]; then
 	CFLAGS_COMMON_ARCH=('-mno-omit-leaf-frame-pointer')
 fi
+CXXFLAGS_CLANG_ARCH=('-mllvm' '-mattr=+rva20u64')
 LDFLAGS_COMMON_CROSS=('-Wl,-rpath -Wl,/usr/lib -Wl,-rpath-link' '-Wl,/var/ab/cross-root/riscv64/usr/lib' '-L/var/ab/cross-root/riscv64/usr/lib')
 RUSTFLAGS_COMMON_ARCH=("-Clink-arg=-mabi=lp64d")
 RUSTFLAGS_COMMON_ARCH_LTO=("${RUSTFLAGS_COMMON_ARCH[@]}" '-Clink-arg=-Wl,-mllvm=-mattr=+rva20u64')
