@@ -36,4 +36,4 @@ build_python_install() {
 	true;
 }
 
-ab_register_template python -- python2 python3
+ab_register_template python -- python3
