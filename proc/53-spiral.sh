@@ -4,8 +4,8 @@
 
 if bool "$ABSPIRAL"; then
 	__ABSPIRAL_PROVIDES=()
-	if [[ "${#__AB_SONAMES[@]}" != 0 ]]; then
-		abspiral_from_sonames "${__AB_SONAMES[@]}"
+	if [[ "${#__AB_SONAMES[@]}" != 0 ]] || [[ "${#__AB_SONAMES_MANUADD[@]}" != 0 ]]; then
+		abspiral_from_sonames "${__AB_SONAMES[@]}" "${__AB_SONAMES_MANUADD[@]}"
 		for SPIRAL_PROV in "${__ABSPIRAL_PROVIDES_SONAMES[@]}"; do
 			# Ignore architecture notation for duplication detection
 			if [[ "${SPIRAL_PROV%%:*}" = "$PKGNAME" ]]; then
