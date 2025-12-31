@@ -22,7 +22,7 @@ ab_register_filter() {
 abtpl_check_exe() {
 	for exe in "$@"; do
 		if ! command -v "$exe" > /dev/null; then
-			abdie "Template ${name} requires $exe but was not found on the system."
+			abwarn "Template ${name} requires $exe but was not found on the system."
 		fi
 	done
 }
