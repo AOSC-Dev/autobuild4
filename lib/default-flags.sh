@@ -38,3 +38,6 @@ MAKE_INSTALL_DEF=(
 	"sbindir=$BINDIR" "libdir=$LIBDIR" "incdir=$INCLUDE" "mandir=$MANDIR"
 )
 
+# Python defaults
+NOPYTHON2=1
+NOPYTHON3=0
