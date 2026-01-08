@@ -98,6 +98,32 @@ if [[ $ABHOST == noarch ]]; then
 	ABSPLITDBG=0
 fi
 
+if bool "$__AB_BOOTSTRAP" ; then
+	if ! bool "$ABSTAGE2" ; then
+		abdie "__AB_BOOTSTRAP should be enabled along with ABSTAGE2."
+	fi
+	# apt is installed; this switch should be disabled from now on
+	if [ -e /var/lib/dpkg/info/apt.list ] ; then
+		abdie "APT is present on this environment - refuse to proceed with bootstrapping mode on."
+	fi
+	if [ -e /var/lib/dpkg/info/"$PKGNAME".list ] ; then
+		abdie "Package is already being built - Disable __AB_BOOTSTRAP to proceed."
+	fi
+	abwarn "WARNING! WARNING! WARNING!"
+	abwarn "BOOTSTRAPPING MODE ACTIVATED!"
+	abwarn "All unauthorized personell should evacuate immidiately!"
+
+	# Ignore PKGDEP and BUILDDEP.
+	PKGDEP=""
+	BUILDDEP=""
+fi
+
+# Disable HWCAPS builds if stage 2 mode is on.
+if bool "$ABSTAGE2" && bool "$AB_HWCAPS" ; then
+	abinfo "Disabling HWCAPS builds on stage 2 ..."
+	AB_HWCAPS=0
+fi
+
 abisdefined PKGREL || PKGREL=0
 abisdefined PKGEPOCH || PKGEPOCH=0
 
