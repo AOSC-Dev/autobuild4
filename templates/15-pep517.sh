@@ -23,8 +23,12 @@ build_pep517_configure() {
 	_backend="$(python3 "${_helper}" "${SRCDIR}")"
 	if [[ "${_backend}" == 'setuptools.build_meta' ]]; then
 		abinfo "Workaround needed for the ${_backend} backend. Applying workaround ..."
+		cd "$SRCDIR"/..
 		cp -av "$SRCDIR" "$SRCDIR"/../tempsrc
-		mv -v "$SRCDIR"/../tempsrc "$SRCDIR"/.tempsrc
+		find "$SRCDIR" -mindepth 1 -maxdepth 1 -not -name autobuild -exec rm -rv {} \;
+		mv -v "$SRCDIR"/../tempsrc "$SRCDIR"/"$PKGNAME"_src
+		rm -rv "$SRCDIR"/"$PKGNAME"_src/autobuild
+		cd "$SRCDIR"
 	fi
 }
 
