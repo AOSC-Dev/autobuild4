@@ -1375,6 +1375,17 @@ static int abspiral_from_sonames(WORD_LIST *list) {
   return 0;
 }
 
+static int abpm_deb_arch_name(WORD_LIST *list) {
+  const auto *arch = get_argv1(list);
+  if (!arch)
+    return EX_BADUSAGE;
+  for (const auto &name: aosc_arch_to_debian_arch_suffix(arch)) {
+    std::cout << name << ' ';
+  }
+  std::cout << std::endl;
+  return 0;
+}
+
 extern "C" {
 void register_all_native_functions() {
   if (set_registered_flag())
@@ -1415,6 +1426,7 @@ void register_all_native_functions() {
       {"abpm_aosc_archive", abpm_aosc_archive_new},
       {"abpm_debver", abpm_genver},
       {"abpm_dump_builddep_req", abpm_dump_builddep_req},
+      {"abpm_deb_arch_name", abpm_deb_arch_name},
       {"abpp_parallelize", abpp_parallelize},
       {"abpp_gil", abpp_gil},
       {"abfp_lambda", abfp_lambda},

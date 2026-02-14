@@ -55,6 +55,7 @@ dpkgfield() {
 	done
 	# second-pass: actually fill in the blanks
 	local _buffer=()
+	local _s_arch=()
 	for _v in "${_string_v[@]}"; do
 		if [[ "${_v}" = '@'* ]]; then
 			continue
@@ -69,7 +70,14 @@ dpkgfield() {
 			_buffer+=("$(abpm_debver "${_v}")")
 		elif [[ "${_v}" =~ _spiral$ ]]; then
 			# Remove _spiral marker, append version
-			_buffer+=("$(abpm_debver "${_v%_spiral}==${PKGEPOCH_SPIRAL:-0}:${_ver#*:}")")
+			if [[ "${DPKG_ARCH%%_*}" == noarch ]]; then
+				_buffer+=("$(abpm_debver "${_v%_spiral}==${PKGEPOCH_SPIRAL:-0}:${_ver#*:}")")
+			else
+				_s_arch+=($(abpm_deb_arch_name "${DPKG_ARCH%%_*}"))
+				for _arch in "${_s_arch[@]}"; do
+					_buffer+=("$(abpm_debver "${_v%_spiral}:${_arch}==${PKGEPOCH_SPIRAL:-0}:${_ver#*:}")")
+				done
+			fi
 		elif ((VER_NONE)) || [[ "$_v" =~ _$ ]]; then
 			_buffer+=("${_v%_}");
 		else

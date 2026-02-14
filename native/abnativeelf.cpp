@@ -535,6 +535,40 @@ static inline int forked_execvp(const char *path, char *const argv[]) {
   return status;
 }
 
+static const AOSCArch parse_aosc_arch_name(const std::string &name) {
+  if (name == "amd64")
+    return AOSCArch::AMD64;
+  if (name == "arm64")
+    return AOSCArch::ARM64;
+  if (name == "armv4")
+    return AOSCArch::ARMV4;
+  if (name == "armv6hf")
+    return AOSCArch::ARMV6HF;
+  if (name == "armv7hf")
+    return AOSCArch::ARMV7HF;
+  if (name == "i486")
+    return AOSCArch::I486;
+  if (name == "loongarch64")
+    return AOSCArch::LOONGARCH64;
+  if (name == "loongson2f")
+    return AOSCArch::LOONGSON2F;
+  if (name == "loongson3")
+    return AOSCArch::LOONGSON3;
+  if (name == "mips64r6el")
+    return AOSCArch::MIPS64R6EL;
+  if (name == "powerpc")
+    return AOSCArch::POWERPC;
+  if (name == "ppc64")
+    return AOSCArch::PPC64;
+  if (name == "ppc64el")
+    return AOSCArch::PPC64EL;
+  if (name == "riscv64")
+    return AOSCArch::RISCV64;
+  if (name == "sparc64")
+    return AOSCArch::SPARC64;
+  return AOSCArch::NONE;
+}
+
 static const std::unordered_set<std::string>
 aosc_arch_to_debian_arch_suffix(const AOSCArch arch) {
   switch (arch) {
@@ -569,6 +603,11 @@ aosc_arch_to_debian_arch_suffix(const AOSCArch arch) {
   default:
     return {};
   }
+}
+
+const std::unordered_set<std::string>
+aosc_arch_to_debian_arch_suffix(const char *arch_name) {
+  return aosc_arch_to_debian_arch_suffix(parse_aosc_arch_name(arch_name));
 }
 
 class FileLockGuard {

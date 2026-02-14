@@ -80,3 +80,5 @@ int elf_copy_debug_symbols_parallel(const std::vector<std::string> &directories,
                                     std::unordered_set<std::string> &so_deps,
                                     std::unordered_set<std::string> &sonames,
                                     int flags = AB_ELF_USE_EU_STRIP);
+const std::unordered_set<std::string>
+aosc_arch_to_debian_arch_suffix(const char *arch_name);
