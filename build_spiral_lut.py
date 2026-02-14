@@ -10,7 +10,7 @@ from urllib import request
 from typing import List, Set, Dict, Optional, Tuple
 from pathlib import Path
 
-CODENAMES: List[str] = ['noble', 'jammy']
+CODENAMES: List[str] = ['noble', 'jammy', 'plucky', 'questing']
 CONTENTS_URL_TEMPLATE: str = '{}/dists/{}/Contents-amd64.gz'
 PATH_REGEX: re.Pattern = re.compile(r'/?usr/lib/(?:x86_64-linux-gnu/)?(?P<key>lib[a-zA-Z0-9\-._+]+\.so(?:\.[0-9]+)*)')
 CHUNK_SIZE: int = 32768
