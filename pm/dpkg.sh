@@ -106,6 +106,11 @@ dpkgctrl() {
 
 	if bool "$ABSPIRAL"; then
 		PKGPROV+=" @AB_SPIRAL_PROVIDES@"
+		if [[ "${arch}" = 'all' ]]; then
+		    # Arch: all packages that has Spiral enabled must be marked as Multi-Arch: foreign,
+			# otherwise dpkg will not allow them to satisfy dependencies for other architectures (e.g. loong64 vs loongarch64).
+			echo "Multi-Arch: foreign"
+		fi
 	fi
 	dpkgfield Provides "$PKGPROV"
 
