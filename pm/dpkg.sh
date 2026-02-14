@@ -70,7 +70,7 @@ dpkgfield() {
 			_buffer+=("$(abpm_debver "${_v}")")
 		elif [[ "${_v}" =~ _spiral$ ]]; then
 			# Remove _spiral marker, append version
-			if [[ "${DPKG_ARCH%%_*}" == noarch ]]; then
+			if [[ "${DPKG_ARCH%%_*}" == noarch ]] || [[ "${_v%_spiral}" = *:* ]]; then
 				_buffer+=("$(abpm_debver "${_v%_spiral}==${PKGEPOCH_SPIRAL:-0}:${_ver#*:}")")
 			else
 				_s_arch+=($(abpm_deb_arch_name "${DPKG_ARCH%%_*}"))
