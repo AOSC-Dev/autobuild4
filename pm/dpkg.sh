@@ -30,6 +30,35 @@ dpkg_get_provides() {
 	dpkg --robot -S "$@" | cut -d':' -f1 | sort -u 2>/dev/null
 }
 
+# Translate AOSC OS architectures to Debian-compliant ones.
+#
+# Takes one argument - AOSC OS architecure ($ARCH).
+dpkg_debian_arch() {
+	case $1 in
+		armv4)
+			echo "armel"
+			;;
+		armv6hf|armv7hf)
+			echo "armhf"
+			;;
+		i486)
+			echo "i386"
+			;;
+		loongarch64)
+			echo "loongarch64 loong64"
+			;;
+		loongson2f|loongson3)
+			echo "mips64el"
+			;;
+		noarch)
+			echo "all"
+			;;
+		*)
+			echo "$1"
+			;;
+	esac
+}
+
 dpkgfield() {
 	local _string_v="$2"
 	local _ver="$(dpkgpkgver)"
@@ -68,8 +97,11 @@ dpkgfield() {
 		elif [[ "${_v}" =~ [\<\>=]= ]]; then
 			_buffer+=("$(abpm_debver "${_v}")")
 		elif [[ "${_v}" =~ _spiral$ ]]; then
-			# Remove _spiral marker, append version
-			_buffer+=("$(abpm_debver "${_v%_spiral}==${PKGEPOCH_SPIRAL:-0}:${_ver#*:}")")
+			# Enumerate the respective Debian architectures.
+			for _debarch in $(dpkg_debian_arch $DPKG_ARCH); do
+				# Remove _spiral marker, append version
+				_buffer+=("$(abpm_debver "${_v%_spiral}:${_debarch}==${PKGEPOCH_SPIRAL:-0}:${_ver#*:}")")
+			done
 		elif ((VER_NONE)) || [[ "$_v" =~ _$ ]]; then
 			_buffer+=("${_v%_}");
 		else
