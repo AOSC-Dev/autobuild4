@@ -8,7 +8,7 @@ constexpr std::pair<const mapbox::eternal::string,
     data[] = {
 #include "../data/lut_sonames.cpp.inc"
 };
-MAPBOX_ETERNAL_CONSTEXPR std::unordered_map<mapbox::eternal::string,
+const std::unordered_map<mapbox::eternal::string,
                                             mapbox::eternal::string>
     spiral_lut =
         std::unordered_map<mapbox::eternal::string, mapbox::eternal::string>(
