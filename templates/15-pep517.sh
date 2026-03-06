@@ -21,7 +21,8 @@ build_pep517_configure() {
 	local _backend _helper
 	_helper="${AB}"/helpers/pep517-helper.py
 	_backend="$(python3 "${_helper}" "${SRCDIR}")"
-	if [[ "${_backend}" == 'setuptools.build_meta' ]]; then
+	if [[ "${_backend}" == 'setuptools.build_meta' || \
+              "${_backend}" == 'poetry.core.masonry.api' ]]; then
 		abinfo "Workaround needed for the ${_backend} backend. Applying workaround ..."
 		cd "$SRCDIR"/..
 		cp -av "$SRCDIR" "$SRCDIR"/../tempsrc
