@@ -385,6 +385,10 @@ const AOSCArch detect_architecture(Elf *elf_file, GElf_Ehdr &elf_ehdr,
     }
   case EM_SPARCV9:
     return AOSCArch::SPARC64;
+  case EM_IA_64:
+    return AOSCArch::IA64;
+  case EM_ALPHA:
+    return AOSCArch::ALPHA;
   default:
     return AOSCArch::NONE;
   }
@@ -536,6 +540,8 @@ static inline int forked_execvp(const char *path, char *const argv[]) {
 }
 
 static const AOSCArch parse_aosc_arch_name(const std::string &name) {
+  if (name == "alpha")
+    return AOSCArch::ALPHA;
   if (name == "amd64")
     return AOSCArch::AMD64;
   if (name == "arm64")
@@ -548,6 +554,8 @@ static const AOSCArch parse_aosc_arch_name(const std::string &name) {
     return AOSCArch::ARMV7HF;
   if (name == "i486")
     return AOSCArch::I486;
+  if (name == "ia64")
+    return AOSCArch::IA64;
   if (name == "loongarch64")
     return AOSCArch::LOONGARCH64;
   if (name == "loongson2f")
@@ -572,6 +580,8 @@ static const AOSCArch parse_aosc_arch_name(const std::string &name) {
 static const std::unordered_set<std::string>
 aosc_arch_to_debian_arch_suffix(const AOSCArch arch) {
   switch (arch) {
+  case AOSCArch::ALPHA:
+    return {"alpha"};
   case AOSCArch::AMD64:
     return {"amd64"};
   case AOSCArch::ARM64:
@@ -583,6 +593,8 @@ aosc_arch_to_debian_arch_suffix(const AOSCArch arch) {
     return {"armhf"};
   case AOSCArch::I486:
     return {"i386"};
+  case AOSCArch::IA64:
+    return {"ia64"};
   case AOSCArch::LOONGARCH64:
     return {"loong64", "loongarch64"};
   case AOSCArch::LOONGSON2F:
