@@ -18,12 +18,14 @@ enum class BinaryType : uint8_t {
 
 enum class AOSCArch : uint8_t {
   NONE = 0,
+  ALPHA,
   AMD64,
   ARM64,
   ARMV4,
   ARMV6HF,
   ARMV7HF,
   I486,
+  IA64,
   LOONGARCH64,
   LOONGSON2F,
   LOONGSON3,
