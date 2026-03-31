@@ -1,10 +1,12 @@
 {
+  "alpha": "alpha-aosc-linux-gnu",
   "amd64": "x86_64-aosc-linux-gnu",
   "arm64": "aarch64-aosc-linux-gnu",
   "armv4": "arm-aosc-linux-gnueabi",
   "armv6hf": "arm-aosc-linux-gnueabihf",
   "armv7hf": "arm-aosc-linux-gnueabihf",
   "i486": "i486-aosc-linux-gnu",
+  "ia64": "ia64-aosc-linux-gnu",
   "loongson2f": "mips64el-aosc-linux-gnuabi64",
   "loongson3": "mips64el-aosc-linux-gnuabi64",
   "loongarch64": "loongarch64-aosc-linux-gnu",
@@ -16,6 +18,5 @@
   "powerpc": "powerpc-aosc-linux-gnu",
   "ppc64": "powerpc64-aosc-linux-gnu",
   "ppc64el": "powerpc64le-aosc-linux-gnu",
-  "riscv64": "riscv64-aosc-linux-gnu",
-  "alpha": "alpha-aosc-linux-gnu"
+  "riscv64": "riscv64-aosc-linux-gnu"
 }
