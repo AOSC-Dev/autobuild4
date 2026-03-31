@@ -75,6 +75,24 @@ set_property(SOURCE native/abspiral_data.cpp APPEND PROPERTY OBJECT_DEPENDS "${C
 
 set(AB_INSTALL_PREFIX "${CMAKE_INSTALL_FULL_LIBDIR}/autobuild4")
 
+if(CMAKE_CROSSCOMPILING)
+    if(NOT DEFINED AB_NATIVE_ARCH_NAME)
+        message(FATAL_ERROR "AB_NATIVE_ARCH_NAME must be defined when cross-compiling")
+    endif()
+    message(STATUS "Autobuild native architecture name: ${AB_NATIVE_ARCH_NAME}")
+else()
+    execute_process(
+        COMMAND dpkg --print-architecture
+        OUTPUT_VARIABLE AB_NATIVE_ARCH_NAME
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        RESULT_VARIABLE ERR_MESSAGE
+    )
+    if(ERR_MESSAGE)
+        message(FATAL_ERROR "Unable to use dpkg to determine current CPU architecture: ${ERR_MESSAGE}")
+    endif()
+    message(STATUS "Detected Autobuild native architecture name: ${AB_NATIVE_ARCH_NAME}")
+endif()
+
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/abconfig.h
   COMMAND cmake
@@ -83,6 +101,7 @@ add_custom_command(
     -DAB_VERSION="${PROJECT_VERSION}"
     -DAB_URL="${PROJECT_HOMEPAGE_URL}"
     -DAB_INSTALL_PREFIX="${AB_INSTALL_PREFIX}"
+    -DAB_NATIVE_ARCH_NAME="${AB_NATIVE_ARCH_NAME}"
     -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/GenerateConfig.cmake"
   DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/config.h.in
