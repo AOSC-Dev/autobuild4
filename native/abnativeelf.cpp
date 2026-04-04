@@ -49,9 +49,6 @@ constexpr uint32_t elf_flags_mips64r6el = EF_MIPS_ARCH_64R6 | EF_MIPS_NAN2008;
 
 constexpr uint32_t elf_min_size = sizeof(Elf32_Ehdr);
 
-// 1MiB.
-constexpr size_t min_map_size = 1 << 20;
-
 enum class Endianness : bool {
   Little = true,
   Big = false,
@@ -397,36 +394,9 @@ const AOSCArch detect_architecture(Elf *elf_file, GElf_Ehdr &elf_ehdr,
   }
 }
 
-class MappedFile {
-public:
-  MappedFile(int fd, size_t size) : m_fd{fd}, m_size{size} {
-    if (m_fd == -1) {
-      m_addr = MAP_FAILED;
-      return;
-    }
-    m_addr = mmap(nullptr, m_size, PROT_READ, MAP_PRIVATE, m_fd, 0);
-  }
-  ~MappedFile() {
-    if (m_addr != MAP_FAILED)
-      munmap(m_addr, m_size);
-    if (m_fd >= 0)
-      close(m_fd);
-  }
-  inline void *addr() const { return m_addr; }
-  inline size_t size() const { return m_size; }
-
-private:
-  int m_fd;
-  void *m_addr;
-  size_t m_size;
-};
-
-static ELFParseResult identify_binary_data(const char *path, int fd,
-                                           const struct stat *st) {
+static ELFParseResult identify_binary_data(const char *data,
+                                           const size_t size) {
   ELFParseResult result{};
-  size_t size = st->st_size > min_map_size ? min_map_size : st->st_size;
-  const MappedFile file{fd, size};
-  const char *data = static_cast<const char *>(file.addr());
   const bool is_static_library =
       (size >= 8 && memcmp(data, ar_magic.data(), ar_magic.size()) == 0) ||
       (size >= 8 &&
@@ -452,19 +422,8 @@ static ELFParseResult identify_binary_data(const char *path, int fd,
     result.bin_type = BinaryType::Invalid;
     return result;
   }
-  /*
-   * NOTE: Do not mmap entire files in parallel on 32-bit targets, since
-   * they have much less address space to work with.
-   */
-#ifdef __LP64__
-  size_t full_size = st->st_size;
-  const MappedFile full_file = {fd, full_size};
-  const char *full_data = static_cast<const char *>(full_file.addr());
-  Elf *elf_file = elf_memory(const_cast<char *>(full_data), full_size);
-#else
-  elf_version(EV_CURRENT);
-  Elf *elf_file = elf_begin(fd, ELF_C_READ, nullptr);
-#endif
+
+  Elf *elf_file = elf_memory(const_cast<char *>(data), size);
   GElf_Ehdr elf_ehdr{};
   gelf_getehdr(elf_file, &elf_ehdr);
   const char *shstr_start = nullptr;
@@ -544,6 +503,30 @@ inline static fs::path get_filename_from_build_id(const std::string &build_id,
 
   return final_path;
 }
+
+class MappedFile {
+public:
+  MappedFile(int fd, size_t size) : m_fd{fd}, m_size{size} {
+    if (m_fd == -1) {
+      m_addr = MAP_FAILED;
+      return;
+    }
+    m_addr = mmap(nullptr, m_size, PROT_READ, MAP_PRIVATE, m_fd, 0);
+  }
+  ~MappedFile() {
+    if (m_addr != MAP_FAILED)
+      munmap(m_addr, m_size);
+    if (m_fd >= 0)
+      close(m_fd);
+  }
+  inline void *addr() const { return m_addr; }
+  inline size_t size() const { return m_size; }
+
+private:
+  int m_fd;
+  void *m_addr;
+  size_t m_size;
+};
 
 static inline int forked_execvp(const char *path, char *const argv[]) {
   const pid_t pid = fork();
@@ -663,13 +646,15 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     perror("fstat");
     return -1;
   }
-
+  const size_t size = st.st_size;
+  const MappedFile file{fd, size};
   std::vector<const char *> args{"", "--remove-section=.comment",
                                  "--remove-section=.note"};
   std::vector<const char *> extra_args{}; // for binutils
   args.reserve(8);
   extra_args.reserve(1);
-  const ELFParseResult result = identify_binary_data(src_path, fd, &st);
+  const char *data = static_cast<const char *>(file.addr());
+  const ELFParseResult result = identify_binary_data(data, size);
 
   constexpr const char *base_path = "/usr/lib/";
   constexpr const size_t base_len = sizeof(base_path);
