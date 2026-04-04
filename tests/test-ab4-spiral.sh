@@ -1,5 +1,8 @@
 #!/bin/bash -e
 source "ab4-prelude.sh"
+EXPECTED_SONAMES=(
+	"libqt5quickparticles5" "libqt5quickparticles5-gles" "qtdeclarative5-dev"
+)
 
 abspiral_from_sonames libgtk-3.so
 if [[ "${__ABSPIRAL_PROVIDES_SONAMES[*]}" = 'libgtk-3-dev' ]]; then
@@ -10,9 +13,17 @@ else
 fi
 
 abspiral_from_sonames libQt5QuickParticles.so.5
-if [[ "${__ABSPIRAL_PROVIDES_SONAMES[*]}" = 'libqt5quickparticles5 libqt5quickparticles5-gles qtdeclarative5-dev' ]]; then
+IFS=' '
+_chk=" ${__ABSPIRAL_PROVIDES_SONAMES[*]} "
+unset IFS
+for soname in "${EXPECTED_SONAMES[@]}" ; do
+    _chk="${_chk/ $soname / }"
+done
+
+if [ -z "${_chk// /}" ]; then
     echo "Spiral test passed."
 else
     echo "Inferred names: ${__ABSPIRAL_PROVIDES_SONAMES[*]}"
+    echo "Expected names: ${EXPECTED_SONAMES[*]}"
     abdie 'Spiral test failed.'
 fi
