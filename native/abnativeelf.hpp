@@ -38,7 +38,7 @@ enum class AOSCArch : uint8_t {
 };
 
 struct ELFParseResult {
-  std::vector<const char *> needed_libs;
+  std::vector<std::string> needed_libs;
   std::string build_id;
   std::string soname;
   BinaryType bin_type;
