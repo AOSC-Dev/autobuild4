@@ -88,10 +88,10 @@ static size_t get_elf_dynstrtab(Elf *elf_file,
   }
 }
 
-static std::vector<const char *>
+static std::vector<std::string>
 get_elf_needed(Elf *elf_file, const std::vector<GElf_Shdr> &section_headers,
                GElf_Off dynstrtab) {
-  std::vector<const char *> needed{};
+  std::vector<std::string> needed{};
   if (!dynstrtab)
     return needed;
   for (const auto &shdr : section_headers) {
