@@ -13,6 +13,12 @@
 #define IFCONSTEXPR
 #endif
 
+#if defined(__LP64__)
+#define ALLOW_THREADS true
+#else
+#define ALLOW_THREADS false
+#endif
+
 template <typename T, typename R> class ThreadPool {
   using processor_func_t = std::function<R(T &)>;
 
@@ -28,7 +34,9 @@ template <typename T, typename R> class ThreadPool {
 
 public:
   explicit ThreadPool(processor_func_t processor,
-                      const unsigned int thread_num = std::thread::hardware_concurrency())
+                      const unsigned int thread_num =
+                          ALLOW_THREADS ? std::thread::hardware_concurrency()
+                                        : 1)
       : m_waker(), m_queue({}), m_stop(false), m_has_error(false),
         m_processor(std::move(processor)) {
     for (int i = 0; i < thread_num; ++i) {
