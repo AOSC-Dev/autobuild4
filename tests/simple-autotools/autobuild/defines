@@ -3,4 +3,3 @@ PKGSEC=devel
 PKGDES="Simple AutoConf and AutoMake test package"
 
 PKGVER="0.0"
-AB_FLAGS_SPECS=0

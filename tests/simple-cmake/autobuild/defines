@@ -3,5 +3,4 @@ PKGSEC=devel
 PKGDES="Simple CMake test package"
 
 ABHOST=noarch
-AB_FLAGS_SPECS=0
 PKGVER="0.0"
