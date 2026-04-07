@@ -53,9 +53,6 @@ AB_FLAGS_FTF=1
 AB_FLAGS_PIC=1
 AB_FLAGS_PIE=1
 
-# Hardening specs?
-AB_FLAGS_SPECS=1
-
 # Enable table-based thread cancellation.
 AB_FLAGS_EXC=1
 

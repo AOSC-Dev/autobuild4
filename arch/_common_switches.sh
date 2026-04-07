@@ -6,7 +6,6 @@ if ((AB_FLAGS_SCP)); then CFLAGS_GCC_COMMON+=('-fstack-clash-protection'); fi
 if ((AB_FLAGS_RRO)); then LDFLAGS_COMMON+=('-Wl,-z,relro'); fi
 if ((AB_FLAGS_NOW)); then LDFLAGS_COMMON+=('-Wl,-z,now'); fi
 if ((AB_FLAGS_FTF)); then CPPFLAGS_COMMON+=('-U_FORTIFY_SOURCE' '-D_FORTIFY_SOURCE=3' '-O2'); fi
-if ((AB_FLAGS_SPECS)); then CFLAGS_GCC_OPTI+=('-specs=/usr/lib/gcc/specs/hardened-cc1'); fi
 if ((AB_FLAGS_O3)); then CFLAGS_COMMON_OPTI="${CFLAGS_COMMON_OPTI/O2/O3}"; fi
 if ((AB_FLAGS_OS)); then CFLAGS_COMMON_OPTI="${CFLAGS_COMMON_OPTI/O2/Os}"; fi
 if ((AB_FLAGS_EXC)); then CFLAGS_COMMON+=('-fexceptions'); fi
@@ -31,7 +30,6 @@ if bool "$USECLANG"; then
         # for CFLAGS, because clang will mark all functions as dso_local if -fPIE is specified
         # However, clang/LLVM internally will enable PIE if you specified -fPIC
 	if ((AB_FLAGS_PIE)); then LDFLAGS_COMMON+=('-fPIE') CFLAGS_COMMON+=('-fPIC'); fi
-elif ((AB_FLAGS_SPECS)); then LDFLAGS_COMMON+=("-specs=/usr/lib/gcc/specs/hardened-ld");
 fi
 
 if bool "$ABSPLITDBG"; then
