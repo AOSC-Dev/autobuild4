@@ -9,10 +9,15 @@ build_autosetup_probe(){
 }
 
 build_autosetup_configure() {
-	mkdir -vp "$BLDDIR" \
-		|| abdie "Failed to create build directory: $?."
-	cd "$BLDDIR" \
-		|| abdie "Failed to enter build directory: $?."
+	export ABSHADOW
+
+	if bool "$ABSHADOW"
+	then
+		mkdir -vp "$BLDDIR" \
+			|| abdie "Failed to create build directory: $?."
+		cd "$BLDDIR" \
+			|| abdie "Failed to enter build directory: $?."
+	fi
 
 	if [[ "x${AUTOTOOLS_TARGET[*]}" != "x" ]]
 	then
@@ -40,8 +45,11 @@ build_autosetup_configure() {
 
 build_autosetup_build() {
 	BUILD_READY
-	cd "$BLDDIR" \
-		|| abdie "Failed to enter build directory: $?."
+	if bool "$ABSHADOW"
+	then
+		cd "$BLDDIR" \
+			|| abdie "Failed to enter build directory: $?."
+	fi
 
 	abinfo "Building binaries ..."
 	make \
@@ -53,8 +61,12 @@ build_autosetup_install() {
 	abinfo "Installing binaries ..."
 	make install DESTDIR="$PKGDIR" \
 		|| abdie "Failed to install binaries: $?."
-	cd "$SRCDIR" \
-		|| abdie "Failed to return to source directory: $?."
+
+	if bool "$ABSHADOW"
+	then
+		cd "$SRCDIR" \
+			|| abdie "Failed to return to source directory: $?."
+	fi
 }
 
 ab_register_template autosetup -- tclsh
