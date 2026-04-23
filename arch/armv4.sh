@@ -8,3 +8,6 @@ LDFLAGS_COMMON_ARCH=('-Wl,--gc-sections')
 
 CFLAGS_COMMON_ARCH+=('-march=armv4' '-mfloat-abi=soft')
 CFLAGS_GCC_ARCH=('-mtune=strongarm110')
+
+# Enable Y2038 (largefile + time64) mitigation.
+AB_FLAGS_Y2038=1
