@@ -368,7 +368,10 @@ static int abdie(WORD_LIST *list) {
   // cd "$SRCDIR"
   const auto *srcdir_v = find_variable("SRCDIR");
   if (srcdir_v && srcdir_v->value) {
-    chdir(srcdir_v->value);
+    if (chdir(srcdir_v->value) != 0) {
+      log->logException(fmt::format("Unable to chdir() to {0}: {1}",
+                                    srcdir_v->value, strerror(errno)));
+    }
   }
   log->logDiagnostic(diag);
   log->logException(message ? message : std::string());
