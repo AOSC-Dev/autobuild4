@@ -28,6 +28,7 @@
   ],
   "filter_elf": ["ABSTRIP", "ABSPLITDBG", "SYMTAB"],
   "flags": [
+    "AB_FLAGS_ATOMIC",
     "AB_FLAGS_SSP",
     "AB_FLAGS_SCP",
     "AB_FLAGS_RRO",
