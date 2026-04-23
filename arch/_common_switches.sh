@@ -1,6 +1,7 @@
 #!/bin/bash
 ##arch/_common_switches.sh: Switches sourced after defines.
 ##@copyright GPL-2.0+
+if ((AB_FLAGS_ATOMIC)); then CFLAGS_COMMON+=('-latomic'); LDFLAGS_COMMON+=('-latomic'); fi
 if ((AB_FLAGS_SSP)); then CFLAGS_COMMON+=('-fstack-protector-strong' '--param=ssp-buffer-size=4'); fi
 if ((AB_FLAGS_SCP)); then CFLAGS_GCC_COMMON+=('-fstack-clash-protection'); fi
 if ((AB_FLAGS_RRO)); then LDFLAGS_COMMON+=('-Wl,-z,relro'); fi
