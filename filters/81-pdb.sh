@@ -6,7 +6,7 @@ filter_pdb() {
 	for p in ${BIN_DIRS[@]}; do
         i="$PKGDIR"/"$p"
 	    if [ -d "$i" ]; then
-            for f in `find $i -type f -name "*.pdb"`; do
+            for f in `find "$i" -type f -name "*.pdb"`; do
                 if bool "$ABSPLITDBG"; then
                     path="${f#"$PKGDIR"}"
                     abinfo "Saving Program Database file $f ..."
