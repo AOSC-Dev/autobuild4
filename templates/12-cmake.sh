@@ -16,10 +16,15 @@ build_cmake_configure() {
 			|| abdie "Failed to enter shadow build directory: $?."
 	fi
 
-    BUILD_START
+	BUILD_START
 
+	# NOTE: CMake does not add ENV{CPPFLAGS} to
+	# CMAKE_${LANGUAGE}_FLAGS_INIT. We must either patch CMake or add
+	# CPPFLAGS to CFLAGS and CXXFLAGS manually.
+	export CFLAGS="$CPPFLAGS $CFLAGS"
+	export CXXFLAGS="$CPPFLAGS $CXXFLAGS"
 	abinfo "Running CMakeLists.txt to generate Makefile ..."
-    ab_tostringarray CMAKE_AFTER
+	ab_tostringarray CMAKE_AFTER
 	cmake "$SRCDIR" "${CMAKE_DEF[@]}" "${CMAKE_AFTER[@]}" \
 			|| abdie "Failed to run CMakeLists.txt: $?."
 }

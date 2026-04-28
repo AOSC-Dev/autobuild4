@@ -36,6 +36,11 @@ ABINFOCOMPRESS=1
 ABELFDEP=0	# Guess dependencies from ldd?
 ABSTRIP=1	# Should ELF be stripped off debug and unneeded symbols?
 
+# Add -latomic to compiler flags.
+# Useful when dealing with architectures lacking 64-bit and longer atomic
+# operations.
+AB_FLAGS_ATOMIC=0
+
 # Use -O3 instead?
 AB_FLAGS_O3=0
 
@@ -58,6 +63,10 @@ AB_FLAGS_EXC=1
 
 # Enable control flow integrity protection.
 AB_FLAGS_CFP=1
+
+# Enable Y2038 mitigations:
+# -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64
+AB_FLAGS_Y2038=0
 
 AB_SAN_ADD=0
 AB_SAN_THR=0

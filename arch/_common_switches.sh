@@ -1,6 +1,7 @@
 #!/bin/bash
 ##arch/_common_switches.sh: Switches sourced after defines.
 ##@copyright GPL-2.0+
+if ((AB_FLAGS_ATOMIC)); then CFLAGS_COMMON+=('-latomic'); LDFLAGS_COMMON+=('-latomic'); fi
 if ((AB_FLAGS_SSP)); then CFLAGS_COMMON+=('-fstack-protector-strong' '--param=ssp-buffer-size=4'); fi
 if ((AB_FLAGS_SCP)); then CFLAGS_GCC_COMMON+=('-fstack-clash-protection'); fi
 if ((AB_FLAGS_RRO)); then LDFLAGS_COMMON+=('-Wl,-z,relro'); fi
@@ -9,6 +10,7 @@ if ((AB_FLAGS_FTF)); then CPPFLAGS_COMMON+=('-U_FORTIFY_SOURCE' '-D_FORTIFY_SOUR
 if ((AB_FLAGS_O3)); then CFLAGS_COMMON_OPTI="${CFLAGS_COMMON_OPTI/O2/O3}"; fi
 if ((AB_FLAGS_OS)); then CFLAGS_COMMON_OPTI="${CFLAGS_COMMON_OPTI/O2/Os}"; fi
 if ((AB_FLAGS_EXC)); then CFLAGS_COMMON+=('-fexceptions'); fi
+if ((AB_FLAGS_Y2038)); then CPPFLAGS_COMMON+=('-D_FILE_OFFSET_BITS=64' '-D_TIME_BITS=64'); fi
 # Only functions (via compiler and/or kernel, and hardware) on ...
 #
 #   - amd64 (x86-64): Intel CET (compiler: -fcf-protection=full,

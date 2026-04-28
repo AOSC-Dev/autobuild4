@@ -13,3 +13,4 @@ CFLAGS_COMMON_ARCH+=('-m32' '-mcpu=603' '-mtune=G4' '-mno-altivec' '-msecure-plt
 GOFLAGS=${GOFLAGS/-buildmode=pie/}
 
 RUSTFLAGS_COMMON_ARCH=('-Ctarget-cpu=603' '-Ctarget-feature=+hard-float,+secure-plt,-altivec')
+AB_FLAGS_Y2038=1

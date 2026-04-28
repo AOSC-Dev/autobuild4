@@ -8,3 +8,4 @@ LDFLAGS_COMMON_ARCH=('-Wl,--gc-sections')
 
 CFLAGS_COMMON_ARCH+=('-march=armv6' '-mfloat-abi=hard')
 CFLAGS_GCC_ARCH=('-mtune=arm1176jz-s')
+AB_FLAGS_Y2038=1
