@@ -316,6 +316,10 @@ is_debug_info_present(const std::vector<GElf_Shdr> &section_headers,
   for (const auto &shdr : section_headers) {
     const Elf64_Word name_idx = shdr.sh_name;
     const char *section_name = elf_strptr(elf_file, shstrndx, name_idx);
+    // Some obscure ELF files don't have section names, primarily from
+    // penetration frameworks that contain invalid ELF files.
+    if (!section_name)
+      return false;
     if (strlen(section_name) >= 8 &&
         memcmp(section_name, sh_debug_info, sh_debug_info_sz) != 0)
       continue;
