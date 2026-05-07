@@ -118,7 +118,7 @@ build_rust_install() {
 			install -Dvm755 "$SRCDIR"/target/release/"$i" -t "$PKGDIR"/usr/lib/
 	done
 	abinfo 'Dropping lingering files ...'
-	rm -v "$PKGDIR"/usr/.crates{.toml,2.json}
+	rm -fv "$PKGDIR"/usr/.crates{.toml,2.json}
 	BUILD_FINAL
 }
 
