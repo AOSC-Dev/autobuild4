@@ -29,6 +29,8 @@ export AB ABBUILD ABHOST ABTARGET
 
 ab_parse_set_modifiers
 
+# Load defines for ABHOST.
+# NOTE: optenv32 is defined as an architecture.
 arch_loaddefines -2 defines || abdie "Failed to source defines file: $?."
 
 if [[ "$ABBUILD" == "$ABHOST" ]]; then
@@ -66,6 +68,12 @@ fi
 if abisdefined FAIL_ARCH && abisdefined ALLOW_ARCH; then
 	abdie "Can not define FAIL_ARCH and ALLOW_ARCH at the same time."
 fi
+
+# NOTE: Some defines may override AB_FLAGS_* defined in an arch-specific
+# manner.
+# Take AB_FLAGS_Y2038 for example, some packages may need to disable this
+# flag in order to build, such as v4l-utils.
+arch_loaddefines -2 defines || abdie "Failed to source defines file: $?."
 
 if bool "$AB_SKIP_ALLMAINTSCRIPTS" ; then
 	abinfo "Will not install maintscripts in this build."
