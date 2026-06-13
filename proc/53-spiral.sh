@@ -18,7 +18,7 @@ if bool "$ABSPIRAL"; then
                 while read -r LINE; do
                     __ABSPIRAL_PROVIDES+=("$LINE")
                 done < <( find "$PKGDIR"/usr/lib/girepository-1.0/ -name '*.typelib' -type f -printf '%f\n' | \
-                   awk '{ sub(/\.typelib$/, "", $1); print "gir-" tolower($1) }' )
+                   awk '{ sub(/\.typelib$/, "", $1); print "gir1.2-" tolower($1) }' )
 	fi
 	if [ -d "$PKGDIR"/usr/lib/python"$ABPY2VER"/site-packages ]; then
                 while read -r LINE; do
