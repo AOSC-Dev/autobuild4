@@ -8,6 +8,8 @@
     "ppc64el",
     "riscv64"
   ],
+  "mainline_tier1": ["amd64", "arm64", "loongarch64", "loongarch64_nosimd"],
+  "mainline_tier2": ["loongson3", "ppc64el", "riscv64"],
   "arm": ["armv4", "armv6hf", "armv7hf", "arm64"],
   "ocaml_native": ["amd64", "arm64", "ppc64el"],
   "retro": [
