@@ -3,7 +3,8 @@
 ##@copyright GPL-2.0+
 
 # Retro: Overriding mainline definitions, and take more interest in reducing code size.
-CFLAGS_COMMON_ARCH=('-O2' '-fno-tree-ch' '-ffunction-sections' '-fdata-sections')
+CFLAGS_COMMON_ARCH=('-O2' '-ffunction-sections' '-fdata-sections')
+CFLAGS_GCC_ARCH=('-fno-tree-ch')
 LDFLAGS_COMMON_ARCH=('-Wl,--gc-sections')
 
 CFLAGS_COMMON_ARCH+=('-march=v9' '-mvis' '-m64' '-mcmodel=medany')
