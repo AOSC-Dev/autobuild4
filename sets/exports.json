@@ -24,7 +24,8 @@
     "ABAPMS",
     "BUILDDEP",
     "PKGPRDEP",
-    "PKGEPOCH_SPIRAL"
+    "PKGEPOCH_SPIRAL",
+    "ABTYPE"
   ],
   "filter_elf": ["ABSTRIP", "ABSPLITDBG", "SYMTAB"],
   "flags": [
