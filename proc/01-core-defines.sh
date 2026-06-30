@@ -92,8 +92,37 @@ if [ -n "$ALLOW_ARCH" ] && [ "${ABBUILD%%\/*}" != $ALLOW_ARCH ]; then
 	abdie "This package can only be built on $ALLOW_ARCH, not including $ABHOST."
 fi
 # shellcheck disable=SC2053
-[[ ${ABHOST} != $FAIL_ARCH ]] ||
+# Now, we need to match not only the ARCH itself, we also have to match every
+# ABHOST_GROUPs (e.g. retro, mainline, etc.).
+# Three types of expressions are handled:
+# - "!(a|b|c)", matching anything except a, b and c, so the build is only
+#   available to a, b and c.
+# - "@(a|b|c)", matching a, b and c, so the build is not available to a,
+#   b and c.
+# - "arch" or "group", disallowing build for one arch/group.
+# NOTE:
+# - Expressions such as "a|b|c" or "(a|b|c)" are invalid.
+last_status=0
+if [ "${FAIL_ARCH##\!}" != "$FAIL_ARCH" ] ; then
+	chk_op="!="
+else
+	chk_op="=="
+fi
+for match in "$ABHOST" "${ABHOST_GROUP[@]}" ; do
+	if eval "[[ \$match $chk_op \$FAIL_ARCH ]]" ; then
+		last_status=0
+		break
+	else
+		last_status=1
+	fi
+done
+if [ "$chk_op" = "==" ] ; then
+	last_status="$(( !last_status ))"
+fi
+if [ "$last_status" != "0" ] ; then
 	abdie "This package cannot be built for $FAIL_ARCH, e.g. $ABHOST."
+fi
+unset last_status chk_op
 
 if ! bool "$ABSTRIP" && bool "$ABSPLITDBG"; then
 	abwarn "QA: ELF stripping is turned OFF."
