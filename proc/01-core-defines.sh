@@ -65,8 +65,8 @@ load_strict "$AB"/lib/default-flags.sh
 if ! abisdefined DPKG_ARCH ; then
 	export DPKG_ARCH="$ABHOST"
 fi
-if abisdefined FAIL_ARCH && abisdefined ALLOW_ARCH; then
-	abdie "Can not define FAIL_ARCH and ALLOW_ARCH at the same time."
+if abisdefined ALLOW_ARCH; then
+	abdie "ALLOW_ARCH is deprecated, please remove it from your defines file."
 fi
 
 # NOTE: Some defines may override AB_FLAGS_* defined in an arch-specific
