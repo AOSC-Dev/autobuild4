@@ -26,8 +26,13 @@ build_autosetup_configure() {
 		AUTOSETUP_TARGET=("${AUTOTOOLS_TARGET[@]}")
 	elif [[ "$ABHOST" = optenv* ]]
 	then
-		AUTOSETUP_TARGET=("--host=${ARCH_TARGET[$ABHOST]}" "--build=${ARCH_TARGET[$ABHOST]}"
-				  "CC=$CC" "CXX=$CXX" "OBJC=$OBJC" "OBJCXX=$OBJCXX" LD="$LD")
+		AUTOSETUP_TARGET=("--host=${ARCH_TARGET[$ABHOST]}"
+				  "--build=${ARCH_TARGET[$ABHOST]}"
+				  "CC=$CC" "CC_FOR_BUILD=$CC"
+				  "CXX=$CXX" "CXX_FOR_BUILD=$CXX"
+				  "OBJC=$OBJC" "OBJC_FOR_BUILD=$OBJC"
+				  "OBJCXX=$OBJCXX" "OBJCXX_FOR_BUILD=$OBJCXX"
+				  "LD=$LD" "LD_FOR_BUILD=$LD")
 	elif [[ "$ABHOST" != "$ABBUILD" ]]
 	then
 		AUTOSETUP_TARGET=("--host=$HOST")
