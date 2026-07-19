@@ -105,6 +105,10 @@ fi
 last_status=0
 if [ "${FAIL_ARCH##\!}" != "$FAIL_ARCH" ] ; then
 	chk_op="!="
+elif [ "${FAIL_ARCH##\@}" != "$FAIL_ARCH" ] ; then
+	chk_op="=="
+elif [ "${FAIL_ARCH//[^0-9a-z-_]/}" != "$FAIL_ARCH" ] ; then
+	abdie "Invalid FAIL_ARCH expression: ‘$FAIL_ARCH’."
 else
 	chk_op="=="
 fi
