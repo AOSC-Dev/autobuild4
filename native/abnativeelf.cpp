@@ -660,8 +660,8 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
   const char *data = static_cast<const char *>(file.addr());
   const ELFParseResult result = identify_binary_data(data, size);
 
-  constexpr const char *base_path = "/usr/lib/";
-  constexpr const size_t base_len = sizeof(base_path);
+  constexpr const char base_path[] = "/usr/lib/";
+  constexpr const size_t base_len = sizeof(base_path) - 1;
 
   const std::string filename(basename(src_path));
   const size_t filename_len = filename.size();
