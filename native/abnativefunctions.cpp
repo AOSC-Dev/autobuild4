@@ -787,7 +787,11 @@ static int abelf_elf_copy_to_symdir(WORD_LIST *list) {
 /**
  * Copy debug symbols for one specific file specified:
  * @param list arguments of the following form:
- *      <-flags> <source directories> <destination directory>
+ *      <-flags> <source file> <destination directory>
+ *      -d: split debug symbols
+ *      -s: strip symbols
+ *      -e: use eu-strip
+ *      -p: save debug symbols by filename instead of build ID
  * @return command status code:
  *       0  - success
  *       1  - invalid flags
@@ -798,13 +802,13 @@ static int abelf_copy_dbg(WORD_LIST *list) {
   int flags = AB_ELF_FIND_SO_DEPS;
   reset_internal_getopt();
   int opt = 0;
-  while ((opt = internal_getopt(list, const_cast<char *>("exrp"))) != -1) {
+  while ((opt = internal_getopt(list, const_cast<char *>("desp"))) != -1) {
     switch (opt) {
-    case 'x':
-      flags |= AB_ELF_STRIP_ONLY;
+    case 'd':
+      flags |= AB_ELF_SPLIT_DEBUG;
       break;
-    case 'r':
-      flags |= AB_ELF_CHECK_ONLY;
+    case 's':
+      flags |= AB_ELF_STRIP_SYMBOLS;
       break;
     case 'e':
       flags |= AB_ELF_USE_EU_STRIP;
@@ -847,6 +851,10 @@ static void ab_set_to_bash_array(const char *varname,
  * Copy debug symbols for all files specified:
  * @param list arguments of the following form:
  *      <-flags> <source directories> <destination directory>
+ *      -d: split debug symbols
+ *      -s: strip symbols
+ *      -e: use eu-strip
+ *      -p: save debug symbols by filename instead of build ID
  * @return command status code:
  *       0  - success
  *       1  - invalid flags
@@ -860,13 +868,13 @@ static int abelf_copy_dbg_parallel(WORD_LIST *list) {
 
   reset_internal_getopt();
   int opt = 0;
-  while ((opt = internal_getopt(list, const_cast<char *>("exrp"))) != -1) {
+  while ((opt = internal_getopt(list, const_cast<char *>("desp"))) != -1) {
     switch (opt) {
-    case 'x':
-      flags |= AB_ELF_STRIP_ONLY;
+    case 'd':
+      flags |= AB_ELF_SPLIT_DEBUG;
       break;
-    case 'r':
-      flags |= AB_ELF_CHECK_ONLY;
+    case 's':
+      flags |= AB_ELF_STRIP_SYMBOLS;
       break;
     case 'e':
       flags |= AB_ELF_USE_EU_STRIP;

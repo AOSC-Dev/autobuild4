@@ -65,10 +65,10 @@ private:
   std::unordered_set<T> m_set;
 };
 
-constexpr int AB_ELF_STRIP_ONLY = 1 << 0;
-constexpr int AB_ELF_USE_EU_STRIP = 1 << 1;
-constexpr int AB_ELF_FIND_SO_DEPS = 1 << 2;
-constexpr int AB_ELF_CHECK_ONLY = 1 << 3;
+constexpr int AB_ELF_SPLIT_DEBUG = 1 << 0;
+constexpr int AB_ELF_STRIP_SYMBOLS = 1 << 1;
+constexpr int AB_ELF_USE_EU_STRIP = 1 << 2;
+constexpr int AB_ELF_FIND_SO_DEPS = 1 << 3;
 constexpr int AB_ELF_SAVE_WITH_PATH = 1 << 4;
 constexpr int AB_ELF_FIND_SONAMES = 1 << 5;
 
@@ -81,6 +81,6 @@ int elf_copy_debug_symbols_parallel(const std::vector<std::string> &directories,
                                     const char *dst_path,
                                     std::unordered_set<std::string> &so_deps,
                                     std::unordered_set<std::string> &sonames,
-                                    int flags = AB_ELF_USE_EU_STRIP);
+                                    int flags);
 const std::unordered_set<std::string>
 aosc_arch_to_debian_arch_suffix(const char *arch_name);
