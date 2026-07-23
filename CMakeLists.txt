@@ -81,16 +81,20 @@ if(CMAKE_CROSSCOMPILING)
     endif()
     message(STATUS "Autobuild native architecture name: ${AB_NATIVE_ARCH_NAME}")
 else()
-    execute_process(
-        COMMAND dpkg --print-architecture
-        OUTPUT_VARIABLE AB_NATIVE_ARCH_NAME
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        RESULT_VARIABLE ERR_MESSAGE
-    )
-    if(ERR_MESSAGE)
-        message(FATAL_ERROR "Unable to use dpkg to determine current CPU architecture: ${ERR_MESSAGE}")
+    if(NOT DEFINED AB_NATIVE_ARCH_NAME)
+        execute_process(
+            COMMAND dpkg --print-architecture
+            OUTPUT_VARIABLE AB_NATIVE_ARCH_NAME
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            RESULT_VARIABLE ERR_MESSAGE
+        )
+        if(ERR_MESSAGE)
+            message(FATAL_ERROR "Unable to use dpkg to determine current CPU architecture: ${ERR_MESSAGE}")
+        endif()
+        message(STATUS "Detected Autobuild native architecture name: ${AB_NATIVE_ARCH_NAME}")
+    else()
+        message(STATUS "Using custom Autobuild native architecture name: ${AB_NATIVE_ARCH_NAME}")
     endif()
-    message(STATUS "Detected Autobuild native architecture name: ${AB_NATIVE_ARCH_NAME}")
 endif()
 
 add_custom_command(
