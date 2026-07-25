@@ -102,6 +102,9 @@ RECONF=yes
 ABQA=yes
 ABINSTALL="dpkg"
 
+# Default to allow build for mainline architectures only
+FAIL_ARCH="!(mainline)"
+
 # Golang default build flags | Adapted from Arch Linux's Go package guildline.
 __GOFLAGS=(
 	'-mod=readonly'  # Ensure module files are not updated during building process.
