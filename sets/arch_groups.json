@@ -48,26 +48,5 @@
     "i486",
     "m68k",
     "powerpc"
-  ],
-  "with_dotnet": [
-    "amd64",
-    "arm64",
-    "armv7hf"
-  ],
-  "without_dotnet": [
-    "loongarch64",
-    "loongarch64_nosimd",
-    "loongson3",
-    "ppc64el",
-    "riscv64",
-    "alpha",
-    "armv4",
-    "armv6hf",
-    "i486",
-    "ia64",
-    "loongson2f",
-    "m68k",
-    "powerpc",
-    "ppc64"
   ]
 }
