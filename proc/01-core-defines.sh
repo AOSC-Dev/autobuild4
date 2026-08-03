@@ -87,7 +87,14 @@ for ele in "${AB_SKIP_MAINTSCRIPTS[@]}" ; do
 	_AB_SKIP_MAINTSCRIPTS_["$ele"]="$ele"
 done
 
-if [ "$ABHOST" != "noarch" ] ; then
+# if some dependencies of a noarch package cannot be built on some architectures
+# then we can't and shouldn't build this noarch package
+if [ "$ABHOST" != "noarch" ] || [ "$FAIL_ARCH" != "$__DEFAULT_FAIL_ARCH" ] ; then
+	if [ "$ABHOST" = "noarch" ] ; then
+		fail_arch_host="$ARCH"
+	else
+		fail_arch_host="$ABHOST"
+	fi
 	# shellcheck disable=SC2053
 	# Now, we need to match not only the ARCH itself, we also have to match every
 	# ABHOST_GROUPs (e.g. retro, mainline, etc.).
@@ -109,7 +116,7 @@ if [ "$ABHOST" != "noarch" ] ; then
 	else
 		chk_op="=="
 	fi
-	for match in "$ABHOST" "${ABHOST_GROUP[@]}" ; do
+	for match in "$fail_arch_host" "${ABHOST_GROUP[@]}" ; do
 		if eval "[[ \$match $chk_op \$FAIL_ARCH ]]" ; then
 			last_status=0
 			break
@@ -121,9 +128,9 @@ if [ "$ABHOST" != "noarch" ] ; then
 		last_status="$(( !last_status ))"
 	fi
 	if [ "$last_status" != "0" ] ; then
-		abdie "This package cannot be built for $FAIL_ARCH, e.g. $ABHOST."
+		abdie "This package cannot be built for $FAIL_ARCH, e.g. $fail_arch_host."
 	fi
-	unset last_status chk_op
+	unset last_status chk_op fail_arch_host
 fi
 
 if ! bool "$ABSTRIP" && bool "$ABSPLITDBG"; then

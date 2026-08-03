@@ -103,7 +103,9 @@ ABQA=yes
 ABINSTALL="dpkg"
 
 # Default to allow build for mainline architectures only
-FAIL_ARCH="!(mainline)"
+# The default value is recorded to check wether it has been explicitly set
+__DEFAULT_FAIL_ARCH="!(mainline)"
+FAIL_ARCH="$__DEFAULT_FAIL_ARCH"
 
 # Golang default build flags | Adapted from Arch Linux's Go package guildline.
 __GOFLAGS=(
