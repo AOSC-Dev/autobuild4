@@ -7,7 +7,7 @@
 # quirky and slowness nature, Merced family of chips are considered
 # not well supported and quirky. GCC deprecated -mtune=itanium1 in
 # 2009 at bbb6eae87edb29b26e7c545645fac3d76a4605d8.
-CFLAGS_COMMON_ARCH=('-O2' '-mtune=itanium2')
+CFLAGS_COMMON_ARCH=('-mtune=itanium2')
 
 # NOTE: -O3 causes ICEs.
 AB_FLAGS_O3=0
