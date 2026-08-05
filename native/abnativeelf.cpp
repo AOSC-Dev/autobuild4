@@ -668,7 +668,7 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
   const size_t src_len = strlen(src_path);
   bool in_usr_lib = false;
   if (src_len >= (base_len + filename_len)) {
-    const int src_offset = src_len - base_len - filename_len - 1;
+    const int src_offset = src_len - base_len - filename_len;
     in_usr_lib = (memcmp(src_path + src_offset, base_path, base_len) == 0);
   }
   if ((flags & AB_ELF_FIND_SONAMES) && in_usr_lib && (!result.soname.empty())) {
