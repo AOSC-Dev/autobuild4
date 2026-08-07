@@ -398,6 +398,8 @@ const AOSCArch detect_architecture(Elf *elf_file, GElf_Ehdr &elf_ehdr,
     return AOSCArch::IA64;
   case EM_ALPHA:
     return AOSCArch::ALPHA;
+  case EM_68K:
+    return AOSCArch::M68K;
   default:
     return AOSCArch::NONE;
   }
@@ -573,6 +575,8 @@ static const AOSCArch parse_aosc_arch_name(const std::string &name) {
     return AOSCArch::LOONGSON2F;
   if (name == "loongson3")
     return AOSCArch::LOONGSON3;
+  if (name == "m68k")
+    return AOSCArch::M68K;
   if (name == "mips64r6el")
     return AOSCArch::MIPS64R6EL;
   if (name == "powerpc")
@@ -612,6 +616,8 @@ aosc_arch_to_debian_arch_suffix(const AOSCArch arch) {
   case AOSCArch::LOONGSON2F:
   case AOSCArch::LOONGSON3:
     return {"mips64el"};
+  case AOSCArch::M68K:
+    return {"m68k"};
   case AOSCArch::MIPS64R6EL:
     return {"mips64r6el"};
   case AOSCArch::POWERPC:

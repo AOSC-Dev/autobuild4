@@ -30,6 +30,7 @@ enum class AOSCArch : uint8_t {
   LOONGARCH64,
   LOONGSON2F,
   LOONGSON3,
+  M68K,
   MIPS64R6EL,
   POWERPC,
   PPC64,
