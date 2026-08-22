@@ -22,7 +22,8 @@
     "loongson2f",
     "m68k",
     "powerpc",
-    "ppc64"
+    "ppc64",
+    "sparc64"
   ],
   "optenv": [
     "optenv32"
