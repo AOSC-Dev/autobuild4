@@ -245,6 +245,10 @@ static AOSCArch get_elf_arm_arch(Elf *elf_file, Endianness endianness,
         case 1:
           ret = AOSCArch::ARMV4;
           break;
+        // v5TE
+        case 4:
+          ret = AOSCArch::ARMV5TE;
+          break;
         // v6
         case 6:
           ret = AOSCArch::ARMV6HF;
@@ -267,7 +271,8 @@ static AOSCArch get_elf_arm_arch(Elf *elf_file, Endianness endianness,
     }
   }
   // Detect unsupported combinations
-  if ((ret == AOSCArch::ARMV4) && hard_float) {
+  if (((ret == AOSCArch::ARMV4) || (ret == AOSCArch::ARMV5TE)) &&
+      hard_float) {
     return AOSCArch::NONE;
   } else if (((ret == AOSCArch::ARMV6HF) || (ret == AOSCArch::ARMV7HF)) &&
              (!hard_float)) {
@@ -552,6 +557,8 @@ static const AOSCArch parse_aosc_arch_name(const std::string &name) {
     return AOSCArch::ARM64;
   if (name == "armv4")
     return AOSCArch::ARMV4;
+  if (name == "armv5te")
+    return AOSCArch::ARMV5TE;
   if (name == "armv6hf")
     return AOSCArch::ARMV6HF;
   if (name == "armv7hf")
@@ -591,6 +598,7 @@ aosc_arch_to_debian_arch_suffix(const AOSCArch arch) {
   case AOSCArch::ARM64:
     return {"arm64"};
   case AOSCArch::ARMV4:
+  case AOSCArch::ARMV5TE:
     return {"armel"};
   case AOSCArch::ARMV6HF:
   case AOSCArch::ARMV7HF:

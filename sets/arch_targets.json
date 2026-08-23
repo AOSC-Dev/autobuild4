@@ -3,6 +3,7 @@
   "amd64": "x86_64-aosc-linux-gnu",
   "arm64": "aarch64-aosc-linux-gnu",
   "armv4": "armv4l-aosc-linux-gnueabi",
+  "armv5te": "armv5l-aosc-linux-gnueabi",
   "armv6hf": "armv6l-aosc-linux-gnueabihf",
   "armv7hf": "armv7l-aosc-linux-gnueabihf",
   "i486": "i486-aosc-linux-gnu",
