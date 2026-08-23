@@ -22,6 +22,7 @@ enum class AOSCArch : uint8_t {
   AMD64,
   ARM64,
   ARMV4,
+  ARMV5TE,
   ARMV6HF,
   ARMV7HF,
   I486,
