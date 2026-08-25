@@ -7,7 +7,7 @@ CFLAGS_COMMON_ARCH=('-ffunction-sections' '-fdata-sections')
 CFLAGS_GCC_ARCH=('-fno-tree-ch')
 LDFLAGS_COMMON_ARCH=('-Wl,--gc-sections')
 
-CFLAGS_COMMON_ARCH+=('-march=armv6' '-mfloat-abi=hard')
+CFLAGS_COMMON_ARCH+=('-march=armv6t2+vfpv2' '-mfloat-abi=hard')
 CFLAGS_GCC_ARCH=('-mtune=arm1176jz-s')
 
 # Enable Y2038 (largefile + time64) mitigation.

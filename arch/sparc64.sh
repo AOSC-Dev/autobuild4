@@ -7,6 +7,6 @@ CFLAGS_COMMON_ARCH=('-ffunction-sections' '-fdata-sections')
 CFLAGS_GCC_ARCH=('-fno-tree-ch')
 LDFLAGS_COMMON_ARCH=('-Wl,--gc-sections')
 
-CFLAGS_COMMON_ARCH+=('-march=v9' '-mvis' '-m64' '-mcmodel=medany')
+CFLAGS_COMMON_ARCH+=('-mcpu=ultrasparc' '-mvis' '-m64' '-mcmodel=medany')
 
-RUSTFLAGS_COMMON_ARCH=('-Ctarget-cpu=v9' '-Ctarget-feature=+vis' '-Ccode-model=medium')
+RUSTFLAGS_COMMON_ARCH=('-Ctarget-cpu=ultrasparc' '-Ctarget-feature=+vis' '-Ccode-model=medium')

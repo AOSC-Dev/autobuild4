@@ -7,7 +7,7 @@ CFLAGS_COMMON_ARCH=('-ffunction-sections' '-fdata-sections')
 CFLAGS_GCC_ARCH=('-fno-tree-ch')
 LDFLAGS_COMMON_ARCH=('-Wl,--gc-sections')
 
-CFLAGS_COMMON_ARCH+=('-m32' '-mcpu=603' '-mtune=G4' '-mno-altivec' '-msecure-plt' '-mhard-float')
+CFLAGS_COMMON_ARCH+=('-m32' '-mcpu=603' '-mtune=G4' '-mno-altivec' '-mno-vsx' '-msecure-plt' '-mhard-float')
 
 # Position-independent executable buildmode is not available on PowerPC 32-bit architecture.
 # Removing for powerpc target.
