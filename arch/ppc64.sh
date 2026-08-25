@@ -6,7 +6,7 @@
 CFLAGS_COMMON_ARCH=('-ffunction-sections' '-fdata-sections')
 CFLAGS_GCC_ARCH=('-fno-tree-ch')
 LDFLAGS_COMMON_ARCH=('-Wl,--gc-sections')
-CFLAGS_COMMON_ARCH+=('-m64' '-mcpu=G5' '-maltivec' '-mabi=altivec' '-msecure-plt' '-mhard-float')
+CFLAGS_COMMON_ARCH+=('-m64' '-mcpu=powerpc64' '-mtune=G5' '-maltivec' '-mno-vsx' '-mabi=ibmlongdouble' '-msecure-plt' '-mhard-float')
 
 # Override some RUSTFLAGS sure that the correct linker is used with NOLTO=1.
 CFLAGS_GCC_OPTI_LTO=("${CFLAGS_COMMON_ARCH_LTO[@]}" '-flto-partition=none')
