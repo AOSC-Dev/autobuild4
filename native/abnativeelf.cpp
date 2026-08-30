@@ -700,12 +700,17 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     symbols.insert(result.needed_libs.begin(), result.needed_libs.end());
   }
 
-  if (flags & AB_ELF_CHECK_ONLY)
+  bool split_debug = flags & AB_ELF_SPLIT_DEBUG;
+  bool strip_symbols = flags & AB_ELF_STRIP_SYMBOLS;
+  bool use_eu_strip = flags & AB_ELF_USE_EU_STRIP;
+  bool save_with_path = flags & AB_ELF_SAVE_WITH_PATH;
+
+  if (!split_debug && !strip_symbols)
     return 0;
 
   if (!result.has_debug_info) {
-    // no debug info, strip only
-    flags |= AB_ELF_STRIP_ONLY;
+    // no debug info, don't split
+    split_debug = false;
   }
 
   switch (result.bin_type) {
@@ -716,54 +721,63 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     // skip and also notify the caller
     return 1;
   case BinaryType::Static:
-    // skip static library
-    flags |= AB_ELF_STRIP_ONLY;
+    // Debug symbol splitting is unsupported for static libraries.
+    split_debug = false;
     // eu-strip can not handle static libraries
-    flags &= ~AB_ELF_USE_EU_STRIP;
-    args.emplace_back("-R");
-    args.emplace_back(".gnu.lto*");
-    args.emplace_back("--strip-debug");
-    extra_args.emplace_back("--enable-deterministic-archives");
+    use_eu_strip = false;
+    if (strip_symbols) {
+      args.emplace_back("-R");
+      args.emplace_back(".gnu.lto*");
+      args.emplace_back("--strip-debug");
+      extra_args.emplace_back("--enable-deterministic-archives");
+    }
     break;
   case BinaryType::Executable:
-    // strip all symbols
-    args.emplace_back("-s");
+    if (strip_symbols) {
+      // strip all symbols
+      args.emplace_back("-s");
+    }
     break;
   case BinaryType::Relocatable:
     // disable debug symbol saving for relocatables
+    split_debug = false;
     // also uses GNU binutils strip for compatibility
-    flags |= AB_ELF_STRIP_ONLY;
-    flags &= ~AB_ELF_USE_EU_STRIP;
-    args.emplace_back("--strip-debug");
-    extra_args.emplace_back("--enable-deterministic-archives");
+    use_eu_strip = false;
+    if (strip_symbols) {
+      args.emplace_back("--strip-debug");
+      extra_args.emplace_back("--enable-deterministic-archives");
+    }
     break;
   case BinaryType::Dynamic:
   case BinaryType::KernelObject:
-    extra_args.emplace_back("--strip-unneeded");
+    if (strip_symbols) {
+      extra_args.emplace_back("--strip-unneeded");
+    }
     break;
   }
 
-  fs::path final_path;
-  if (flags & AB_ELF_STRIP_ONLY) {
+  if (split_debug && strip_symbols) {
+    get_logger()->info(fmt::format(
+        "Splitting debug symbols and stripping symbols from {0}", src_path));
+  } else if (split_debug) {
     get_logger()->info(
-        fmt::format("Stripping debug symbols from {0}", src_path));
+        fmt::format("Splitting debug symbols from {0}", src_path));
+  } else if (strip_symbols) {
+    get_logger()->info(fmt::format("Stripping symbols from {0}", src_path));
   } else {
-    get_logger()->info(
-        fmt::format("Saving and stripping debug symbols from {0}", src_path));
-    if (!result.has_debug_info) {
-      get_logger()->warning(
-          fmt::format("No debug symbols found in {0}", src_path));
-      return -3;
-    }
+    return 0;
+  }
 
-    if (result.build_id.empty() && !(flags & AB_ELF_SAVE_WITH_PATH)) {
+  fs::path final_path;
+  if (split_debug) {
+    if (result.build_id.empty() && !save_with_path) {
       // For binaries without build-id, save with path
-      flags |= AB_ELF_SAVE_WITH_PATH;
+      save_with_path = true;
       get_logger()->warning(fmt::format(
           "No build id found in {0}. Saving with relative path", src_path));
     }
 
-    if (flags & AB_ELF_SAVE_WITH_PATH) {
+    if (save_with_path) {
       final_path = fs::path{dst_path} / fs::path{src_path}.filename();
       get_logger()->debug(fmt::format("Saving to {0}", final_path.string()));
     } else {
@@ -774,9 +788,18 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     fs::create_directories(final_prefix);
   }
 
-  if (flags & AB_ELF_USE_EU_STRIP) {
+  if (use_eu_strip) {
+    if (!strip_symbols) {
+      const char *eu_strip_args[] = {
+          "eu-strip", "--strip-debug",    "--reloc-debug-sections",
+          "-f",       final_path.c_str(), src_path,
+          nullptr};
+      return forked_execvp("eu-strip",
+                           const_cast<char *const *>(eu_strip_args));
+    }
+
     args[0] = "eu-strip";
-    if (!(flags & AB_ELF_STRIP_ONLY)) {
+    if (split_debug) {
       args.emplace_back("--reloc-debug-sections");
       args.emplace_back("-f");
       args.emplace_back(final_path.c_str());
@@ -785,21 +808,29 @@ int elf_copy_debug_symbols(const char *src_path, const char *dst_path,
     args.emplace_back(nullptr);
     return forked_execvp("eu-strip", const_cast<char *const *>(args.data()));
   }
-  if (!(flags & AB_ELF_STRIP_ONLY)) {
-    const auto path = final_path.string();
-    const char *args[] = {
+
+  if (split_debug) {
+    const char *objcopy_args[] = {
         "objcopy", "--only-keep-debug", "--compress-debug-sections=zstd",
-        src_path,  path.c_str(),        nullptr};
-    int ret = forked_execvp("objcopy", const_cast<char *const *>(args));
+        src_path,  final_path.c_str(),  nullptr};
+    const int ret =
+        forked_execvp("objcopy", const_cast<char *const *>(objcopy_args));
     if (ret != 0) {
       return ret;
     }
   }
-  args[0] = "strip";
-  std::copy(extra_args.begin(), extra_args.end(), std::back_inserter(args));
-  args.emplace_back(src_path);
-  args.emplace_back(nullptr);
-  return forked_execvp("strip", const_cast<char *const *>(args.data()));
+
+  if (strip_symbols) {
+    args[0] = "strip";
+    std::copy(extra_args.begin(), extra_args.end(), std::back_inserter(args));
+    args.emplace_back(src_path);
+    args.emplace_back(nullptr);
+    return forked_execvp("strip", const_cast<char *const *>(args.data()));
+  }
+
+  const char *strip_debug_args[] = {"strip", "--strip-debug", src_path,
+                                    nullptr};
+  return forked_execvp("strip", const_cast<char *const *>(strip_debug_args));
 }
 
 int elf_copy_to_symdir(const char *src_path, const char *dst_path,

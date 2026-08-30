@@ -9,12 +9,9 @@ filter_pdb() {
             for f in "$i"/**/*.@(pdb|dbg); do
                 if bool "$ABSPLITDBG"; then
                     path="${f#"$PKGDIR"}"
-                    abinfo "Saving Program Database file $f ..."
+                    abinfo "Moving Program Database file $f ..."
                     mkdir -p "$(dirname "$SYMDIR"/"$path")"
                     mv "$f" "$SYMDIR"/"$path"
-                elif bool "$ABSTRIP"; then
-                    abinfo "Dropping Program Database file $f ..."
-                    rm "$f"
                 fi
             done
         fi
