@@ -115,7 +115,7 @@ build_rust_install() {
 	for i in "$SRCDIR"/target/release/*.so*; do
 		# filter out the compiler plugins
 		readelf --wide --dyn-syms "$i" | grep -q '__rustc_proc_macro_decls_[0-9a-f]*__' ||\
-			install -Dvm755 "$SRCDIR"/target/release/"$i" -t "$PKGDIR"/usr/lib/
+			install -Dvm755 "$i" -t "$PKGDIR"/usr/lib/
 	done
 	abinfo 'Dropping lingering files ...'
 	rm -fv "$PKGDIR"/usr/.crates{.toml,2.json}
