@@ -1,5 +1,4 @@
 {
-  "build_qtproj": ["QT_SELECT"],
   "compilers": ["USECLANG"],
   "default": [
     "PKGNAME",
