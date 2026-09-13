@@ -24,10 +24,18 @@ build_qtproj_configure() {
 	else
 		abdie "Unknown qmake version: ${QMAKEVER}."
 	fi
+
+	export QTPROJ_SPEC
+	if bool "$USECLANG"; then
+		QTPROJ_SPEC=" -spec linux-clang "
+	else
+		QTPROJ_SPEC=" -spec linux-g++ "
+	fi
+
 	ab_tostringarray QTPROJ_AFTER
 	ab_typecheck -a QTPROJ_DEF
 	abinfo "Running ${QMAKE} to generate Makefile ..."
-	"/usr/bin/${QMAKE}" "${QTPROJ_DEF[@]}" "${QTPROJ_AFTER[@]}" \
+	"/usr/bin/${QMAKE}" $QTPROJ_SPEC "${QTPROJ_DEF[@]}" "${QTPROJ_AFTER[@]}" \
 		|| abdie "Failed while running qmake to generate Makefile: $?."
 }
 
