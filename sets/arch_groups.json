@@ -23,7 +23,8 @@
     "loongson2f",
     "m68k",
     "powerpc",
-    "ppc64"
+    "ppc64",
+    "sh3"
   ],
   "optenv": [
     "optenv32"
@@ -48,6 +49,7 @@
     "armv7hf",
     "i486",
     "m68k",
-    "powerpc"
+    "powerpc",
+    "sh3"
   ]
 }

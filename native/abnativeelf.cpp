@@ -400,6 +400,8 @@ const AOSCArch detect_architecture(Elf *elf_file, GElf_Ehdr &elf_ehdr,
     return AOSCArch::ALPHA;
   case EM_68K:
     return AOSCArch::M68K;
+  case EM_SH:
+    return AOSCArch::SH3;
   default:
     return AOSCArch::NONE;
   }
@@ -587,6 +589,8 @@ static const AOSCArch parse_aosc_arch_name(const std::string &name) {
     return AOSCArch::PPC64EL;
   if (name == "riscv64")
     return AOSCArch::RISCV64;
+  if (name == "sh3")
+    return AOSCArch::SH3;
   if (name == "sparc64")
     return AOSCArch::SPARC64;
   return AOSCArch::NONE;
@@ -628,6 +632,8 @@ aosc_arch_to_debian_arch_suffix(const AOSCArch arch) {
     return {"ppc64el"};
   case AOSCArch::RISCV64:
     return {"riscv64"};
+  case AOSCArch::SH3:
+    return {"sh4"};
   case AOSCArch::SPARC64:
     return {"sparc64"};
   default:
