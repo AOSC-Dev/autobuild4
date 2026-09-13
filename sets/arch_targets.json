@@ -20,5 +20,6 @@
   "ppc64": "powerpc64-aosc-linux-gnu",
   "ppc64el": "powerpc64le-aosc-linux-gnu",
   "riscv64": "riscv64-aosc-linux-gnu",
+  "sh3": "sh3-aosc-linux-gnu",
   "sparc64": "sparc64-aosc-linux-gnu"
 }

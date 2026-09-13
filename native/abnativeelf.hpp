@@ -36,6 +36,7 @@ enum class AOSCArch : uint8_t {
   PPC64,
   PPC64EL,
   RISCV64,
+  SH3,
   SPARC64,
 };
 
