@@ -31,7 +31,7 @@ elif [ -d "$patch_root" ]; then
     for src in "${patch_dirs[@]}"; do
         subdir="${src#"$patch_root"}"
         dst="$SRCDIR"/"$subdir"
-        
+
         abinfo "Applying patches from $src to $dst ...."
         if [ ! -d "$dst" ]; then
             abdie "Patch destination does no exist, aborting ..."
@@ -47,6 +47,12 @@ elif [ -d "$patch_root" ]; then
         ab_reverse_patches \
             "$src"/*.r{patch,diff} \
             "$src"/*.r{patch,diff}."${CROSS:-$ARCH}"
+        for archgroup in "${ABHOST_GROUP[@]}"; do
+            ab_apply_patches \
+                "$src"/*.{patch,diff}."${archgroup}"
+            ab_reverse_patches \
+                "$src"/*.r{patch,diff}."${archgroup}"
+        done
         touch .patch
     done
 fi
