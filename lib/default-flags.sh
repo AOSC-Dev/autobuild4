@@ -20,6 +20,20 @@ CMAKE_DEF=(
 	-DCMAKE_INSTALL_SBINDIR="$BINDIR"
 	-DCMAKE_SKIP_INSTALL_RPATH=ON
 	-DCMAKE_VERBOSE_MAKEFILE=ON
+	# FIXME: A large number of projects would still build with CMake >= 4.0
+	# with -DCMAKE_POLICY_VERSION_MINIMUM=3.5 specified. Most projects
+	# simply never updated their CMake policy version requirement, throwing
+	# this error during build time:
+	#
+	# CMake Error at CMakeLists.txt:2 (cmake_minimum_required):
+	# Compatibility with CMake < 3.5 has been removed from CMake.
+	#
+	#   Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+	#   to tell CMake that the project requires at least <min> but has been updated
+	#   to work with policies introduced by <max> or earlier.
+	#
+	#   Or, add -DCMAKE_POLICY_VERSION_MINIMUM=3.5 to try configuring anyway.
+	-DCMAKE_POLICY_VERSION_MINIMUM=3.5
 )
 AUTOSETUP_DEF=(
 	--prefix="$PREFIX"
