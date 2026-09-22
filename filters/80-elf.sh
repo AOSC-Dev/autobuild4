@@ -17,12 +17,15 @@ BIN_DIRS=(
 
 filter_elf() {
 	local _opts=()
-	if ! bool "$ABSTRIP"; then
+	if bool "$ABSTRIP"; then
+		_opts+=('-s')
+	else
 		abinfo 'Not stripping ELF binaries as requested.'
-	    _opts+=('-r')
-	elif ! bool "$ABSPLITDBG"; then
-	    abinfo 'Not splitting ELF binaries as requested.'
-		_opts+=('-x')
+	fi
+	if bool "$ABSPLITDBG"; then
+		_opts+=('-d')
+	else
+		abinfo 'Not splitting ELF binaries as requested.'
 	fi
 
 	local _elf_path=()
