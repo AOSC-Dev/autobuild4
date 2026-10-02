@@ -12,7 +12,7 @@ CFLAGS_COMMON_ARCH+=('-m64' '-mcpu=powerpc64' '-mtune=G5' '-maltivec' '-mno-vsx'
 CFLAGS_GCC_OPTI_LTO=("${CFLAGS_COMMON_ARCH_LTO[@]}" '-flto-partition=none')
 LDFLAGS_GCC_OPTI_LTO=("${LDFLAGS_COMMON_ARCH_LTO[@]}" '-flto-partition=none')
 
-RUSTFLAGS_COMMON_ARCH=('-Ctarget-cpu=g5' '-Ctarget-features=+altivec,+secure-plt,+hard-float,+64bit')
+RUSTFLAGS_COMMON_ARCH=('-Ctarget-cpu=g5' '-Ctarget-feature=+altivec,+secure-plt,+hard-float,+64bit')
 # LLD does not support POWER ABI v1.
 RUSTFLAGS_COMMON_ARCH_LTO=('-Clink-arg=-fuse-ld=bfd' '-Clink-arg=-Wl,-build-id=sha1')
 
