@@ -98,7 +98,7 @@ if __name__ == "__main__":
     logger.info(f"{len(output)} entries found, saving to {target_path}")
     csv_data = "\n".join(
         [
-            '{{"{}","{}"}},'.format(k, ",".join([pkg for pkg in v]))
+            '{{"{}","{}"}},'.format(k, ",".join([pkg for pkg in sorted(v)]))
             for (k, v) in output.items()
         ]
     )
