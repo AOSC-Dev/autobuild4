@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
+import csv
+import datetime
 import logging
 import os
 import re
+import sys
 import zlib
 from pathlib import Path
 from urllib import request
@@ -59,23 +62,45 @@ def parse_ubuntu_contents(
     with request.urlopen(request.Request(url)) as resp:
         if resp.status != 200:
             logger.error(f"Failed to download {url}: {resp.status}")
-            exit(1)
+            sys.exit(1)
         file_str = d.decompress(resp.read()).decode("utf-8")
         parse_contents_chunk(file_str, out)
+
+
+def get_active_ubuntu_series() -> list[str]:
+    with request.urlopen(
+        "https://salsa.debian.org/debian/distro-info-data/-/raw/main/ubuntu.csv?ref_type=heads&inline=false"
+    ) as resp:
+        if resp.status != 200:
+            logger.warning(f"Failed to fetch active Ubuntu series: {resp.status}")
+            return CODENAMES
+        data = csv.DictReader(resp.read().decode("utf-8").splitlines())
+        current_time = datetime.datetime.now(tz=datetime.timezone.utc)
+        series = [
+            row["series"]
+            for row in data
+            if datetime.datetime.strptime(row["eol"], "%Y-%m-%d").replace(
+                tzinfo=datetime.timezone.utc
+            )
+            > current_time
+        ]
+        series.sort()
+        logger.info(f"Active Ubuntu series: {series}")
+        return series
 
 
 if __name__ == "__main__":
     target_path = Path(os.path.dirname(__file__)) / "data" / "lut_sonames.cpp.inc"
     logger.info(f"target path: {target_path}")
-    output: dict[str, set[str]] = dict()
-    for c in CODENAMES:
+    output: dict[str, set[str]] = {}
+    for c in get_active_ubuntu_series():
         parse_ubuntu_contents(c, output)
-    logging.info(f"{len(output)} entries found, saving to {target_path}")
-    csv = "\n".join(
+    logger.info(f"{len(output)} entries found, saving to {target_path}")
+    csv_data = "\n".join(
         [
             '{{"{}","{}"}},'.format(k, ",".join([pkg for pkg in v]))
             for (k, v) in output.items()
         ]
     )
     with open(target_path, "w") as target_file:
-        target_file.write(csv)
+        target_file.write(csv_data)
