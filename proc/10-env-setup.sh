@@ -19,3 +19,8 @@ fi
 
 # Note: Set up non-interactive mode for Node.js Corepack.
 export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+
+# Note: Warn and continue with the installed (packaged) pnpm when its version
+# differs from the project's declared version, instead of downloading the
+# declared upstream version, which may fail as pnpm 12+ is platfrom-dependent.
+export pnpm_config_pm_on_fail=warn
