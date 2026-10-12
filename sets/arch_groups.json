@@ -37,12 +37,13 @@
     "ia64",
     "loongarch64",
     "loongarch64_nosimd",
+    "loongson2f",
     "loongson3",
     "mips64r6el",
     "ppc64el",
+    "ppc64",
     "riscv64",
-    "loongson2f",
-    "ppc64"
+    "sparc64"
   ],
   "32bit": [
     "armv4",
