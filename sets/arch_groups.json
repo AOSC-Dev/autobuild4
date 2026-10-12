@@ -47,6 +47,7 @@
   ],
   "32bit": [
     "armv4",
+    "armv5te",
     "armv6hf",
     "armv7hf",
     "i486",
