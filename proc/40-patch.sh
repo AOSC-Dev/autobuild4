@@ -31,6 +31,7 @@ elif [ -d "$patch_root" ]; then
     for src in "${patch_dirs[@]}"; do
         subdir="${src#"$patch_root"}"
         dst="$SRCDIR"/"$subdir"
+        stage2_suffix=""
 
         abinfo "Applying patches from $src to $dst ...."
         if [ ! -d "$dst" ]; then
@@ -41,17 +42,20 @@ elif [ -d "$patch_root" ]; then
         fi
 
         cd "$dst"
+        if bool "$ABSTAGE2"; then
+            stage2_suffix=".stage2"
+        fi
         ab_apply_patches \
-            "$src"/*.{patch,diff} \
-            "$src"/*.{patch,diff}."${CROSS:-$ARCH}"
+            "$src"/*.{patch,diff}"${stage2_suffix}" \
+            "$src"/*.{patch,diff}"${stage2_suffix}"."${CROSS:-$ARCH}"
         ab_reverse_patches \
-            "$src"/*.r{patch,diff} \
-            "$src"/*.r{patch,diff}."${CROSS:-$ARCH}"
+            "$src"/*.r{patch,diff}"${stage2_suffix}" \
+            "$src"/*.r{patch,diff}"${stage2_suffix}"."${CROSS:-$ARCH}"
         for archgroup in "${ABHOST_GROUP[@]}"; do
             ab_apply_patches \
-                "$src"/*.{patch,diff}."${archgroup}"
+                "$src"/*.{patch,diff}"${stage2_suffix}"."${archgroup}"
             ab_reverse_patches \
-                "$src"/*.r{patch,diff}."${archgroup}"
+                "$src"/*.r{patch,diff}"${stage2_suffix}"."${archgroup}"
         done
         touch .patch
     done
