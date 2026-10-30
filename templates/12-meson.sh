@@ -12,9 +12,13 @@ build_meson_configure() {
 		|| abdie "Failed to create build directory: $?."
 	BUILD_START
 	abinfo "Running Meson ..."
-	meson setup "${MESON_DEF[@]}" "${MESON_AFTER[@]}" \
-			"$SRCDIR" "$BLDDIR" \
-			|| abdie "Failed to run Meson ..."
+	local CONFIGURE_CMD=(
+		meson setup
+		"${MESON_DEF[@]}" "${MESON_AFTER[@]}"
+		"$SRCDIR" "$BLDDIR"
+	)
+	ab_log_configuring_command "${CONFIGURE_CMD[@]}"
+	"${CONFIGURE_CMD[@]}" || abdie "Failed to run Meson ..."
 }
 
 build_meson_build() {

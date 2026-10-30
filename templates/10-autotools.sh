@@ -90,11 +90,14 @@ build_autotools_configure() {
 	if bool "$AUTOTOOLS_STRICT"; then
 		AUTOTOOLS_OPTION_CHECKING="--enable-option-checking=fatal"
 	fi
-	$ABCONFWRAPPER \
-	${configure:="$SRCDIR"/configure} \
-			"${AUTOTOOLS_TARGET[@]}" "${AUTOTOOLS_DEF[@]}" "${AUTOTOOLS_AFTER[@]}" \
-			"${AUTOTOOLS_OPTION_CHECKING[@]}" \
-			|| abdie "Failed to run configure: $?."
+	local CONFIGURE_CMD=(
+		$ABCONFWRAPPER
+		"${configure:="$SRCDIR"/configure}"
+		"${AUTOTOOLS_TARGET[@]}" "${AUTOTOOLS_DEF[@]}" "${AUTOTOOLS_AFTER[@]}"
+		"${AUTOTOOLS_OPTION_CHECKING[@]}"
+	)
+	ab_log_configuring_command "${CONFIGURE_CMD[@]}"
+	"${CONFIGURE_CMD[@]}" || abdie "Failed to run configure: $?."
 }
 
 build_autotools_build() {

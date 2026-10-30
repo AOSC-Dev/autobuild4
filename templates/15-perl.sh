@@ -13,14 +13,24 @@ build_perl_configure() {
 	BUILD_START
 	if [ -e "$SRCDIR"/Makefile.PL ]; then
 		abinfo "Generating Makefile from Makefile.PL ..."
-		PERL_MM_USE_DEFAULT=1 \
-                perl -I"$SRCDIR" Makefile.PL INSTALLDIRS=vendor \
-                || abdie "Makefile generation failed: $?."
+		local CONFIGURE_CMD=(
+			perl -I"$SRCDIR" Makefile.PL INSTALLDIRS=vendor
+		)
+		ab_log_configuring_command \
+			"PERL_MM_USE_DEFAULT=1 ${CONFIGURE_CMD[0]}" \
+			"${CONFIGURE_CMD[@]:1}"
+		PERL_MM_USE_DEFAULT=1 "${CONFIGURE_CMD[@]}" \
+			|| abdie "Makefile generation failed: $?."
 	elif [ -e "$SRCDIR"/Build.PL ]; then
 		abinfo "Generating Build from Build.PL ..."
-		PERL_MM_USE_DEFAULT=1 \
-		perl -I"$SRCDIR" Build.PL INSTALLDIRS=vendor \
-		|| abdie "Build generation failed: $?."
+		local CONFIGURE_CMD=(
+			perl -I"$SRCDIR" Build.PL INSTALLDIRS=vendor
+		)
+		ab_log_configuring_command \
+			"PERL_MM_USE_DEFAULT=1 ${CONFIGURE_CMD[0]}" \
+			"${CONFIGURE_CMD[@]:1}"
+		PERL_MM_USE_DEFAULT=1 "${CONFIGURE_CMD[@]}" \
+			|| abdie "Build generation failed: $?."
 	else
 		abdie "Unrecognized type, does this not seem to be a Perl package?: $?."
 	fi
