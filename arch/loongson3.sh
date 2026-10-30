@@ -1,12 +1,12 @@
 #!/bin/bash
 ##arch/loongson3.sh: Build definitions for Loongson 3A/B 1000-4000+.
 ##@copyright GPL-2.0+
-CFLAGS_GCC_ARCH=('-mabi=64' '-march=gs464' '-mtune=gs464e' '-mxgot')
-CFLAGS_CLANG_ARCH=('-mabi=64' '-march=mips64r2')
-RUSTFLAGS_COMMON_ARCH=('-Clink-arg=-Wl,-build-id=sha1')
+CFLAGS_GCC_ARCH=('-mabi=64' '-march=gs464' '-mtune=gs464e' '-mxgot' '-mno-check-zero-division')
+CFLAGS_CLANG_ARCH=('-mabi=64' '-march=mips64r2' '-mno-check-zero-division')
+RUSTFLAGS_COMMON_ARCH=('-Clink-arg=-Wl,-build-id=sha1' '-Cllvm-args=-mno-check-zero-division')
 
 # Override some RUSTFLAGS sure that the correct linker is used with NOLTO=1.
-RUSTFLAGS_COMMON_ARCH_NOLTO=('-Clink-arg=-fuse-ld=bfd' '-Clink-arg=-Wl,-build-id=sha1')
+RUSTFLAGS_COMMON_ARCH_NOLTO=('-Clink-arg=-fuse-ld=bfd' '-Clink-arg=-Wl,-build-id=sha1' '-Cllvm-args=-mno-check-zero-division')
 
 # Override some LTO flags to avoid partition size errors during linkage.
 CFLAGS_GCC_ARCH_LTO=("${CFLAGS_COMMON_ARCH_LTO[@]}" '-flto-partition=none')
