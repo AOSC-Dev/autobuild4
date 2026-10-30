@@ -35,7 +35,12 @@ build_qtproj_configure() {
 	ab_tostringarray QTPROJ_AFTER
 	ab_typecheck -a QTPROJ_DEF
 	abinfo "Running ${QMAKE} to generate Makefile ..."
-	"/usr/bin/${QMAKE}" $QTPROJ_SPEC "${QTPROJ_DEF[@]}" "${QTPROJ_AFTER[@]}" \
+	local CONFIGURE_CMD=(
+		"/usr/bin/${QMAKE}" $QTPROJ_SPEC
+		"${QTPROJ_DEF[@]}" "${QTPROJ_AFTER[@]}"
+	)
+	ab_log_configuring_command "${CONFIGURE_CMD[@]}"
+	"${CONFIGURE_CMD[@]}" \
 		|| abdie "Failed while running qmake to generate Makefile: $?."
 }
 

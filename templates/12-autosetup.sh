@@ -43,9 +43,12 @@ build_autosetup_configure() {
 	BUILD_START
 	abinfo "Running autosetup ..."
 	ab_tostringarray AUTOSETUP_AFTER
-	"$SRCDIR"/configure \
-		"${AUTOSETUP_TARGET[@]}" "${AUTOSETUP_DEF[@]}" "${AUTOSETUP_AFTER[@]}" \
-		|| abdie "Failed to run autosetup ..."
+	local CONFIGURE_CMD=(
+		"$SRCDIR"/configure
+		"${AUTOSETUP_TARGET[@]}" "${AUTOSETUP_DEF[@]}" "${AUTOSETUP_AFTER[@]}"
+	)
+	ab_log_configuring_command "${CONFIGURE_CMD[@]}"
+	"${CONFIGURE_CMD[@]}" || abdie "Failed to run autosetup ..."
 }
 
 build_autosetup_build() {

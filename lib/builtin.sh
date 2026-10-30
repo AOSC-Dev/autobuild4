@@ -89,3 +89,25 @@ ab_trim_args() {
 	declare -n arg="$1"
 	arg="$(tr -s ' ' <<< "${arg}")"
 }
+
+## ab_log_configuring_command cmd...
+## Log a command to configure the build
+## Example: ab_log_configuring_command "${CONFIGURE_CMD[@]}"
+ab_log_configuring_command() {
+	local CMD_STRING
+	if [[ $# -gt 1 ]]; then
+		# log each argument on a line
+		# with '\' as the line break
+		CMD_STRING="$1"$' \\\n'
+		shift
+		while [[ $# -gt 1 ]]; do
+			CMD_STRING+=$'\t'"$1"$' \\\n'
+			shift
+		done
+		CMD_STRING+=$'\t'"$1"
+	else
+		CMD_STRING="$1"
+	fi
+	abdbg "== Command used to configure the build =="$'\n\n'"${CMD_STRING}"$'\n'
+	abdbg "== End of command used to configure the build =="
+}

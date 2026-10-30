@@ -10,8 +10,12 @@ build_waf_configure() {
     BUILD_START
 	abinfo "Running Waf script(s) ..."
     ab_tostringarray WAF_AFTER
-	"$PYTHON" waf configure "${WAF_DEF[@]}" "${WAF_AFTER[@]}" \
-		|| abdie "Failed to run Waf script(s): $?."
+	local CONFIGURE_CMD=(
+		"$PYTHON" waf configure
+		"${WAF_DEF[@]}" "${WAF_AFTER[@]}"
+	)
+	ab_log_configuring_command "${CONFIGURE_CMD[@]}"
+	"${CONFIGURE_CMD[@]}" || abdie "Failed to run Waf script(s): $?."
 }
 
 build_waf_build() {

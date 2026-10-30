@@ -25,8 +25,12 @@ build_cmake_configure() {
 	export CXXFLAGS="$CPPFLAGS $CXXFLAGS"
 	abinfo "Running CMakeLists.txt to generate Makefile ..."
 	ab_tostringarray CMAKE_AFTER
-	cmake "$SRCDIR" "${CMAKE_DEF[@]}" "${CMAKE_AFTER[@]}" \
-			|| abdie "Failed to run CMakeLists.txt: $?."
+	local CONFIGURE_CMD=(
+		cmake "$SRCDIR"
+		"${CMAKE_DEF[@]}" "${CMAKE_AFTER[@]}"
+	)
+	ab_log_configuring_command "${CONFIGURE_CMD[@]}"
+	"${CONFIGURE_CMD[@]}" || abdie "Failed to run CMakeLists.txt: $?."
 }
 
 build_cmake_build() {
