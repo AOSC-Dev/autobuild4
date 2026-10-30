@@ -19,7 +19,7 @@ build_perl_configure() {
 	elif [ -e "$SRCDIR"/Build.PL ]; then
 		abinfo "Generating Build from Build.PL ..."
 		PERL_MM_USE_DEFAULT=1 \
-		perl -I"SRCDIR" Build.PL INSTALLDIRS=vendor \
+		perl -I"$SRCDIR" Build.PL INSTALLDIRS=vendor \
 		|| abdie "Build generation failed: $?."
 	else
 		abdie "Unrecognized type, does this not seem to be a Perl package?: $?."
