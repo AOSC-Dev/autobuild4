@@ -26,7 +26,7 @@ build_meson_build() {
 	cd "$BLDDIR" \
 		|| abdie "Failed to enter build directory: $?."
 	abinfo "Building binaries ..."
-	ninja \
+	ninja --verbose \
 		|| abdie "Failed to run build binaries: $?."
 }
 
