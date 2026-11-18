@@ -18,11 +18,20 @@ build_cmake_configure() {
 
 	BUILD_START
 
-	# NOTE: CMake does not add ENV{CPPFLAGS} to
+	# FIXME: CMake does not add ENV{CPPFLAGS} to
 	# CMAKE_${LANGUAGE}_FLAGS_INIT. We must either patch CMake or add
 	# CPPFLAGS to CFLAGS and CXXFLAGS manually.
+	#
+	# https://cmake.org/cmake/help/v4.5/variable/CMAKE_LANG_FLAGS.html
+	#
+	# Upstream report has been under deliberation since 2012:
+	#
+	# https://gitlab.kitware.com/cmake/cmake/-/work_items/12928
+	#
+	# Re-visit if this changes.
 	export CFLAGS="$CPPFLAGS $CFLAGS"
 	export CXXFLAGS="$CPPFLAGS $CXXFLAGS"
+
 	abinfo "Running CMakeLists.txt to generate Makefile ..."
 	ab_tostringarray CMAKE_AFTER
 	local CONFIGURE_CMD=(
