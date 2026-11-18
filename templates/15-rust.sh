@@ -58,6 +58,31 @@ build_rust_configure() {
 	export PKG_CONFIG_SYSROOT_DIR=/
 
 	BUILD_START
+
+	# FIXME: The cc crate (as of v1.11.2) does not respect the C
+	# preprocessor flags, and they are simply ignored as a result.
+	#
+	# More problematically, this would cause Rust programs with C++
+	# bindings, such as oma, to be built with ABI incompatibilities
+	# with C++ libraries it links against, causing runtime failures.
+	#
+	# For instance, on 32-bit architectures with ABI-changing flags
+	# `-D_FILE_OFFSET_BITS=64' and `-D_TIME_BITS=64' enabled by
+	# default to future proof binaries for Y2038 compatibility. As
+	# such, we ran into a scenario where libapt-pkg to be built with
+	# 64-bit time_t, whereas oma was still built with 32-bit time_t,
+	# as the aforementioned flags was not honoured by the cc crate.
+	# During runtime, this would manifest in random crashes due to
+	# misalignment in data structures.
+	#
+	# Issue reported upstream, awaiting upstream response:
+	#
+	# https://github.com/rust-lang/cc-rs/issues/2107
+	#
+	# Re-visit if this changes.
+	export CFLAGS="$CPPFLAGS $CFLAGS"
+	export CXXFLAGS="$CPPFLAGS $CXXFLAGS"
+
 	if bool AB_FLAGS_O3; then
 		DEFAULT_CARGO_CONFIG+=(--config 'profile.release.opt-level = 3')
 	fi
