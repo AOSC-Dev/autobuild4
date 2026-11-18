@@ -111,3 +111,151 @@ ab_log_configuring_command() {
 	abdbg "== Command used to configure the build =="$'\n\n'"${CMD_STRING}"$'\n'
 	abdbg "== End of command used to configure the build =="
 }
+
+
+function __ab_replace_string_build_expr() {
+	sep='`'
+	pattern=${1//$sep/\\$sep}
+	replacement=${2//$sep/\\$sep}
+	expr="s""$sep$pattern$sep$replacement$sep""g"
+	abinfo "expression=$expr"
+	echo "$expr"
+}
+
+function __ab_replace_string_misuse() {
+help="Usage: ab_replace_string [options].. [--] {regexp replacement} input{..} {[output]}
+Options:
+	-E
+		use extended regexp
+	-e regexp replacement
+		replace regexp with replacement, can repeat multiple times
+	-i
+		in place replace files, mutually exclusive with -o
+	-o output
+		output to file, mutually exclusive with -i
+	--
+		stop option parsing
+
+all known options are parsed first
+then if no -e specified, remain parameter 1 and 2 are taken as regexp and replacement
+then if no -i or -o specified, remain parameter 1 and 2 are taken as input and output
+else all remain parameters are taken as input
+when multiple input exists and -o specified, output contains all input replaced and concatenated
+"
+	aberr "$1"
+	abinfo "$help"
+	abdie "Misuse of ab_replace_string()! Refuse to proceed."
+}
+
+## ab_replace_string
+## Replace pattern in file
+## Example: ab_replace_string %VER% 1.2.3 "$PKGDIR/autobuild/postinst.in" "$PKGDIR/autobuild/postinst"
+## Example: ab_replace_string -e a b -e c d -- input
+## Example: ab_replace_string -E -o output regex replaced input1 input2
+function ab_replace_string() {
+	expr_list=()
+	sed_args=()
+	argv=()
+	dst=""
+	in_place=0
+	# parse argv
+	while [[ $# -gt 0 ]]; do
+		case $1 in
+			-e)
+				if [[ $# -lt 3 ]]; then
+					__ab_replace_string_misuse "-e require 2 parameters"
+				fi
+				expr_list+=("$(__ab_replace_string_build_expr "$2" "$3")")
+				shift 3
+				;;
+			-E)
+				sed_args+=(-E)
+				shift
+				;;
+			-o)
+				dst="$2"
+				shift 2
+				;;
+			-i)
+				in_place=1
+				shift
+				;;
+			--)
+				shift
+				argv+=("$@")
+				break
+				;;
+			*)
+				if [[ $1 == "-*" ]]; then
+					# compatibility note, in case of future expansion
+					abwarn "unknown option $1, treat as addtional parameter (consider use '--')"
+				fi
+				argv+=("$1")
+				shift
+				;;
+		esac
+	done
+
+	# parse additional parameter
+	if [[ 0 -eq ${#expr_list[@]} ]]; then
+		# no pattern, find pattern in remain_argv
+		if [[ ${#argv[@]} -lt 3 ]]; then
+			__ab_replace_string_misuse "no pattern, require at least 3 parameters"
+		fi
+		expr_list+=("$(__ab_replace_string_build_expr "${argv[0]}" "${argv[1]}")")
+		argv=("${argv[@]:2}")
+	fi
+
+	case ${#argv[@]} in
+		0)
+			__ab_replace_string_misuse "no input file, require at least 1 parameter"
+			;;
+		1)
+			srcs=("${argv[0]}")
+			in_place=1
+			;;
+		2)
+			srcs=("${argv[0]}")
+			dst="${argv[1]}"
+			;;
+		*)
+			if [[ -z $dst && ! $in_place ]]; then
+				__ab_replace_string_misuse "more than 3 files specified, enable either -i or -o option"
+			fi
+			srcs=("${argv[@]}")
+			;;
+	esac
+
+	for e in "${expr_list[@]}"; do
+		sed_args+=(-e "$e")
+	done
+
+	if [[ -e "$dst" ]]; then
+		abinfo "destination already exist, clearing content"
+		echo "" > "$dst"
+	fi
+
+	for src in "${srcs[@]}"; do
+		tmp=$(mktemp "ab_replace_string.XXXXXXXX")
+
+		abdbg "sed ${sed_args[*]} $src > $tmp"
+		sed "${sed_args[@]}" "$src" > "$tmp"
+
+		if cmp --silent -- "$src" "$tmp"; then
+			abwarn "Replaced nothing, aborting ..."
+			abinfo "Content of $src :"
+			cat "$src"
+			if [[ -n "$tmp" ]]; then
+				rm "$tmp"
+			fi
+			abdie "Replaced nothing in $src"
+		fi
+
+		if [[ $in_place ]]; then
+			cat "$tmp" > "$src"
+		else
+			cat "$tmp" >> "$dst"
+		fi
+		rm "$tmp"
+	done
+}
