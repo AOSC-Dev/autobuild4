@@ -126,12 +126,6 @@ if [ "$ABHOST" != "noarch" ] ; then
 	unset last_status chk_op
 fi
 
-if ! bool "$ABSTRIP" && bool "$ABSPLITDBG"; then
-	abwarn "QA: ELF stripping is turned OFF."
-	abwarn "    Won't package debug symbols as they are shipped in ELF themselves."
-	ABSPLITDBG=0
-fi
-
 if [[ $ABHOST == noarch ]]; then
 	abinfo "Architecture-agnostic (noarch) package detected, disabling -dbg package split ..."
 	ABSPLITDBG=0
