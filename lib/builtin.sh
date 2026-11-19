@@ -111,3 +111,41 @@ ab_log_configuring_command() {
 	abdbg "== Command used to configure the build =="$'\n\n'"${CMD_STRING}"$'\n'
 	abdbg "== End of command used to configure the build =="
 }
+
+
+## ab_replace_string "pattern" "replacement" "file" <"out_file">
+## Replace pattern to replacement in file
+## Example: ab_replace_string %VER% 1.2.3 "$PKGDIR/autobuild/postinst.in" "$PKGDIR/autobuild/postinst"
+function ab_replace_string() {
+	local src tmp dst pattern replacement
+	src=$3
+	tmp=""
+	# Escape the sed delimiter and metacharacters so that pattern and
+	# replacement are treated literally rather than as regex/replacement
+	# syntax. The delimiter used in the sed expression below is '|'.
+	pattern=$(printf '%s' "$1" | sed 's|[.*^$[\\|]|\\&|g')
+	replacement=$(printf '%s' "$2" | sed 's|[\\|&]|\\&|g')
+	if [[ $# -gt 3 ]]; then
+		dst=$4
+	else
+		tmp=$(mktemp "ab_replace_string.XXXXXXXX")
+		dst=$tmp
+	fi
+	sed -e "s|$pattern|$replacement|" "$src" > "$dst"
+
+	if cmp --silent -- "$src" "$dst"; then
+		abwarn "Replaced nothing, aborting ..."
+		abinfo "Content of $src :"
+		cat "$src"
+		if [[ -n "$tmp" ]]; then
+			rm "$tmp"
+		fi
+		abdie "Replaced nothing in $src"
+	fi
+
+	if [[ -n "$tmp" ]]; then
+		# Note: overwrite instead of copy to preserve permission
+		cat "$tmp" > "$src"
+		rm "$tmp"
+	fi
+}
